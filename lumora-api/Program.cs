@@ -7,33 +7,23 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Firebase App init
+var projectId = builder.Configuration["Firebase:ProjectId"] ?? "lumora-placeholder";
 var firebaseCredentials = builder.Configuration["Firebase:CredentialsJson"];
-if (!string.IsNullOrEmpty(firebaseCredentials))
+var firebaseConfigured = !string.IsNullOrWhiteSpace(firebaseCredentials)
+    && !string.IsNullOrWhiteSpace(builder.Configuration["Firebase:ProjectId"]);
+
+// Firebase init — only when credentials are present
+if (firebaseConfigured)
 {
     FirebaseApp.Create(new AppOptions
     {
         Credential = GoogleCredential.FromJson(firebaseCredentials)
     });
+    builder.Services.AddSingleton(_ => FirestoreDb.Create(projectId));
+    builder.Services.AddScoped<IAlbumService, AlbumService>();
+    builder.Services.AddScoped<IPhotoService, PhotoService>();
+    builder.Services.AddScoped<IStorageService, FirebaseStorageService>();
 }
-else
-{
-    FirebaseApp.Create(new AppOptions
-    {
-        Credential = GoogleCredential.GetApplicationDefault()
-    });
-}
-
-// Firestore
-var projectId = builder.Configuration["Firebase:ProjectId"]
-    ?? throw new InvalidOperationException("Firebase:ProjectId not configured");
-
-builder.Services.AddSingleton(_ => FirestoreDb.Create(projectId));
-
-// Services
-builder.Services.AddScoped<IAlbumService, AlbumService>();
-builder.Services.AddScoped<IPhotoService, PhotoService>();
-builder.Services.AddScoped<IStorageService, FirebaseStorageService>();
 
 // Auth — Firebase ID tokens via JWT
 builder.Services
@@ -97,7 +87,7 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o =>
 {
-    o.MultipartBodyLengthLimit = 25 * 1024 * 1024; // 25 MB max upload
+    o.MultipartBodyLengthLimit = 25 * 1024 * 1024;
 });
 
 var app = builder.Build();
@@ -111,6 +101,11 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "lumora-api" }));
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "ok",
+    service = "lumora-api",
+    firebase = firebaseConfigured ? "connected" : "not configured"
+}));
 
 app.Run();
