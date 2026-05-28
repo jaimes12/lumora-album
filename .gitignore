@@ -1,0 +1,30 @@
+# ─── .NET ────────────────────────────────────────────────────
+**/bin/
+**/obj/
+*.user
+*.suo
+.vs/
+*.swp
+lumora-api/lumora-api.http
+
+# Secrets — never commit
+**/appsettings.Local.json
+**/firebase-credentials.json
+**/*.pfx
+**/*.key
+
+# ─── Node / React ────────────────────────────────────────────
+**/node_modules/
+**/dist/
+**/.env
+**/.env.local
+**/.env.*.local
+
+# ─── OS ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── IDE ─────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.code-workspace

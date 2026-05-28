@@ -1,0 +1,127 @@
+.section {
+  padding: 120px 48px;
+  border-top: 1px solid var(--border);
+}
+
+.inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.title {
+  font-size: clamp(40px, 4.5vw, 60px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+.sub {
+  font-size: 17px;
+  color: var(--text-muted);
+  line-height: 1.65;
+  max-width: 360px;
+}
+
+.btn {
+  background: transparent;
+  color: var(--accent);
+  border: 1.5px solid rgba(232,201,122,0.3);
+  padding: 13px 26px;
+  border-radius: 100px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  width: fit-content;
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  background: var(--accent-dim);
+  border-color: rgba(232,201,122,0.5);
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+.step {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  position: relative;
+  padding: 28px 0;
+}
+
+.stepNum {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+  background: var(--accent-dim);
+  border: 1px solid rgba(232,201,122,0.2);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stepContent {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 10px;
+}
+
+.stepTitle {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.stepDesc {
+  font-size: 15px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.connector {
+  position: absolute;
+  left: 21px;
+  top: 72px;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, rgba(232,201,122,0.2), transparent);
+}
+
+@media (max-width: 900px) {
+  .section { padding: 80px 24px; }
+  .inner {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+  .sub { max-width: none; }
+}
