@@ -1,0 +1,146 @@
+export const CLIENTES = {
+  c1: { id: 'c1', nombre: 'Fernanda García',  telefono: '+52 55 1111 2222', email: 'fernanda@gmail.com',    avatar: 'FG' },
+  c2: { id: 'c2', nombre: 'Carlos Mendoza',   telefono: '+52 55 7788 9900', email: 'carlos@telmex.com',     avatar: 'CM' },
+  c3: { id: 'c3', nombre: 'Ana López',         telefono: '+52 55 5555 1234', email: 'ana.lopez@gmail.com',   avatar: 'AL' },
+  c4: { id: 'c4', nombre: 'Roberto Sánchez',   telefono: '+52 55 3322 1100', email: 'roberto@itesm.mx',     avatar: 'RS' },
+  c5: { id: 'c5', nombre: 'Mónica Reyes',      telefono: '+52 55 4455 6677', email: 'monica.reyes@gmail.com',avatar: 'MR' },
+  c6: { id: 'c6', nombre: 'Valeria Torres',    telefono: '+52 55 1234 5678', email: 'valeria.t@gmail.com',   avatar: 'VT' },
+}
+
+export const PROVEEDORES = {
+  p1: { id: 'p1', nombre: 'Foto Arte MX',       categoria: 'Fotografía', telefono: '+52 55 9900 1122', rating: 4.9, precio: 12000 },
+  p2: { id: 'p2', nombre: 'Banquetes Gourmet',  categoria: 'Catering',   telefono: '+52 55 2233 4455', rating: 4.7, precio: 25000 },
+  p3: { id: 'p3', nombre: 'Flores & Diseño',    categoria: 'Decoración', telefono: '+52 55 6677 8899', rating: 4.8, precio: 8000  },
+  p4: { id: 'p4', nombre: 'DJ Mango Sound',     categoria: 'Música',     telefono: '+52 55 1122 3344', rating: 4.6, precio: 6500  },
+  p5: { id: 'p5', nombre: 'Hacienda San Lucas', categoria: 'Venue',      telefono: '+52 55 5544 3322', rating: 4.9, precio: 18000 },
+  p6: { id: 'p6', nombre: 'Video Film Pro',     categoria: 'Video',      telefono: '+52 55 7766 5544', rating: 4.5, precio: 9500  },
+  p7: { id: 'p7', nombre: 'Transportes Elite',  categoria: 'Transporte', telefono: '+52 55 8899 0011', rating: 4.4, precio: 4000  },
+  p8: { id: 'p8', nombre: 'Sabores del Norte',  categoria: 'Catering',   telefono: '+52 55 3344 5566', rating: 4.3, precio: 15000 },
+}
+
+export const EVENTOS = [
+  {
+    id: '1',
+    nombre: 'Boda García & Ruiz',
+    tipo: 'Boda',
+    estado: 'confirmed',
+    fecha: '14 Jun 2026',
+    hora: '18:00',
+    venue: 'Hacienda San Lucas, Querétaro',
+    presupuestoTotal: 85000,
+    anticipo: 42500,
+    pagos: [
+      { id: 'pa1', concepto: 'Anticipo 50%',  monto: 42500, fecha: '10 Ene 2026', metodo: 'Transferencia' },
+    ],
+    invitados: 180,
+    notas: 'Ceremonia religiosa a las 18h, recepción a las 20h. Mesa principal para 10 personas. Pastel de 4 pisos.',
+    clienteId: 'c1',
+    proveedorIds: ['p1', 'p2', 'p3', 'p4', 'p5'],
+  },
+  {
+    id: '2',
+    nombre: 'Corporativo Telmex Q3',
+    tipo: 'Corporativo',
+    estado: 'pending',
+    fecha: '18 Jun 2026',
+    hora: '09:00',
+    venue: 'Centro Banamex, CDMX',
+    presupuestoTotal: 42000,
+    anticipo: 0,
+    pagos: [],
+    invitados: 250,
+    notas: 'Conferencia de resultados Q3. Requiere traducción simultánea inglés-español. Desayuno incluido.',
+    clienteId: 'c2',
+    proveedorIds: ['p2', 'p7'],
+  },
+  {
+    id: '3',
+    nombre: 'XV Años Sofía López',
+    tipo: 'XV Años',
+    estado: 'confirmed',
+    fecha: '22 Jun 2026',
+    hora: '20:00',
+    venue: 'Salón Versalles, Guadalajara',
+    presupuestoTotal: 67500,
+    anticipo: 25000,
+    pagos: [
+      { id: 'pb1', concepto: 'Anticipo inicial',   monto: 15000, fecha: '5 Feb 2026',  metodo: 'Efectivo'     },
+      { id: 'pb2', concepto: '2do abono',           monto: 10000, fecha: '1 Abr 2026',  metodo: 'Transferencia'},
+    ],
+    invitados: 220,
+    notas: 'Tema: jardín encantado. Vals preparado con 14 chambelanes. Torta de 5 pisos color rosa.',
+    clienteId: 'c3',
+    proveedorIds: ['p1', 'p3', 'p4', 'p6'],
+  },
+  {
+    id: '4',
+    nombre: 'Graduación ITESM',
+    tipo: 'Graduación',
+    estado: 'lead',
+    fecha: '03 Jul 2026',
+    hora: '11:00',
+    venue: 'Auditorio ITESM Monterrey',
+    presupuestoTotal: 28000,
+    anticipo: 0,
+    pagos: [],
+    invitados: 400,
+    notas: 'Graduación generación 2026. Entrega de diplomas en 3 turnos. Brunch al terminar.',
+    clienteId: 'c4',
+    proveedorIds: ['p8'],
+  },
+  {
+    id: '5',
+    nombre: 'Bautizo Sebastián Reyes',
+    tipo: 'Bautizo',
+    estado: 'confirmed',
+    fecha: '08 Jul 2026',
+    hora: '13:00',
+    venue: 'Quinta Las Palmas, EDOMEX',
+    presupuestoTotal: 18500,
+    anticipo: 18500,
+    pagos: [
+      { id: 'pc1', concepto: 'Pago total',  monto: 18500, fecha: '20 May 2026', metodo: 'Transferencia' },
+    ],
+    invitados: 80,
+    notas: 'Evento íntimo familiar. Buffet con menú infantil incluido. Decoración azul cielo.',
+    clienteId: 'c5',
+    proveedorIds: ['p2', 'p3'],
+  },
+  {
+    id: '6',
+    nombre: 'Boda Torres & Medina',
+    tipo: 'Boda',
+    estado: 'lead',
+    fecha: '22 Jul 2026',
+    hora: '17:00',
+    venue: 'Por confirmar',
+    presupuestoTotal: 110000,
+    anticipo: 0,
+    pagos: [],
+    invitados: 200,
+    notas: 'Primera reunión el 5 de junio. Interesados en venue con jardín exterior.',
+    clienteId: 'c6',
+    proveedorIds: [],
+  },
+]
+
+export const ESTADO_META = {
+  confirmed: { label: 'Confirmado', color: '#34d399', bg: 'rgba(52,211,153,0.12)'  },
+  pending:   { label: 'Pendiente',  color: '#fb923c', bg: 'rgba(251,146,60,0.12)'  },
+  lead:      { label: 'Prospecto',  color: '#fbbf24', bg: 'rgba(251,191,36,0.12)'  },
+  cancelled: { label: 'Cancelado',  color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
+}
+
+export const TIPO_EMOJI = {
+  Boda: '💍', 'XV Años': '🌸', Corporativo: '🏢',
+  Graduación: '🎓', Bautizo: '✝️', Cumpleaños: '🎂',
+}
+
+export const CAT_COLOR = {
+  Fotografía: '#a78bfa', Catering: '#fb923c', Decoración: '#f472b6',
+  Música: '#34d399', Venue: '#38bdf8', Video: '#fbbf24',
+  Transporte: '#94a3b8', Otro: '#64748b',
+}
+
+export const fmt = (n) =>
+  '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0 })

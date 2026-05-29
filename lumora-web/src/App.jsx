@@ -15,6 +15,7 @@ import AppLayout from './layouts/AppLayout'
 // App pages
 import DashboardPage from './pages/DashboardPage'
 import EventosPage from './pages/EventosPage'
+import EventoDetallePage from './pages/EventoDetallePage'
 import ClientesPage from './pages/ClientesPage'
 import ChatPage from './pages/ChatPage'
 import ProveedoresPage from './pages/ProveedoresPage'
@@ -48,6 +49,7 @@ export default function App() {
           <Route index element={<Navigate to="/app/dashboard" replace />} />
           <Route path="dashboard"   element={<DashboardPage />} />
           <Route path="eventos"     element={<EventosPage />} />
+          <Route path="eventos/:id" element={<EventoDetallePage />} />
           <Route path="clientes"    element={<ClientesPage />} />
           <Route path="chats"       element={<ChatPage />} />
           <Route path="proveedores" element={<ProveedoresPage />} />
