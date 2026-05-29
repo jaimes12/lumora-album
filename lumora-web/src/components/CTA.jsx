@@ -5,21 +5,22 @@ export default function CTA() {
     <section className={styles.section}>
       <div className={styles.card}>
         <div className={styles.glow} />
-        <span className={styles.label}>¿Tienes un evento pronto?</span>
+        <div className={styles.glowBlue} />
+        <span className={styles.label}>¿Listo para organizar mejor?</span>
         <h2 className={styles.title}>
-          Guarda cada momento.
+          Tu negocio de eventos
           <br />
-          Para siempre.
+          merece una herramienta pro.
         </h2>
         <p className={styles.sub}>
-          Crea tu álbum en menos de un minuto. Sin tarjeta de crédito.
+          14 días gratis, sin tarjeta de crédito.
+          Configura en menos de 10 minutos.
         </p>
         <div className={styles.btns}>
-          <button className={styles.btnPrimary}>
-            Crear álbum gratis
-          </button>
-          <button className={styles.btnSecondary}>Ver un ejemplo</button>
+          <button className={styles.btnPrimary}>Crear cuenta gratis</button>
+          <button className={styles.btnSecondary}>Hablar con ventas</button>
         </div>
+        <p className={styles.hint}>+500 organizadores ya usan Lumora en México</p>
       </div>
     </section>
   )

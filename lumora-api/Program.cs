@@ -4,6 +4,7 @@ using Google.Cloud.Firestore;
 using lumora_api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+// Lumora — Event Management Platform
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,9 +21,9 @@ if (firebaseConfigured)
         Credential = GoogleCredential.FromJson(firebaseCredentials)
     });
     builder.Services.AddSingleton(_ => FirestoreDb.Create(projectId));
-    builder.Services.AddScoped<IAlbumService, AlbumService>();
-    builder.Services.AddScoped<IPhotoService, PhotoService>();
-    builder.Services.AddScoped<IStorageService, FirebaseStorageService>();
+    builder.Services.AddScoped<IEventService, EventService>();
+    builder.Services.AddScoped<IClientService, ClientService>();
+    builder.Services.AddScoped<IVendorService, VendorService>();
 }
 
 // Auth — Firebase ID tokens via JWT
