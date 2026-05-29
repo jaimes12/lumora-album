@@ -31,19 +31,19 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 16px 18px 14px;
+  padding: 18px 16px 16px;
   border-bottom: 1px solid var(--border);
 }
 
 .logoMini {
-  height: 36px;
-  width: 36px;
+  height: 44px;
+  width: 44px;
   object-fit: contain;
   flex-shrink: 0;
 }
 
 .logoFull {
-  height: 28px;
+  height: 36px;
   width: auto;
   object-fit: contain;
   flex: 1;
