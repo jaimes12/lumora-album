@@ -20,6 +20,7 @@ import ClientesPage from './pages/ClientesPage'
 import ChatPage from './pages/ChatPage'
 import ProveedoresPage from './pages/ProveedoresPage'
 import VentasPage from './pages/VentasPage'
+import ContratosPage from './pages/ContratosPage'
 
 function LandingPage() {
   return (
@@ -54,6 +55,7 @@ export default function App() {
           <Route path="chats"       element={<ChatPage />} />
           <Route path="proveedores" element={<ProveedoresPage />} />
           <Route path="ventas"      element={<VentasPage />} />
+          <Route path="contratos"   element={<ContratosPage />} />
         </Route>
 
         {/* Catch-all */}
