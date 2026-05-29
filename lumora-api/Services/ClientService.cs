@@ -1,6 +1,8 @@
-using Google.Cloud.Firestore;
+using lumora_api.Data;
 using lumora_api.DTOs;
 using lumora_api.Models;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace lumora_api.Services;
 
@@ -13,14 +15,13 @@ public interface IClientService
     Task<bool> DeleteAsync(string orgId, string id);
 }
 
-public class ClientService(FirestoreDb db) : IClientService
+public class ClientService(LumoraDbContext db) : IClientService
 {
-    private readonly CollectionReference _col = db.Collection("clients");
-
     public async Task<ClientResponse> CreateAsync(string orgId, CreateClientRequest req)
     {
         var client = new Client
         {
+            Id = Guid.NewGuid().ToString(),
             OrgId = orgId,
             Name = req.Name,
             Email = req.Email,
@@ -28,66 +29,60 @@ public class ClientService(FirestoreDb db) : IClientService
             Company = req.Company,
             Stage = "lead",
             Notes = req.Notes,
-            Tags = req.Tags ?? [],
-            CreatedAt = Timestamp.GetCurrentTimestamp()
+            Tags = JsonSerializer.Serialize(req.Tags ?? []),
+            CreatedAt = DateTime.UtcNow
         };
-        var doc = await _col.AddAsync(client);
-        client.Id = doc.Id;
+        await db.Clients.AddAsync(client);
+        await db.SaveChangesAsync();
         return ToResponse(client);
     }
 
     public async Task<ClientResponse?> GetByIdAsync(string orgId, string id)
     {
-        var snap = await _col.Document(id).GetSnapshotAsync();
-        if (!snap.Exists) return null;
-        var c = snap.ConvertTo<Client>();
-        c.Id = snap.Id;
-        return c.OrgId == orgId ? ToResponse(c) : null;
+        var c = await db.Clients.FirstOrDefaultAsync(x => x.Id == id && x.OrgId == orgId);
+        return c is null ? null : ToResponse(c);
     }
 
     public async Task<IEnumerable<ClientResponse>> GetByOrgAsync(string orgId, string? stage = null)
     {
-        Query query = _col.WhereEqualTo("OrgId", orgId).OrderByDescending("CreatedAt");
-        if (stage is not null) query = query.WhereEqualTo("Stage", stage);
-        var snap = await query.GetSnapshotAsync();
-        return snap.Documents.Select(d => { var c = d.ConvertTo<Client>(); c.Id = d.Id; return ToResponse(c); });
+        var query = db.Clients.Where(c => c.OrgId == orgId);
+        if (stage is not null) query = query.Where(c => c.Stage == stage);
+        var list = await query.OrderByDescending(c => c.CreatedAt).ToListAsync();
+        return list.Select(ToResponse);
     }
 
     public async Task<ClientResponse?> UpdateAsync(string orgId, string id, UpdateClientRequest req)
     {
-        var docRef = _col.Document(id);
-        var snap = await docRef.GetSnapshotAsync();
-        if (!snap.Exists) return null;
-        var c = snap.ConvertTo<Client>();
-        if (c.OrgId != orgId) return null;
+        var c = await db.Clients.FirstOrDefaultAsync(x => x.Id == id && x.OrgId == orgId);
+        if (c is null) return null;
 
-        var updates = new Dictionary<string, object>();
-        if (req.Name is not null) updates["Name"] = req.Name;
-        if (req.Email is not null) updates["Email"] = req.Email;
-        if (req.Phone is not null) updates["Phone"] = req.Phone;
-        if (req.Company is not null) updates["Company"] = req.Company;
-        if (req.Stage is not null) updates["Stage"] = req.Stage;
-        if (req.Notes is not null) updates["Notes"] = req.Notes;
-        if (req.Tags is not null) updates["Tags"] = req.Tags;
-        updates["LastContactAt"] = Timestamp.GetCurrentTimestamp();
+        if (req.Name is not null) c.Name = req.Name;
+        if (req.Email is not null) c.Email = req.Email;
+        if (req.Phone is not null) c.Phone = req.Phone;
+        if (req.Company is not null) c.Company = req.Company;
+        if (req.Stage is not null) c.Stage = req.Stage;
+        if (req.Notes is not null) c.Notes = req.Notes;
+        if (req.Tags is not null) c.Tags = JsonSerializer.Serialize(req.Tags);
+        c.LastContactAt = DateTime.UtcNow;
 
-        if (updates.Count > 0) await docRef.UpdateAsync(updates);
-        return await GetByIdAsync(orgId, id);
+        await db.SaveChangesAsync();
+        return ToResponse(c);
     }
 
     public async Task<bool> DeleteAsync(string orgId, string id)
     {
-        var snap = await _col.Document(id).GetSnapshotAsync();
-        if (!snap.Exists) return false;
-        var c = snap.ConvertTo<Client>();
-        if (c.OrgId != orgId) return false;
-        await _col.Document(id).DeleteAsync();
+        var c = await db.Clients.FirstOrDefaultAsync(x => x.Id == id && x.OrgId == orgId);
+        if (c is null) return false;
+        db.Clients.Remove(c);
+        await db.SaveChangesAsync();
         return true;
     }
 
     private static ClientResponse ToResponse(Client c) => new(
         c.Id, c.Name, c.Email, c.Phone, c.Company, c.Stage,
-        c.Notes, c.Tags, c.CreatedAt.ToDateTime(),
-        c.LastContactAt?.ToDateTime()
+        c.Notes,
+        JsonSerializer.Deserialize<List<string>>(c.Tags) ?? [],
+        c.CreatedAt,
+        c.LastContactAt
     );
 }

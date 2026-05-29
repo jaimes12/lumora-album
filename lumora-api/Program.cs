@@ -1,8 +1,9 @@
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
-using Google.Cloud.Firestore;
+using lumora_api.Data;
 using lumora_api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 // Lumora — Event Management Platform
 
@@ -13,18 +14,31 @@ var firebaseCredentials = builder.Configuration["Firebase:CredentialsJson"];
 var firebaseConfigured = !string.IsNullOrWhiteSpace(firebaseCredentials)
     && !string.IsNullOrWhiteSpace(builder.Configuration["Firebase:ProjectId"]);
 
-// Firebase init — only when credentials are present
+// Firebase init — only for JWT auth, NOT for database
 if (firebaseConfigured)
 {
     FirebaseApp.Create(new AppOptions
     {
         Credential = GoogleCredential.FromJson(firebaseCredentials)
     });
-    builder.Services.AddSingleton(_ => FirestoreDb.Create(projectId));
-    builder.Services.AddScoped<IEventService, EventService>();
-    builder.Services.AddScoped<IClientService, ClientService>();
-    builder.Services.AddScoped<IVendorService, VendorService>();
 }
+
+// MySQL / EF Core
+var connectionString =
+    builder.Configuration.GetConnectionString("MySql")
+    ?? Environment.GetEnvironmentVariable("MYSQL_URL")
+    ?? "Server=zephyr.proxy.rlwy.net;Port=22140;Database=railway;User=root;Password=ieVDKlaSitDJTjSPqxlhDtdNchFHoLgE;AllowPublicKeyRetrieval=true;SslMode=none;";
+
+builder.Services.AddDbContext<LumoraDbContext>(opts =>
+    opts.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString),
+        mySqlOpts => mySqlOpts.EnableRetryOnFailure(3)));
+
+// Business services
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IClientService, ClientService>();
+builder.Services.AddScoped<IVendorService, VendorService>();
+builder.Services.AddScoped<ISaleService, SaleService>();
+builder.Services.AddScoped<IWhatsappService, WhatsappService>();
 
 // Auth — Firebase ID tokens via JWT
 builder.Services
@@ -106,6 +120,7 @@ app.MapGet("/health", () => Results.Ok(new
 {
     status = "ok",
     service = "lumora-api",
+    database = "mysql",
     firebase = firebaseConfigured ? "connected" : "not configured"
 }));
 
