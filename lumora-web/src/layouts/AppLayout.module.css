@@ -586,22 +586,26 @@
 
 /* ── Mobile breakpoint ── */
 @media (max-width: 768px) {
-  /* Show top bar */
+
+  /* Shell becomes a full-height column — only mainInner scrolls */
+  .shell {
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Top bar — static in the column flow (not fixed, no padding-top hack needed) */
   .topBar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 56px;
+    flex-shrink: 0;
+    height: 60px;
     padding: 0 16px;
     background: var(--bg-1);
     border-bottom: 1px solid var(--border);
     z-index: 200;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    position: relative;
   }
 
   .hamburger {
@@ -609,22 +613,25 @@
     border: none;
     color: var(--text);
     cursor: pointer;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
+    border-radius: 10px;
     transition: background 0.15s;
     flex-shrink: 0;
   }
   .hamburger:hover { background: var(--bg-2); }
 
   .topBarLogo {
-    height: 28px;
+    height: 30px;
     width: auto;
     object-fit: contain;
     filter: brightness(0) invert(1);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
   }
   [data-theme="light"] .topBarLogo { filter: none; }
 
@@ -647,13 +654,17 @@
   /* Show close button in sidebar */
   .sidebarClose { display: flex; }
 
-  /* Main takes full width */
+  /* Main fills remaining space and scrolls */
   .main {
     margin-left: 0;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    min-height: 0;
   }
 
   .mainInner {
-    padding: 16px;
-    padding-top: 72px;
+    padding: 20px 16px 32px;
+    max-width: 100%;
   }
 }
