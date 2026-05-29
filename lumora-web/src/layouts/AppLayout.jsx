@@ -1,10 +1,11 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useSettings } from '../context/SettingsContext'
 import styles from './AppLayout.module.css'
 
-const NAV = [
+const NAV_KEYS = [
   {
     to: '/app/dashboard',
-    label: 'Dashboard',
+    key: 'dashboard',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -16,7 +17,7 @@ const NAV = [
   },
   {
     to: '/app/eventos',
-    label: 'Eventos',
+    key: 'eventos',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -28,7 +29,7 @@ const NAV = [
   },
   {
     to: '/app/clientes',
-    label: 'Clientes',
+    key: 'clientes',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -40,7 +41,7 @@ const NAV = [
   },
   {
     to: '/app/chats',
-    label: 'Chats',
+    key: 'chats',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -49,7 +50,7 @@ const NAV = [
   },
   {
     to: '/app/proveedores',
-    label: 'Proveedores',
+    key: 'proveedores',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -59,33 +60,56 @@ const NAV = [
   },
   {
     to: '/app/ventas',
-    label: 'Ventas',
+    key: 'ventas',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
         <polyline points="14 2 14 8 20 8" />
         <line x1="16" y1="13" x2="8" y2="13" />
         <line x1="16" y1="17" x2="8" y2="17" />
-        <polyline points="10 9 9 9 8 9" />
       </svg>
     ),
   },
 ]
 
+const SunIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="5"/>
+    <line x1="12" y1="1" x2="12" y2="3"/>
+    <line x1="12" y1="21" x2="12" y2="23"/>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+    <line x1="1" y1="12" x2="3" y2="12"/>
+    <line x1="21" y1="12" x2="23" y2="12"/>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </svg>
+)
+
+const MoonIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+)
+
 export default function AppLayout() {
   const navigate = useNavigate()
+  const { theme, lang, toggleTheme, toggleLang, i18n } = useSettings()
 
   return (
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
         <div className={styles.sidebarInner}>
+
+          {/* Logo */}
           <div className={styles.logoArea}>
             <div className={styles.logoMark}>L</div>
             <span className={styles.logoText}>Lumora</span>
           </div>
 
+          {/* Nav */}
           <nav className={styles.nav}>
-            {NAV.map(item => (
+            {NAV_KEYS.map(item => (
               <NavLink
                 key={item.to}
                 to={item.to}
@@ -94,22 +118,33 @@ export default function AppLayout() {
                 }
               >
                 <span className={styles.navIcon}>{item.icon}</span>
-                <span className={styles.navLabel}>{item.label}</span>
+                <span className={styles.navLabel}>{i18n[item.key]}</span>
               </NavLink>
             ))}
           </nav>
 
+          {/* Settings toggles */}
+          <div className={styles.settingsArea}>
+            <button className={styles.toggleBtn} onClick={toggleTheme} title={theme === 'dark' ? i18n.lightMode : i18n.darkMode}>
+              {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+              <span>{theme === 'dark' ? i18n.lightMode : i18n.darkMode}</span>
+            </button>
+
+            <button className={styles.toggleBtn} onClick={toggleLang} title="Cambiar idioma">
+              <span className={styles.langFlag}>{lang === 'es' ? '🇲🇽' : '🇺🇸'}</span>
+              <span>{lang === 'es' ? 'English' : 'Español'}</span>
+              <span className={styles.langBadge}>{lang.toUpperCase()}</span>
+            </button>
+          </div>
+
+          {/* User */}
           <div className={styles.userArea}>
             <div className={styles.avatar}>AJ</div>
             <div className={styles.userInfo}>
               <span className={styles.userName}>Angel Jaimes</span>
-              <span className={styles.userRole}>Administrador</span>
+              <span className={styles.userRole}>{i18n.admin}</span>
             </div>
-            <button
-              className={styles.logoutBtn}
-              onClick={() => navigate('/')}
-              title="Cerrar sesión"
-            >
+            <button className={styles.logoutBtn} onClick={() => navigate('/')} title={i18n.logout}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <polyline points="16 17 21 12 16 7" />
@@ -117,11 +152,14 @@ export default function AppLayout() {
               </svg>
             </button>
           </div>
+
         </div>
       </aside>
 
       <main className={styles.main}>
-        <Outlet />
+        <div className={styles.mainInner}>
+          <Outlet />
+        </div>
       </main>
     </div>
   )

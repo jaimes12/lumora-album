@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { SettingsProvider } from './context/SettingsContext'
 
 // Landing components
 import Navbar from './components/Navbar'
@@ -36,6 +37,7 @@ function LandingPage() {
 
 export default function App() {
   return (
+    <SettingsProvider>
     <BrowserRouter>
       <Routes>
         {/* Landing */}
@@ -56,5 +58,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    </SettingsProvider>
   )
 }
