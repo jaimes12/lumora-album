@@ -148,6 +148,327 @@
   border-radius: 4px;
 }
 
+/* ── WhatsApp section ── */
+.waSection {
+  padding: 10px 10px 6px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.waSectionHead { padding: 0 4px 2px; }
+
+.waSectionLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.waConnectBtn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 12px;
+  background: rgba(37,211,102,0.08);
+  border: 1px solid rgba(37,211,102,0.2);
+  border-radius: 9px;
+  color: #25D366;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.waConnectBtn:hover {
+  background: rgba(37,211,102,0.14);
+  border-color: rgba(37,211,102,0.4);
+}
+
+.waConnectIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.waConnected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(37,211,102,0.06);
+  border: 1px solid rgba(37,211,102,0.18);
+  border-radius: 9px;
+}
+
+.waConnectedLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.waGreenDot {
+  width: 8px;
+  height: 8px;
+  background: #25D366;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(37,211,102,0.6);
+  animation: waPulse 2s ease-in-out infinite;
+}
+
+@keyframes waPulse {
+  0%,100% { opacity:1; } 50% { opacity:0.5; }
+}
+
+.waConnectedInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.waConnectedText {
+  font-size: 12px;
+  font-weight: 700;
+  color: #25D366;
+  line-height: 1;
+}
+
+.waConnectedPhone {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.waDisconnectBtn {
+  background: none;
+  border: none;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 5px;
+  transition: all 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.waDisconnectBtn:hover {
+  background: rgba(248,113,113,0.1);
+  color: #f87171;
+}
+
+/* ── WhatsApp Modal ── */
+.waOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: waFade 0.18s ease;
+}
+@keyframes waFade { from { opacity:0 } to { opacity:1 } }
+
+.waModal {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+  animation: waPop 0.22s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes waPop {
+  from { transform: scale(0.9); opacity:0; }
+  to   { transform: scale(1);   opacity:1; }
+}
+
+.waHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.waHeaderLeft { display: flex; align-items: center; gap: 10px; }
+
+.waIconWrap {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  background: rgba(37,211,102,0.12);
+  color: #25D366;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.waTitle { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; }
+
+.waClose {
+  background: var(--bg-2); border: 1px solid var(--border);
+  color: var(--text-muted); width: 28px; height: 28px;
+  border-radius: 8px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.waClose:hover { color: var(--text); background: var(--bg); }
+
+.waBody { padding: 24px 20px; display: flex; flex-direction: column; gap: 20px; }
+
+.waSteps {
+  display: flex;
+  gap: 0;
+  position: relative;
+}
+
+.waStep {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+  position: relative;
+}
+
+.waStep:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: calc(50% + 14px);
+  right: calc(-50% + 14px);
+  height: 1px;
+  background: var(--border);
+}
+
+.waStepNum {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  border: 1.5px solid rgba(124,106,247,0.3);
+  color: var(--accent-2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  position: relative; z-index: 1;
+}
+
+.waInputGroup { display: flex; flex-direction: column; gap: 8px; }
+
+.waLabel { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+
+.waInput {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+.waInput:focus { border-color: #25D366; }
+.waInput::placeholder { color: var(--text-muted); }
+
+.waHint { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+.waBtn {
+  background: #25D366;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.waBtn:hover:not(:disabled) { background: #20c45a; transform: translateY(-1px); }
+.waBtn:disabled { opacity: 0.4; cursor: default; }
+
+.waQrWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.waQr {
+  width: 160px; height: 160px;
+  border: 3px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 8px;
+  background: var(--bg-2);
+}
+
+.waQrGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  height: 100%;
+}
+
+.waQrCell { border-radius: 2px; }
+
+.waQrText { font-size: 12px; color: var(--text-muted); text-align: center; max-width: 260px; line-height: 1.5; }
+
+.waSpinner {
+  width: 24px; height: 24px;
+  border: 2px solid var(--border);
+  border-top-color: #25D366;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.waScanning { font-size: 12px; color: var(--text-muted); }
+
+.waSuccess {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.waSuccessIcon {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: rgba(37,211,102,0.12);
+  color: #25D366;
+  font-size: 22px;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.waSuccessTitle { font-size: 18px; font-weight: 800; letter-spacing: -0.03em; }
+.waSuccessPhone { font-size: 14px; font-weight: 600; color: #25D366; }
+.waSuccessText  { font-size: 13px; color: var(--text-muted); line-height: 1.6; max-width: 300px; }
+
 /* User area */
 .userArea {
   display: flex;
