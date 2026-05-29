@@ -96,7 +96,9 @@
 }
 
 @media (max-width: 768px) {
-  .nav { padding: 16px 20px; }
+  .nav { padding: 12px 16px; }
   .links { display: none; }
   .btnLogin { display: none; }
+  .logoImg { height: 34px; }
+  .btnCta { padding: 8px 14px; font-size: 13px; }
 }

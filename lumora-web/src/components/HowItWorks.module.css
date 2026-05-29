@@ -123,3 +123,12 @@
   .inner { grid-template-columns: 1fr; gap: 48px; }
   .left { position: static; }
 }
+
+@media (max-width: 768px) {
+  .section { padding: 60px 16px; }
+  .title { font-size: clamp(26px, 6vw, 40px); }
+  .sub { font-size: 14px; }
+  .inner { gap: 32px; }
+  .stepTitle { font-size: 15px; }
+  .stepDesc { font-size: 13px; }
+}

@@ -84,6 +84,13 @@
   .grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+@media (max-width: 768px) {
+  .section { padding: 60px 16px; }
+  .header { margin-bottom: 48px; }
+  .title { font-size: clamp(24px, 6vw, 36px); }
+  .sub { font-size: 15px; }
+}
+
 @media (max-width: 520px) {
   .grid { grid-template-columns: 1fr; }
 }

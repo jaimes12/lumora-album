@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useSettings } from '../context/SettingsContext'
 import styles from './AppLayout.module.css'
@@ -139,6 +139,22 @@ export default function AppLayout() {
   const [waConnected, setWaConnected] = useState(false)
   const [waPhone,     setWaPhone]     = useState('')
   const [showWaModal, setShowWaModal] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  // Close sidebar on route change
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [navigate])
+
+  // Prevent body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [sidebarOpen])
 
   const handleConnect = (phone) => {
     setWaConnected(true)
@@ -154,19 +170,43 @@ export default function AppLayout() {
         />
       )}
 
-      <aside className={styles.sidebar}>
+      {/* Mobile top bar */}
+      <div className={styles.topBar}>
+        <button className={styles.hamburger} onClick={() => setSidebarOpen(true)} aria-label="Abrir menú">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <img src={logoFull} alt="Lumora" className={styles.topBarLogo} />
+        <div style={{width: 40}} />
+      </div>
+
+      {/* Overlay */}
+      {sidebarOpen && (
+        <div className={styles.overlay} onClick={() => setSidebarOpen(false)} />
+      )}
+
+      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
         <div className={styles.sidebarInner}>
 
           {/* Logo */}
           <div className={styles.logoArea}>
             <img src={logoMini} alt="Lumora" className={styles.logoMini} />
             <img src={logoFull} alt="Lumora" className={styles.logoFull} />
+            <button className={styles.sidebarClose} onClick={() => setSidebarOpen(false)} aria-label="Cerrar menú">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
           </div>
 
           {/* Nav */}
           <nav className={styles.nav}>
             {NAV_KEYS.map(item => (
               <NavLink key={item.to} to={item.to}
+                onClick={() => setSidebarOpen(false)}
                 className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ''}`}>
                 <span className={styles.navIcon}>{item.icon}</span>
                 <span className={styles.navLabel}>{i18n[item.key]}</span>

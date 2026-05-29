@@ -474,3 +474,21 @@
   background: var(--accent-2);
   transform: scale(1.05);
 }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .header { gap: 10px; }
+  .title { font-size: 18px; }
+  .headerStats { flex-wrap: wrap; }
+  .column {
+    min-width: 240px;
+    max-height: calc(100vh - 240px);
+  }
+  .panel {
+    width: 100%;
+    left: 0;
+    z-index: 300;
+  }
+  .panelActions { gap: 6px; }
+  .stageSelect { font-size: 11px; padding: 4px 8px; }
+}

@@ -56,8 +56,8 @@
 }
 
 @media (max-width: 768px) {
-  .logoMini { display: block; }
-  .logoFull  { display: none;  }
+  .logoMini { display: none; }
+  .logoFull  { display: block; height: 30px; }
 }
 
 /* Nav */
@@ -548,4 +548,112 @@
 .mainInner {
   padding: 32px 36px;
   max-width: 1400px;
+}
+
+/* ── Mobile top bar ── */
+.topBar {
+  display: none;
+}
+
+/* ── Sidebar close button (mobile) ── */
+.sidebarClose {
+  display: none;
+  margin-left: auto;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.sidebarClose:hover { color: var(--text); background: var(--bg); }
+
+/* ── Overlay ── */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 299;
+  animation: overlayFade 0.2s ease;
+}
+@keyframes overlayFade { from { opacity: 0; } to { opacity: 1; } }
+
+/* ── Mobile breakpoint ── */
+@media (max-width: 768px) {
+  /* Show top bar */
+  .topBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    padding: 0 16px;
+    background: var(--bg-1);
+    border-bottom: 1px solid var(--border);
+    z-index: 200;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .hamburger {
+    background: none;
+    border: none;
+    color: var(--text);
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .hamburger:hover { background: var(--bg-2); }
+
+  .topBarLogo {
+    height: 28px;
+    width: auto;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+  }
+  [data-theme="light"] .topBarLogo { filter: none; }
+
+  /* Show overlay */
+  .overlay { display: block; }
+
+  /* Sidebar becomes a drawer */
+  .sidebar {
+    transform: translateX(-100%);
+    z-index: 300;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
+  }
+
+  .sidebarOpen {
+    transform: translateX(0);
+    box-shadow: 4px 0 40px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Show close button in sidebar */
+  .sidebarClose { display: flex; }
+
+  /* Main takes full width */
+  .main {
+    margin-left: 0;
+  }
+
+  .mainInner {
+    padding: 16px;
+    padding-top: 72px;
+  }
 }

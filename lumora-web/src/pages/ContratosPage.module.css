@@ -644,3 +644,29 @@
   .previewPanel { position: static; }
   .statsRow { grid-template-columns: 1fr 1fr; }
 }
+
+@media (max-width: 768px) {
+  .header { flex-wrap: wrap; gap: 10px; }
+  .title { font-size: 18px; }
+  .btnNew { padding: 9px 14px; font-size: 13px; }
+  .statsRow { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .statVal { font-size: 20px; }
+  .tableWrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table { min-width: 600px; }
+  .generatorLayout { grid-template-columns: 1fr; gap: 16px; }
+  .configPanel { max-height: none; }
+  .previewPanel { position: static; }
+  .generatorHeader { flex-wrap: wrap; gap: 8px; }
+  .generatorActions { flex-wrap: wrap; gap: 6px; }
+  .formGrid { grid-template-columns: 1fr; }
+  .preview { padding: 24px 20px; font-size: 10pt; }
+  .letterhead { flex-direction: column; gap: 12px; }
+  .letterheadRight { text-align: left; }
+  .sigRow { gap: 20px; }
+  .previewScroll { max-height: none; }
+  .templateCard { flex-wrap: nowrap; }
+}
+
+@media (max-width: 480px) {
+  .statsRow { grid-template-columns: 1fr; }
+}

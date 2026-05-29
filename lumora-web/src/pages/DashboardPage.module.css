@@ -238,3 +238,24 @@
 .badge_confirmed { background: rgba(52, 211, 153, 0.12); color: #34d399; }
 .badge_pending   { background: rgba(251, 146, 60, 0.12); color: #fb923c; }
 .badge_quote     { background: rgba(124, 106, 247, 0.15); color: var(--accent-2); }
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .statsGrid { grid-template-columns: repeat(2, 1fr); }
+  .chartsRow { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .page { padding: 0; }
+  .header { flex-wrap: wrap; gap: 8px; }
+  .title { font-size: 20px; }
+  .statsGrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .chartsRow { grid-template-columns: 1fr; gap: 12px; }
+  .barChart { height: 110px; }
+  .eventList { overflow-x: auto; }
+}
+
+@media (max-width: 420px) {
+  .statsGrid { grid-template-columns: 1fr; }
+  .statValue { font-size: 22px; }
+}

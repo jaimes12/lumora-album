@@ -68,8 +68,16 @@
 
 .bottom p { font-size: 13px; color: rgba(238,237,242,0.22); }
 
+@media (max-width: 768px) {
+  .footer { padding: 40px 16px 28px; }
+  .inner { flex-direction: column; gap: 28px; }
+  .links { flex-wrap: wrap; gap: 24px; }
+  .logoImg { height: 30px; }
+  .tagline { font-size: 13px; }
+}
+
 @media (max-width: 640px) {
-  .footer { padding: 48px 20px 32px; }
+  .footer { padding: 40px 16px 28px; }
   .inner { flex-direction: column; }
-  .links { flex-wrap: wrap; gap: 32px; }
+  .links { flex-wrap: wrap; gap: 24px; }
 }

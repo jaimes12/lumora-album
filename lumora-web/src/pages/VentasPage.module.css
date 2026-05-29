@@ -213,3 +213,31 @@
   color: var(--text);
   background: var(--bg);
 }
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .summaryRow { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+@media (max-width: 768px) {
+  .page { padding: 0; }
+  .header { flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+  .title { font-size: 20px; }
+  .btnPrimary { padding: 9px 14px; font-size: 13px; }
+  .summaryRow { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .summaryValue { font-size: 20px; }
+  .tabs {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex-shrink: 0; }
+  .tableWrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table { min-width: 650px; }
+}
+
+@media (max-width: 480px) {
+  .summaryRow { grid-template-columns: 1fr; }
+}

@@ -819,3 +819,25 @@
   .finGrid { grid-template-columns: 1fr 1fr; }
   .heroTitle { font-size: 20px; }
 }
+
+@media (max-width: 768px) {
+  .topBar { flex-wrap: wrap; gap: 8px; }
+  .topActions { flex-wrap: wrap; gap: 6px; }
+  .hero { padding: 16px; gap: 12px; flex-wrap: wrap; }
+  .heroEmoji { font-size: 32px; }
+  .heroTitle { font-size: 18px; }
+  .heroMeta { gap: 10px; }
+  .mainGrid { grid-template-columns: 1fr; }
+  .rightCol { order: -1; }
+  .finGrid { grid-template-columns: 1fr 1fr; }
+  .finTotal, .finAbonado, .finPendiente { font-size: 16px; }
+  .card { padding: 16px; }
+  .modalOverlay { padding: 0; align-items: flex-end; }
+  .modal {
+    max-width: 100%;
+    width: 100%;
+    height: 85vh;
+    border-radius: 18px 18px 0 0;
+  }
+  .pagoForm { grid-template-columns: 1fr; }
+}

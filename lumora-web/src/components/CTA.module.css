@@ -105,7 +105,14 @@
   color: rgba(238,237,242,0.28);
 }
 
+@media (max-width: 768px) {
+  .section { padding: 40px 16px 80px; }
+  .card { padding: 48px 20px; }
+  .title { font-size: clamp(22px, 6vw, 36px); }
+  .sub { font-size: 14px; }
+  .btnPrimary, .btnSecondary { padding: 12px 24px; font-size: 14px; }
+}
+
 @media (max-width: 640px) {
-  .section { padding: 40px 20px 80px; }
-  .card { padding: 52px 24px; }
+  .card { padding: 40px 16px; }
 }

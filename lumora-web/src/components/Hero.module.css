@@ -274,3 +274,20 @@
   .glow, .glowRight { display: none; }
   .stats { gap: 20px; }
 }
+
+@media (max-width: 768px) {
+  .hero { padding: 90px 16px 48px; gap: 36px; }
+  .title { font-size: clamp(32px, 8vw, 44px); }
+  .sub { font-size: 15px; }
+  .stats {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .stat { min-width: 80px; }
+  .statVal { font-size: 18px; }
+  .btnPrimary, .btnSecondary { padding: 12px 20px; font-size: 14px; }
+}
+
+@media (max-width: 480px) {
+  .stats { gap: 12px; }
+}
