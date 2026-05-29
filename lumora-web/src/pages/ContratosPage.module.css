@@ -449,33 +449,12 @@
   margin-bottom: 14px;
 }
 
-.letterheadLeft { display: flex; align-items: center; gap: 14px; }
+.letterheadLeft { display: flex; align-items: center; }
 
-.letterheadLogo {
-  width: 46px; height: 46px;
-  background: #7c6af7;
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-family: sans-serif;
-  font-size: 22px;
-  font-weight: 800;
-  color: white;
-  flex-shrink: 0;
-}
-
-.letterheadCompany {
-  font-family: sans-serif;
-  font-size: 15pt;
-  font-weight: 800;
-  color: #0d0c12;
-  letter-spacing: 1.5px;
-}
-
-.letterheadSub {
-  font-family: sans-serif;
-  font-size: 8.5pt;
-  color: #666;
-  margin-top: 1px;
+.letterheadLogoImg {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 
 .letterheadRight { text-align: right; }

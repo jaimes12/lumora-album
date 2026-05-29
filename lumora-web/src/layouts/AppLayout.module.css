@@ -31,30 +31,29 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 20px 18px 16px;
+  padding: 16px 18px 14px;
   border-bottom: 1px solid var(--border);
 }
 
-.logoMark {
-  width: 32px;
-  height: 32px;
-  background: var(--accent);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 16px;
-  color: #fff;
+.logoMini {
+  height: 28px;
+  width: 28px;
+  object-fit: contain;
   flex-shrink: 0;
 }
 
-.logoText {
-  font-weight: 700;
-  font-size: 17px;
-  color: var(--text);
-  letter-spacing: -0.02em;
-  transition: color 0.2s;
+.logoFull {
+  height: 22px;
+  width: auto;
+  object-fit: contain;
+  flex: 1;
+  min-width: 0;
+  filter: brightness(0) invert(1);
+  transition: filter 0.2s;
+}
+
+[data-theme="light"] .logoFull {
+  filter: none;
 }
 
 /* Nav */

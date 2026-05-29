@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import styles from './ContratosPage.module.css'
 import { CLIENTES, EVENTOS, fmt } from '../data/eventosData'
+import logoFull from '../assets/lumora-logo.png'
 
 /* ─── Contract templates ──────────────────────────────────── */
 const TEMPLATES = [
@@ -100,11 +101,7 @@ function ContractPreview({ template, form, contratoRef }) {
       {/* Letterhead */}
       <div className={styles.letterhead}>
         <div className={styles.letterheadLeft}>
-          <div className={styles.letterheadLogo}>L</div>
-          <div>
-            <div className={styles.letterheadCompany}>LUMORA EVENTS</div>
-            <div className={styles.letterheadSub}>Organización Profesional de Eventos</div>
-          </div>
+          <img src={logoFull} alt="Lumora Events" className={styles.letterheadLogoImg} />
         </div>
         <div className={styles.letterheadRight}>
           <div className={styles.letterheadData}>RFC: LES210601AB3</div>
@@ -280,10 +277,8 @@ export default function ContratosPage() {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Georgia', serif; font-size: 11pt; color: #1a1a1a; background: #fff; padding: 20mm 18mm; line-height: 1.7; }
         .letterhead { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12pt; }
-        .letterheadLeft { display:flex; align-items:center; gap:12pt; }
-        .letterheadLogo { width:44pt; height:44pt; background:#7c6af7; border-radius:8pt; display:flex; align-items:center; justify-content:center; color:white; font-size:22pt; font-weight:800; font-family:sans-serif; }
-        .letterheadCompany { font-family:sans-serif; font-size:16pt; font-weight:800; color:#0d0c12; letter-spacing:1pt; }
-        .letterheadSub { font-family:sans-serif; font-size:9pt; color:#666; }
+        .letterheadLeft { display:flex; align-items:center; }
+        .letterheadLogoImg { height:38pt; width:auto; object-fit:contain; }
         .letterheadRight { text-align:right; }
         .letterheadData { font-family:sans-serif; font-size:9pt; color:#555; }
         .letterheadLine { border-top:2pt solid #7c6af7; margin-bottom:18pt; }

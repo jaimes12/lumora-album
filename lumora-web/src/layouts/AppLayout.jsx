@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useSettings } from '../context/SettingsContext'
 import styles from './AppLayout.module.css'
+import logoFull from '../assets/lumora-logo.png'
+import logoMini from '../assets/lumora-mini-logo.png'
 
 const NAV_KEYS = [
   {
@@ -157,8 +159,8 @@ export default function AppLayout() {
 
           {/* Logo */}
           <div className={styles.logoArea}>
-            <div className={styles.logoMark}>L</div>
-            <span className={styles.logoText}>Lumora</span>
+            <img src={logoMini} alt="Lumora" className={styles.logoMini} />
+            <img src={logoFull} alt="Lumora" className={styles.logoFull} />
           </div>
 
           {/* Nav */}

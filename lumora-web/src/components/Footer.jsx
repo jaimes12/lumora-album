@@ -1,4 +1,5 @@
 import styles from './Footer.module.css'
+import logoFull from '../assets/lumora-logo.png'
 
 export default function Footer() {
   return (
@@ -6,8 +7,7 @@ export default function Footer() {
       <div className={styles.inner}>
         <div className={styles.brand}>
           <div className={styles.logo}>
-            <div className={styles.logoMark}>L</div>
-            <span className={styles.logoText}>Lumora</span>
+            <img src={logoFull} alt="Lumora" className={styles.logoImg} />
           </div>
           <p className={styles.tagline}>La plataforma para organizadores de eventos.</p>
         </div>

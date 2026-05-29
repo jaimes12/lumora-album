@@ -15,18 +15,17 @@
 
 .brand { display: flex; flex-direction: column; gap: 12px; }
 
-.logo { display: flex; align-items: center; gap: 10px; }
+.logo { display: flex; align-items: center; }
 
-.logoMark {
-  width: 30px; height: 30px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 14px;
-  color: white;
+.logoImg {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+[data-theme="light"] .logoImg {
+  filter: none;
 }
 
 .logoText {

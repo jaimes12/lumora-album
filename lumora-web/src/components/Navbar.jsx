@@ -1,11 +1,11 @@
 import styles from './Navbar.module.css'
+import logoFull from '../assets/lumora-logo.png'
 
 export default function Navbar() {
   return (
     <nav className={styles.nav}>
       <div className={styles.logo}>
-        <div className={styles.logoMark}>L</div>
-        <span className={styles.logoText}>Lumora</span>
+        <img src={logoFull} alt="Lumora" className={styles.logoImg} />
       </div>
       <div className={styles.links}>
         <a href="#features">Características</a>
