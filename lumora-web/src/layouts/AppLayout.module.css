@@ -36,24 +36,28 @@
 }
 
 .logoMini {
-  height: 44px;
-  width: 44px;
+  height: 40px;
+  width: 40px;
   object-fit: contain;
   flex-shrink: 0;
+  display: none;
 }
 
 .logoFull {
   height: 36px;
   width: auto;
   object-fit: contain;
-  flex: 1;
-  min-width: 0;
   filter: brightness(0) invert(1);
   transition: filter 0.2s;
 }
 
 [data-theme="light"] .logoFull {
   filter: none;
+}
+
+@media (max-width: 768px) {
+  .logoMini { display: block; }
+  .logoFull  { display: none;  }
 }
 
 /* Nav */
