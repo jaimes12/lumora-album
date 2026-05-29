@@ -18,7 +18,7 @@
 .logo { display: flex; align-items: center; }
 
 .logoImg {
-  height: 28px;
+  height: 38px;
   width: auto;
   object-fit: contain;
   filter: brightness(0) invert(1);

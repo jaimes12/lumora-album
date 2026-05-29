@@ -36,14 +36,14 @@
 }
 
 .logoMini {
-  height: 28px;
-  width: 28px;
+  height: 36px;
+  width: 36px;
   object-fit: contain;
   flex-shrink: 0;
 }
 
 .logoFull {
-  height: 22px;
+  height: 28px;
   width: auto;
   object-fit: contain;
   flex: 1;
