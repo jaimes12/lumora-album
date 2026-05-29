@@ -1,190 +1,298 @@
 import { useState } from 'react'
 import styles from './ChatPage.module.css'
 
-const CHATS = [
+const STAGES = [
+  { id: 'nuevo',      label: 'Nuevo',              color: '#64748b', bg: 'rgba(100,116,139,0.12)' },
+  { id: 'contactado', label: 'Contactado',          color: '#38bdf8', bg: 'rgba(56,189,248,0.12)'  },
+  { id: 'cotizacion', label: 'Cotización enviada',  color: '#fb923c', bg: 'rgba(251,146,60,0.12)'  },
+  { id: 'negociando', label: 'Negociando',          color: '#a78bfa', bg: 'rgba(167,139,250,0.12)' },
+  { id: 'confirmado', label: 'Confirmado',          color: '#34d399', bg: 'rgba(52,211,153,0.12)'  },
+]
+
+const LEADS = [
   {
-    id: 1,
-    nombre: 'Fernanda García',
-    avatar: 'FG',
-    ultimoMensaje: 'Perfecto, entonces confirmamos el 14 de junio ✓',
-    hora: '10:42 am',
-    noLeidos: 0,
+    id: 1, stage: 'nuevo',
+    nombre: 'Valeria Torres', avatar: 'VT', telefono: '+52 55 1234 5678',
+    evento: 'Boda — Jul 22', presupuesto: '$85,000',
+    ultimoMsg: 'Hola! Me recomendaron con ustedes para mi boda en julio.',
+    hora: 'Hace 2h', noLeidos: 1,
     mensajes: [
-      { id: 1, texto: 'Hola! Quería preguntarle sobre los detalles finales de la boda.', tipo: 'in', hora: '10:30 am' },
-      { id: 2, texto: 'Claro Fernanda, con gusto. ¿En qué puedo ayudarte?', tipo: 'out', hora: '10:32 am' },
-      { id: 3, texto: 'Necesito saber si ya tienen confirmado el mesero extra para el cóctel.', tipo: 'in', hora: '10:35 am' },
-      { id: 4, texto: 'Sí, ya está confirmado. Contamos con 8 meseros para el cóctel y 12 para la recepción.', tipo: 'out', hora: '10:38 am' },
-      { id: 5, texto: 'Perfecto, entonces confirmamos el 14 de junio ✓', tipo: 'in', hora: '10:42 am' },
+      { id: 1, texto: 'Hola! Me recomendaron con ustedes para mi boda en julio.', tipo: 'in', hora: '11:00 am' },
+      { id: 2, texto: 'Hola Valeria, qué gusto. ¿Para qué fecha exactamente?', tipo: 'out', hora: '11:05 am' },
+      { id: 3, texto: 'El 22 de julio. Somos aprox 200 personas.', tipo: 'in', hora: '11:08 am' },
+      { id: 4, texto: 'Ok, espero su respuesta', tipo: 'in', hora: '2:00 pm' },
     ],
   },
   {
-    id: 2,
-    nombre: 'Carlos Mendoza',
-    avatar: 'CM',
-    ultimoMensaje: '¿Pueden enviarme la factura antes del viernes?',
-    hora: '9:15 am',
-    noLeidos: 2,
+    id: 2, stage: 'nuevo',
+    nombre: 'Diego Ramírez', avatar: 'DR', telefono: '+52 55 9876 5432',
+    evento: 'Corporativo — Ago', presupuesto: '$42,000',
+    ultimoMsg: 'Vi su trabajo en Instagram. Necesito un evento de lanzamiento.',
+    hora: 'Ayer', noLeidos: 0,
     mensajes: [
-      { id: 1, texto: 'Buenos días, ¿ya está lista la propuesta para el evento de Q3?', tipo: 'in', hora: '9:00 am' },
-      { id: 2, texto: 'Buenos días Carlos. Sí, ya la preparé. Se la envío en unos minutos.', tipo: 'out', hora: '9:05 am' },
-      { id: 3, texto: 'Excelente. También necesito que incluyan el servicio de traducción simultánea.', tipo: 'in', hora: '9:10 am' },
-      { id: 4, texto: '¿Pueden enviarme la factura antes del viernes?', tipo: 'in', hora: '9:15 am' },
+      { id: 1, texto: 'Buenas, vi su trabajo en Instagram. Necesito un evento de lanzamiento.', tipo: 'in', hora: 'Dom 4:00 pm' },
+      { id: 2, texto: 'Hola Diego! Claro, cuéntame más.', tipo: 'out', hora: 'Dom 4:30 pm' },
+      { id: 3, texto: 'Les escribo la próxima semana para agendar.', tipo: 'in', hora: 'Dom 4:45 pm' },
     ],
   },
   {
-    id: 3,
-    nombre: 'Ana López',
-    avatar: 'AL',
-    ultimoMensaje: 'Muchas gracias por la cotización 🙏',
-    hora: 'Ayer',
-    noLeidos: 0,
+    id: 3, stage: 'contactado',
+    nombre: 'Ana López', avatar: 'AL', telefono: '+52 55 5555 1234',
+    evento: 'XV Años — Jun 22', presupuesto: '$68,000',
+    ultimoMsg: 'Muchas gracias por la cotización 🙏',
+    hora: 'Ayer', noLeidos: 0,
     mensajes: [
-      { id: 1, texto: 'Hola buenas tardes, vengo de parte de mi mamá para los XV de Sofía.', tipo: 'in', hora: 'Ayer 3:00 pm' },
-      { id: 2, texto: 'Bienvenida Ana. Con gusto te atiendo. ¿Tienes ya una fecha en mente?', tipo: 'out', hora: 'Ayer 3:02 pm' },
-      { id: 3, texto: 'Sí, queremos el 22 de junio si todavía está disponible.', tipo: 'in', hora: 'Ayer 3:05 pm' },
-      { id: 4, texto: 'Está disponible. Te mando la cotización esta tarde.', tipo: 'out', hora: 'Ayer 3:08 pm' },
+      { id: 1, texto: 'Hola buenas tardes, vengo para los XV de Sofía.', tipo: 'in', hora: 'Ayer 3:00 pm' },
+      { id: 2, texto: 'Bienvenida Ana. ¿Tienes fecha en mente?', tipo: 'out', hora: 'Ayer 3:02 pm' },
+      { id: 3, texto: 'El 22 de junio si está disponible.', tipo: 'in', hora: 'Ayer 3:05 pm' },
+      { id: 4, texto: 'Está disponible. Te mando cotización esta tarde.', tipo: 'out', hora: 'Ayer 3:08 pm' },
       { id: 5, texto: 'Muchas gracias por la cotización 🙏', tipo: 'in', hora: 'Ayer 6:30 pm' },
     ],
   },
   {
-    id: 4,
-    nombre: 'Valeria Torres',
-    avatar: 'VT',
-    ultimoMensaje: 'Ok, espero su respuesta',
-    hora: 'Lun',
-    noLeidos: 1,
+    id: 4, stage: 'contactado',
+    nombre: 'Mariana Vega', avatar: 'MV', telefono: '+52 55 3344 5566',
+    evento: 'Graduación — Jul 10', presupuesto: '$31,000',
+    ultimoMsg: '¿El servicio incluye decoración de mesas?',
+    hora: 'Lun', noLeidos: 2,
     mensajes: [
-      { id: 1, texto: 'Hola! Me recomendaron con ustedes para mi boda en julio.', tipo: 'in', hora: 'Lun 11:00 am' },
-      { id: 2, texto: 'Hola Valeria, qué gusto. ¿Para qué fecha estás pensando la boda?', tipo: 'out', hora: 'Lun 11:05 am' },
-      { id: 3, texto: 'El 22 de julio. Somos aprox 200 personas.', tipo: 'in', hora: 'Lun 11:08 am' },
-      { id: 4, texto: 'Ok, espero su respuesta', tipo: 'in', hora: 'Lun 2:00 pm' },
+      { id: 1, texto: 'Buen día, buscamos organizar la graduación de medicina.', tipo: 'in', hora: 'Lun 10:00 am' },
+      { id: 2, texto: 'Con gusto les ayudamos. ¿Cuántos graduados son?', tipo: 'out', hora: 'Lun 10:10 am' },
+      { id: 3, texto: 'Somos 45 con familia, como 180 personas total.', tipo: 'in', hora: 'Lun 10:15 am' },
+      { id: 4, texto: '¿El servicio incluye decoración de mesas?', tipo: 'in', hora: 'Lun 11:00 am' },
     ],
   },
   {
-    id: 5,
-    nombre: 'Diego Ramírez',
-    avatar: 'DR',
-    ultimoMensaje: 'Les escribo la próxima semana para agendar',
-    hora: 'Dom',
-    noLeidos: 0,
+    id: 5, stage: 'cotizacion',
+    nombre: 'Carlos Mendoza', avatar: 'CM', telefono: '+52 55 7788 9900',
+    evento: 'Corporativo — Sep 15', presupuesto: '$120,000',
+    ultimoMsg: '¿Pueden enviarme la factura antes del viernes?',
+    hora: '9:15 am', noLeidos: 2,
     mensajes: [
-      { id: 1, texto: 'Buenas, vi su trabajo en Instagram. Necesito un evento de lanzamiento.', tipo: 'in', hora: 'Dom 4:00 pm' },
-      { id: 2, texto: 'Hola Diego! Claro, cuéntame más sobre el evento.', tipo: 'out', hora: 'Dom 4:30 pm' },
-      { id: 3, texto: 'Es para agosto, lanzamiento de nuestra app. Como 80 personas.', tipo: 'in', hora: 'Dom 4:35 pm' },
-      { id: 4, texto: 'Suena genial. Puedo preparar una propuesta. ¿Cuándo podemos hablar?', tipo: 'out', hora: 'Dom 4:40 pm' },
-      { id: 5, texto: 'Les escribo la próxima semana para agendar', tipo: 'in', hora: 'Dom 4:45 pm' },
+      { id: 1, texto: 'Buenos días, ¿ya está lista la propuesta para Q3?', tipo: 'in', hora: '9:00 am' },
+      { id: 2, texto: 'Sí, ya la preparé. Se la envío en unos minutos.', tipo: 'out', hora: '9:05 am' },
+      { id: 3, texto: 'Incluyan traducción simultánea también.', tipo: 'in', hora: '9:10 am' },
+      { id: 4, texto: '¿Pueden enviarme la factura antes del viernes?', tipo: 'in', hora: '9:15 am' },
+    ],
+  },
+  {
+    id: 6, stage: 'cotizacion',
+    nombre: 'Sofía Herrera', avatar: 'SH', telefono: '+52 55 2233 4455',
+    evento: 'Boda — Ago 3', presupuesto: '$95,000',
+    ultimoMsg: 'Me parece bien, pero ¿pueden bajar un poco el catering?',
+    hora: 'Ayer', noLeidos: 0,
+    mensajes: [
+      { id: 1, texto: 'Ya revisé la cotización que me enviaron.', tipo: 'in', hora: 'Ayer 2:00 pm' },
+      { id: 2, texto: '¿Tienes alguna duda o cambio?', tipo: 'out', hora: 'Ayer 2:10 pm' },
+      { id: 3, texto: 'Me parece bien, pero ¿pueden bajar un poco el catering?', tipo: 'in', hora: 'Ayer 2:30 pm' },
+    ],
+  },
+  {
+    id: 7, stage: 'negociando',
+    nombre: 'Roberto Salinas', avatar: 'RS', telefono: '+52 55 6677 8899',
+    evento: 'Aniversario — Jun 28', presupuesto: '$58,000',
+    ultimoMsg: 'Si incluyen el fotógrafo, cerramos hoy.',
+    hora: 'Hoy', noLeidos: 1,
+    mensajes: [
+      { id: 1, texto: 'La propuesta está bien pero quiero el fotógrafo incluido.', tipo: 'in', hora: '8:00 am' },
+      { id: 2, texto: 'Podemos incluir 6 hrs de fotografía con $58k total.', tipo: 'out', hora: '8:30 am' },
+      { id: 3, texto: 'Si incluyen el fotógrafo, cerramos hoy.', tipo: 'in', hora: '9:00 am' },
+    ],
+  },
+  {
+    id: 8, stage: 'confirmado',
+    nombre: 'Fernanda García', avatar: 'FG', telefono: '+52 55 1111 2222',
+    evento: 'Boda — Jun 14', presupuesto: '$110,000',
+    ultimoMsg: 'Perfecto, entonces confirmamos el 14 de junio ✓',
+    hora: '10:42 am', noLeidos: 0,
+    mensajes: [
+      { id: 1, texto: '¿Ya confirmaron el mesero extra para el cóctel?', tipo: 'in', hora: '10:30 am' },
+      { id: 2, texto: 'Sí, 8 meseros para cóctel y 12 para recepción.', tipo: 'out', hora: '10:38 am' },
+      { id: 3, texto: 'Perfecto, entonces confirmamos el 14 de junio ✓', tipo: 'in', hora: '10:42 am' },
+    ],
+  },
+  {
+    id: 9, stage: 'confirmado',
+    nombre: 'Luisa Ortega', avatar: 'LO', telefono: '+52 55 4455 6677',
+    evento: 'XV Años — Jul 5', presupuesto: '$74,000',
+    ultimoMsg: 'Ya hice el depósito del 50% ✓',
+    hora: 'Ayer', noLeidos: 0,
+    mensajes: [
+      { id: 1, texto: 'Ya hice el depósito del 50% ✓', tipo: 'in', hora: 'Ayer 5:00 pm' },
+      { id: 2, texto: 'Perfecto Luisa, confirmado. Nos vemos el 5 de julio 🎉', tipo: 'out', hora: 'Ayer 5:10 pm' },
     ],
   },
 ]
 
 export default function ChatPage() {
-  const [chatActivo, setChatActivo] = useState(CHATS[0])
+  const [leadActivo, setLeadActivo] = useState(null)
   const [mensaje, setMensaje] = useState('')
+  const [leads, setLeads] = useState(LEADS)
+  const [dragging, setDragging] = useState(null)
+  const [dragOver, setDragOver] = useState(null)
+
+  const byStage = (stageId) => leads.filter(l => l.stage === stageId)
+
+  const totalPresupuesto = leads
+    .filter(l => l.stage === 'confirmado')
+    .reduce((acc, l) => acc + parseInt(l.presupuesto.replace(/[$,]/g, '')), 0)
+
+  const enviarMensaje = () => {
+    if (!mensaje.trim() || !leadActivo) return
+    const nuevo = { id: Date.now(), texto: mensaje, tipo: 'out', hora: 'Ahora' }
+    setLeads(prev => prev.map(l =>
+      l.id === leadActivo.id
+        ? { ...l, mensajes: [...l.mensajes, nuevo], ultimoMsg: mensaje }
+        : l
+    ))
+    setLeadActivo(prev => ({ ...prev, mensajes: [...prev.mensajes, nuevo] }))
+    setMensaje('')
+  }
+
+  const moverStage = (leadId, nuevoStage) => {
+    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, stage: nuevoStage } : l))
+    if (leadActivo?.id === leadId) setLeadActivo(prev => ({ ...prev, stage: nuevoStage }))
+  }
+
+  const handleDragStart = (e, lead) => {
+    setDragging(lead)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDrop = (e, stageId) => {
+    e.preventDefault()
+    if (dragging && dragging.stage !== stageId) moverStage(dragging.id, stageId)
+    setDragging(null)
+    setDragOver(null)
+  }
 
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Chats</h1>
-        <p className={styles.sub}>WhatsApp CRM — {CHATS.filter(c => c.noLeidos > 0).length} conversaciones sin leer</p>
+        <div>
+          <h1 className={styles.title}>Pipeline de chats</h1>
+          <p className={styles.sub}>{leads.length} conversaciones · {leads.filter(l => l.noLeidos > 0).length} sin leer</p>
+        </div>
+        <div className={styles.headerStats}>
+          <div className={styles.statChip}>
+            <span className={styles.statChipVal}>${totalPresupuesto.toLocaleString()}</span>
+            <span className={styles.statChipLabel}>Confirmado</span>
+          </div>
+          <div className={styles.statChip}>
+            <span className={styles.statChipVal}>{byStage('negociando').length + byStage('cotizacion').length}</span>
+            <span className={styles.statChipLabel}>En proceso</span>
+          </div>
+          <button className={styles.btnNew}>+ Nuevo lead</button>
+        </div>
       </div>
 
-      <div className={styles.chatLayout}>
-        {/* Chat list */}
-        <div className={styles.chatList}>
-          <div className={styles.chatListHeader}>
-            <div className={styles.chatSearchWrap}>
-              <svg className={styles.chatSearchIcon} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input className={styles.chatSearch} placeholder="Buscar..." />
-            </div>
-          </div>
-          {CHATS.map(c => (
+      <div className={styles.board}>
+        {STAGES.map(stage => {
+          const cols = byStage(stage.id)
+          return (
             <div
-              key={c.id}
-              className={`${styles.chatItem} ${chatActivo?.id === c.id ? styles.chatItemActive : ''}`}
-              onClick={() => setChatActivo(c)}
+              key={stage.id}
+              className={`${styles.column} ${dragOver === stage.id ? styles.columnDragOver : ''}`}
+              onDragOver={e => { e.preventDefault(); setDragOver(stage.id) }}
+              onDragLeave={() => setDragOver(null)}
+              onDrop={e => handleDrop(e, stage.id)}
             >
-              <div className={styles.chatAvatar}>{c.avatar}</div>
-              <div className={styles.chatItemInfo}>
-                <div className={styles.chatItemRow}>
-                  <span className={styles.chatItemName}>{c.nombre}</span>
-                  <span className={styles.chatItemHora}>{c.hora}</span>
+              <div className={styles.colHeader} style={{ borderColor: stage.color }}>
+                <div className={styles.colTitleWrap}>
+                  <span className={styles.colDot} style={{ background: stage.color }} />
+                  <span className={styles.colTitle}>{stage.label}</span>
                 </div>
-                <div className={styles.chatItemRow}>
-                  <span className={styles.chatItemMsg}>{c.ultimoMensaje}</span>
-                  {c.noLeidos > 0 && (
-                    <span className={styles.unreadBadge}>{c.noLeidos}</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Conversation */}
-        <div className={styles.conversation}>
-          {chatActivo ? (
-            <>
-              <div className={styles.convHeader}>
-                <div className={styles.convAvatar}>{chatActivo.avatar}</div>
-                <div className={styles.convName}>{chatActivo.nombre}</div>
-                <div className={styles.convActions}>
-                  <button className={styles.convActionBtn} title="Llamar">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.64 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.55 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.1 6.1l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-                    </svg>
-                  </button>
-                  <button className={styles.convActionBtn} title="Info">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="12" />
-                      <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
-                  </button>
-                </div>
+                <span className={styles.colCount} style={{ background: stage.bg, color: stage.color }}>
+                  {cols.length}
+                </span>
               </div>
 
-              <div className={styles.messages}>
-                {chatActivo.mensajes.map(m => (
-                  <div key={m.id} className={`${styles.msgWrap} ${m.tipo === 'out' ? styles.msgWrapOut : ''}`}>
-                    <div className={`${styles.bubble} ${m.tipo === 'out' ? styles.bubbleOut : styles.bubbleIn}`}>
-                      <p className={styles.bubbleText}>{m.texto}</p>
-                      <span className={styles.bubbleHora}>{m.hora}</span>
+              <div className={styles.cards}>
+                {cols.map(lead => (
+                  <div
+                    key={lead.id}
+                    className={`${styles.card} ${leadActivo?.id === lead.id ? styles.cardActive : ''}`}
+                    draggable
+                    onDragStart={e => handleDragStart(e, lead)}
+                    onClick={() => setLeadActivo(lead)}
+                  >
+                    <div className={styles.cardTop}>
+                      <div className={styles.cardAvatar}>{lead.avatar}</div>
+                      <div className={styles.cardInfo}>
+                        <span className={styles.cardName}>{lead.nombre}</span>
+                        <span className={styles.cardEvento}>{lead.evento}</span>
+                      </div>
+                      {lead.noLeidos > 0 && (
+                        <span className={styles.unread}>{lead.noLeidos}</span>
+                      )}
+                    </div>
+                    <p className={styles.cardMsg}>{lead.ultimoMsg}</p>
+                    <div className={styles.cardFooter}>
+                      <span className={styles.cardPresupuesto}>{lead.presupuesto}</span>
+                      <span className={styles.cardHora}>{lead.hora}</span>
                     </div>
                   </div>
                 ))}
-              </div>
 
-              <div className={styles.inputArea}>
-                <button className={styles.attachBtn}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-                  </svg>
-                </button>
-                <input
-                  className={styles.msgInput}
-                  placeholder="Escribe un mensaje..."
-                  value={mensaje}
-                  onChange={e => setMensaje(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && setMensaje('')}
-                />
-                <button
-                  className={styles.sendBtn}
-                  onClick={() => setMensaje('')}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13" />
-                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                  </svg>
-                </button>
+                {cols.length === 0 && (
+                  <div className={styles.emptyCol}>Arrastra aquí</div>
+                )}
               </div>
-            </>
-          ) : (
-            <div className={styles.noChat}>Selecciona una conversación</div>
-          )}
-        </div>
+            </div>
+          )
+        })}
       </div>
+
+      {/* Side panel — conversation */}
+      {leadActivo && (
+        <div className={styles.panel}>
+          <div className={styles.panelHeader}>
+            <div className={styles.panelAvatar}>{leadActivo.avatar}</div>
+            <div className={styles.panelInfo}>
+              <span className={styles.panelName}>{leadActivo.nombre}</span>
+              <span className={styles.panelEvento}>{leadActivo.evento} · {leadActivo.presupuesto}</span>
+            </div>
+            <div className={styles.panelActions}>
+              <select
+                className={styles.stageSelect}
+                value={leadActivo.stage}
+                onChange={e => moverStage(leadActivo.id, e.target.value)}
+              >
+                {STAGES.map(s => (
+                  <option key={s.id} value={s.id}>{s.label}</option>
+                ))}
+              </select>
+              <button className={styles.closeBtn} onClick={() => setLeadActivo(null)}>✕</button>
+            </div>
+          </div>
+
+          <div className={styles.messages}>
+            {leadActivo.mensajes.map(m => (
+              <div key={m.id} className={`${styles.msgWrap} ${m.tipo === 'out' ? styles.msgOut : ''}`}>
+                <div className={`${styles.bubble} ${m.tipo === 'out' ? styles.bubbleOut : styles.bubbleIn}`}>
+                  <p>{m.texto}</p>
+                  <span className={styles.hora}>{m.hora}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className={styles.inputArea}>
+            <input
+              className={styles.msgInput}
+              placeholder="Escribe un mensaje..."
+              value={mensaje}
+              onChange={e => setMensaje(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && enviarMensaje()}
+            />
+            <button className={styles.sendBtn} onClick={enviarMensaje}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
