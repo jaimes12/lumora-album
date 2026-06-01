@@ -1093,3 +1093,33 @@
 .infoPanelSave:hover:not(:disabled) { opacity: 0.85; }
 .infoPanelSave:disabled { opacity: 0.5; cursor: default; }
 .infoPanelSaved { background: #34d399 !important; }
+
+/* ── Phone input with country code toggle ── */
+.phoneWrap {
+  display: flex; align-items: stretch; gap: 0;
+  border: 1px solid var(--border); border-radius: 9px;
+  overflow: hidden;
+  background: var(--bg-2);
+  transition: border-color 0.15s;
+}
+.phoneWrap:focus-within { border-color: var(--accent); }
+
+.ccToggle {
+  display: flex; align-items: center; gap: 4px;
+  padding: 0 10px;
+  background: var(--bg-1); border: none; border-right: 1px solid var(--border);
+  color: var(--text); font-size: 12px; font-weight: 600;
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  transition: background 0.15s;
+}
+.ccToggle:hover { background: var(--bg-2); }
+
+.phoneDigitsInput {
+  flex: 1; background: transparent; border: none !important; outline: none;
+  padding: 9px 10px; font-size: 13px; color: var(--text);
+  font-family: inherit; min-width: 0;
+}
+.phoneDigitsInput::placeholder { color: var(--text-muted); }
+
+/* phoneDigitsInput lives inside phoneWrap which has its own border */
+.leadPhoneInput { border: none !important; border-radius: 0 !important; background: transparent !important; width: auto; padding: 0; }

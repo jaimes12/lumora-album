@@ -2,6 +2,52 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { leadsApi } from '../api/leadsApi'
 import styles from './ChatPage.module.css'
 
+// ─── Phone input with country code toggle ────────────────────────────────────
+const CC = [
+  { key: 'mx', prefix: '52', flag: '🇲🇽', label: '+52', hint: '449 452 1666' },
+  { key: 'us', prefix: '1',  flag: '🇺🇸', label: '+1',  hint: '415 555 1234' },
+]
+
+function PhoneInput({ value, onChange, inputClassName }) {
+  const detect = (v) => {
+    const d = (v || '').replace(/\D/g, '')
+    if (d.startsWith('52') && d.length >= 12) return 0
+    if (d.startsWith('1')  && d.length >= 11) return 1
+    return 0
+  }
+  const [idx, setIdx] = useState(() => detect(value))
+  const cc = CC[idx]
+
+  const localDigits = () => {
+    const d = (value || '').replace(/\D/g, '')
+    return d.startsWith(cc.prefix) ? d.slice(cc.prefix.length) : d
+  }
+
+  const handleChange = e => onChange(cc.prefix + e.target.value.replace(/\D/g, ''))
+
+  const toggle = () => {
+    const next = (idx + 1) % CC.length
+    const bare = localDigits()
+    setIdx(next)
+    onChange(CC[next].prefix + bare)
+  }
+
+  return (
+    <div className={styles.phoneWrap}>
+      <button type="button" className={styles.ccToggle} onClick={toggle}>
+        {cc.flag} {cc.label}
+      </button>
+      <input
+        className={`${styles.phoneDigitsInput} ${inputClassName || ''}`}
+        value={localDigits()}
+        onChange={handleChange}
+        placeholder={cc.hint}
+        inputMode="numeric"
+      />
+    </div>
+  )
+}
+
 // ─── Default stages ──────────────────────────────────────────────────────────
 const DEFAULT_STAGES = [
   { id: 'nuevo',      label: 'Nuevo',              color: '#64748b' },
@@ -179,7 +225,11 @@ function NuevoLeadModal({ onClose, onCreated, leads }) {
             </div>
             <div className={styles.leadField}>
               <label>Teléfono *</label>
-              <input placeholder="+52 55 1234 5678" value={form.telefono} onChange={set('telefono')} required />
+              <PhoneInput
+                value={form.telefono}
+                onChange={v => setForm(f => ({ ...f, telefono: v }))}
+                inputClassName={styles.leadPhoneInput}
+              />
             </div>
             <div className={styles.leadField}>
               <label>Tipo de evento <span className={styles.optLabel}>(opcional)</span></label>
@@ -257,7 +307,11 @@ function ContactInfoPanel({ lead, onUpdate }) {
       </div>
       <div className={styles.infoField}>
         <label className={styles.infoLabel}>Teléfono</label>
-        <input className={styles.infoInput} value={telefono} onChange={e => setTelefono(e.target.value)} />
+        <PhoneInput
+          value={telefono}
+          onChange={setTelefono}
+          inputClassName={styles.infoInput}
+        />
       </div>
 
       <div className={styles.infoSep} />
