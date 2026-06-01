@@ -8,9 +8,29 @@ namespace lumora_api.Controllers;
 [ApiController]
 [Route("api/whatsapp")]
 [Authorize]
-public class WhatsappController(IWhatsappService whatsapp) : ControllerBase
+public class WhatsappController(IWhatsappService whatsapp, IWaServerService waServer) : ControllerBase
 {
     private string OrgId => User.FindFirst("org_id")?.Value ?? User.FindFirst("user_id")?.Value ?? User.FindFirst("sub")?.Value ?? string.Empty;
+
+    // ── WA Number Connection ───────────────────────────────
+
+    [HttpGet("connection")]
+    public async Task<IActionResult> GetConnection() =>
+        Ok(await waServer.GetStatusAsync(OrgId));
+
+    [HttpPost("connection/connect")]
+    public async Task<IActionResult> Connect()
+    {
+        await waServer.ConnectAsync(OrgId);
+        return Accepted();
+    }
+
+    [HttpPost("connection/disconnect")]
+    public async Task<IActionResult> Disconnect()
+    {
+        await waServer.DisconnectAsync(OrgId);
+        return Ok(new { ok = true });
+    }
 
     // ── Chats ──────────────────────────────────────────────
 

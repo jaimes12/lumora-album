@@ -41,12 +41,23 @@ builder.Services.AddDbContext<LumoraDbContext>(opts =>
     opts.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 35)),
         mySqlOpts => mySqlOpts.EnableRetryOnFailure(5)));
 
+// WhatsApp server HTTP client
+var waServerUrl = builder.Configuration["WaServerUrl"]
+    ?? Environment.GetEnvironmentVariable("WA_SERVER_URL")
+    ?? "https://whatsapp-production-117e.up.railway.app";
+builder.Services.AddHttpClient("wa", c =>
+{
+    c.BaseAddress = new Uri(waServerUrl);
+    c.Timeout = TimeSpan.FromSeconds(15);
+});
+
 // Business services
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IVendorService, VendorService>();
 builder.Services.AddScoped<ISaleService, SaleService>();
 builder.Services.AddScoped<IWhatsappService, WhatsappService>();
+builder.Services.AddScoped<IWaServerService, WaServerService>();
 builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<ILeadService, LeadService>();
 builder.Services.AddScoped<IAuthService, AuthService>();

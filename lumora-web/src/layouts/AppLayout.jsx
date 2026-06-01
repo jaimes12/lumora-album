@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useSettings } from '../context/SettingsContext'
+import { whatsappApi } from '../api/whatsappApi'
 import styles from './AppLayout.module.css'
 import logoFull from '../assets/lumora-logo.png'
 import logoMini from '../assets/lumora-mini-logo.png'
@@ -51,14 +52,43 @@ const WhatsAppIcon = () => (
 
 /* ── WhatsApp Connect Modal ── */
 function WhatsAppModal({ onClose, onConnect }) {
-  const [step,   setStep]   = useState('intro') // intro | qr | connected
-  const [phone,  setPhone]  = useState('')
+  // state: loading | qr | ready | disconnected | error
+  const [waState, setWaState] = useState('loading')
+  const [qrCode,  setQrCode]  = useState(null)
+  const [error,   setError]   = useState('')
+  const pollRef = useRef(null)
 
-  const handleConnect = () => {
-    if (!phone.trim()) return
-    setStep('qr')
-    setTimeout(() => { setStep('connected'); onConnect(phone) }, 2200)
+  const stopPolling = () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null } }
+
+  const poll = async () => {
+    try {
+      const status = await whatsappApi.getStatus()
+      setWaState(status.state)
+      setQrCode(status.qrCode ?? null)
+      if (status.connected) {
+        stopPolling()
+        onConnect()
+      }
+    } catch {
+      // keep polling; server may be momentarily unreachable
+    }
   }
+
+  useEffect(() => {
+    // Kick off connection on the WA server then start polling
+    whatsappApi.connect().catch(() => {})
+    poll() // immediate first check
+    pollRef.current = setInterval(poll, 2500)
+    return stopPolling
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const stateLabel = {
+    loading:      'Iniciando conexión…',
+    qr:           'Escanea el código QR con tu WhatsApp',
+    ready:        '¡Conectado!',
+    disconnected: 'Desconectado — reconectando…',
+    error:        'Error al conectar',
+  }[waState] ?? 'Conectando…'
 
   return (
     <div className={styles.waOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
@@ -76,58 +106,27 @@ function WhatsAppModal({ onClose, onConnect }) {
         </div>
 
         <div className={styles.waBody}>
-          {step === 'intro' && (
-            <>
-              <div className={styles.waSteps}>
-                {['Ingresa tu número', 'Escanea el QR', 'Listo para chatear'].map((s, i) => (
-                  <div key={i} className={styles.waStep}>
-                    <div className={styles.waStepNum}>{i + 1}</div>
-                    <span>{s}</span>
-                  </div>
-                ))}
-              </div>
-              <div className={styles.waInputGroup}>
-                <label className={styles.waLabel}>Número de WhatsApp</label>
-                <input
-                  className={styles.waInput}
-                  placeholder="+52 55 1234 5678"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleConnect()}
-                />
-                <p className={styles.waHint}>Usaremos este número para conectar tu WhatsApp Business o personal.</p>
-              </div>
-              <button className={styles.waBtn} onClick={handleConnect} disabled={!phone.trim()}>
-                Continuar →
-              </button>
-            </>
-          )}
-
-          {step === 'qr' && (
-            <div className={styles.waQrWrap}>
-              <div className={styles.waQr}>
-                <div className={styles.waQrGrid}>
-                  {Array.from({ length: 49 }).map((_, i) => (
-                    <div key={i} className={styles.waQrCell}
-                      style={{ background: Math.random() > 0.45 ? '#25D366' : 'transparent' }} />
-                  ))}
-                </div>
-              </div>
-              <p className={styles.waQrText}>Abre WhatsApp → Dispositivos vinculados → Vincular dispositivo</p>
-              <div className={styles.waSpinner} />
-              <p className={styles.waScanning}>Esperando escaneo...</p>
-            </div>
-          )}
-
-          {step === 'connected' && (
+          {waState === 'ready' ? (
             <div className={styles.waSuccess}>
               <div className={styles.waSuccessIcon}>✓</div>
               <h3 className={styles.waSuccessTitle}>¡WhatsApp conectado!</h3>
-              <p className={styles.waSuccessPhone}>{phone}</p>
-              <p className={styles.waSuccessText}>
-                Tus conversaciones de WhatsApp aparecerán en el CRM de Chats automáticamente.
-              </p>
+              <p className={styles.waSuccessText}>Tus mensajes de WhatsApp estarán disponibles en el CRM de Chats.</p>
               <button className={styles.waBtn} onClick={onClose}>Empezar a usar →</button>
+            </div>
+          ) : waState === 'qr' && qrCode ? (
+            <div className={styles.waQrWrap}>
+              <img src={qrCode} alt="QR WhatsApp" className={styles.waQrImg} />
+              <p className={styles.waQrText}>Abre WhatsApp → Dispositivos vinculados → Vincular dispositivo</p>
+              <div className={styles.waSpinner} />
+              <p className={styles.waScanning}>Esperando escaneo…</p>
+            </div>
+          ) : (
+            <div className={styles.waQrWrap}>
+              <div className={styles.waSpinner} />
+              <p className={styles.waScanning}>{stateLabel}</p>
+              {(waState === 'loading' || waState === 'disconnected') && (
+                <p className={styles.waHint}>El QR aparecerá en unos segundos.<br/>Puede tardar hasta 30s la primera vez.</p>
+              )}
             </div>
           )}
         </div>
@@ -264,10 +263,16 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const { theme, lang, toggleTheme, toggleLang, i18n } = useSettings()
   const [waConnected, setWaConnected] = useState(false)
-  const [waPhone,     setWaPhone]     = useState('')
   const [showWaModal, setShowWaModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [planOpen,    setPlanOpen]    = useState(false)
+
+  // Restore WA connected state on mount
+  useEffect(() => {
+    whatsappApi.getStatus()
+      .then(s => { if (s.connected) setWaConnected(true) })
+      .catch(() => {})
+  }, [])
 
   // Close sidebar on route change
   useEffect(() => {
@@ -284,9 +289,13 @@ export default function AppLayout() {
     return () => { document.body.style.overflow = '' }
   }, [sidebarOpen])
 
-  const handleConnect = (phone) => {
+  const handleConnect = () => {
     setWaConnected(true)
-    setWaPhone(phone)
+  }
+
+  const handleDisconnect = async () => {
+    await whatsappApi.disconnect().catch(() => {})
+    setWaConnected(false)
   }
 
   return (
@@ -354,10 +363,9 @@ export default function AppLayout() {
                   <span className={styles.waGreenDot} />
                   <div className={styles.waConnectedInfo}>
                     <span className={styles.waConnectedText}>Conectado</span>
-                    <span className={styles.waConnectedPhone}>{waPhone}</span>
                   </div>
                 </div>
-                <button className={styles.waDisconnectBtn} onClick={() => { setWaConnected(false); setWaPhone('') }}>
+                <button className={styles.waDisconnectBtn} onClick={handleDisconnect}>
                   Desconectar
                 </button>
               </div>

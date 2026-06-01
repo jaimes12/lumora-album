@@ -15,7 +15,7 @@ public interface ILeadService
     Task<LeadMessageResponse?> SendMessageAsync(string orgId, string leadId, SendLeadMessageRequest req);
 }
 
-public class LeadService(LumoraDbContext db) : ILeadService
+public class LeadService(LumoraDbContext db, IWaServerService waServer) : ILeadService
 {
     public async Task<LeadResponse> CreateAsync(string orgId, CreateLeadRequest req)
     {
@@ -105,6 +105,11 @@ public class LeadService(LumoraDbContext db) : ILeadService
             lead.UnreadCount++;
 
         await db.SaveChangesAsync();
+
+        // Fire-and-forget WA send — DB save already succeeded, WA failure is non-fatal
+        if (req.Direction == "outbound" && !string.IsNullOrWhiteSpace(lead.Phone))
+            _ = waServer.SendAsync(orgId, lead.Phone, req.Body);
+
         return ToMessageResponse(message);
     }
 

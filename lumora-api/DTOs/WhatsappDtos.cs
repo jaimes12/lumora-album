@@ -38,3 +38,10 @@ public record MessageResponse(
     string Status,
     DateTime SentAt
 );
+
+// WA connection status returned to the frontend
+public record WaConnectionStatus(
+    string State,   // loading | qr | ready | disconnected
+    string? QrCode, // base64 PNG data-URL when state == "qr"
+    bool Connected  // shorthand: state == "ready"
+);
