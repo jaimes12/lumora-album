@@ -21,6 +21,7 @@ import ChatPage from './pages/ChatPage'
 import ProveedoresPage from './pages/ProveedoresPage'
 import VentasPage from './pages/VentasPage'
 import ContratosPage from './pages/ContratosPage'
+import CalendarioPage from './pages/CalendarioPage'
 
 function LandingPage() {
   return (
@@ -56,6 +57,7 @@ export default function App() {
           <Route path="proveedores" element={<ProveedoresPage />} />
           <Route path="ventas"      element={<VentasPage />} />
           <Route path="contratos"   element={<ContratosPage />} />
+          <Route path="calendario"  element={<CalendarioPage />} />
         </Route>
 
         {/* Catch-all */}
