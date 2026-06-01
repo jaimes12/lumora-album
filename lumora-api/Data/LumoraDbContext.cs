@@ -5,6 +5,14 @@ namespace lumora_api.Data;
 
 public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbContext(options)
 {
+    // Pomelo 8.x auto-detects GUID-formatted strings and converts them to System.Guid.
+    // Overriding the convention forces all string properties to use varchar,
+    // preventing the "Unable to cast System.Guid to System.String" error.
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.Properties<string>().HaveColumnType("varchar(500)");
+    }
+
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Client> Clients => Set<Client>();
