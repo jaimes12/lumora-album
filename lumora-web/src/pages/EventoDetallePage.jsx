@@ -98,6 +98,7 @@ export default function EventoDetallePage() {
   const [nuevoPago,     setNuevoPago]     = useState({ concepto: '', monto: '', metodo: 'transfer' })
   const [savingPago,    setSavingPago]    = useState(false)
   const [chatContacto,  setChatContacto]  = useState(null)
+  const [linkedIds,     setLinkedIds]     = useState([])
 
   useEffect(() => {
     Promise.all([
@@ -134,7 +135,6 @@ export default function EventoDetallePage() {
   const pct       = evento.presupuestoTotal > 0 ? Math.min(100, Math.round((abonado / evento.presupuestoTotal) * 100)) : 0
 
   // vendors linked to this event (we manage locally for now since backend doesn't have event-vendor relation yet)
-  const [linkedIds, setLinkedIds] = useState([])
   const linkedProvs  = proveedores.filter(p => linkedIds.includes(p.id))
   const disponibles  = proveedores.filter(p => !linkedIds.includes(p.id))
 
