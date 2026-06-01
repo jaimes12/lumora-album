@@ -8,9 +8,26 @@ namespace lumora_api.Controllers;
 [ApiController]
 [Route("api/whatsapp")]
 [Authorize]
-public class WhatsappController(IWhatsappService whatsapp, IWaServerService waServer) : ControllerBase
+public class WhatsappController(IWhatsappService whatsapp, IWaServerService waServer, ILeadService leads) : ControllerBase
 {
     private string OrgId => User.FindFirst("org_id")?.Value ?? User.FindFirst("user_id")?.Value ?? User.FindFirst("sub")?.Value ?? string.Empty;
+
+    // ── Inbound webhook (called by WA server, no auth) ────
+
+    [HttpPost("webhook")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Webhook([FromBody] WaWebhookPayload payload)
+    {
+        if (string.IsNullOrWhiteSpace(payload.Body)) return Ok();
+        if (!payload.ClientName.StartsWith("lm_")) return Ok();
+        if (payload.From.EndsWith("@g.us")) return Ok(); // skip groups
+
+        // lm_ba22ec7e_6745_4a8f_9c89_9a9e0f954474 → ba22ec7e-6745-4a8f-9c89-9a9e0f954474
+        var orgId = payload.ClientName[3..].Replace('_', '-');
+
+        await leads.HandleInboundAsync(orgId, payload.From, payload.Body);
+        return Ok();
+    }
 
     // ── WA Number Connection ───────────────────────────────
 

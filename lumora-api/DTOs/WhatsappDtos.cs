@@ -39,6 +39,14 @@ public record MessageResponse(
     DateTime SentAt
 );
 
+// Payload POSTed by the WA server when an inbound message arrives
+public record WaWebhookPayload(
+    string ClientName, // e.g. "lm_ba22ec7e_6745_..."
+    string From,       // e.g. "521234567890@c.us"
+    string Body,
+    long?  Timestamp
+);
+
 // WA connection status returned to the frontend
 public record WaConnectionStatus(
     string State,   // loading | qr | ready | disconnected

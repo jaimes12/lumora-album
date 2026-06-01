@@ -1,13 +1,126 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { leadsApi } from '../api/leadsApi'
 import styles from './ChatPage.module.css'
 
+// ─── Default stages ──────────────────────────────────────────────────────────
+const DEFAULT_STAGES = [
+  { id: 'nuevo',      label: 'Nuevo',              color: '#64748b' },
+  { id: 'contactado', label: 'Contactado',          color: '#38bdf8' },
+  { id: 'cotizacion', label: 'Cotización enviada',  color: '#fb923c' },
+  { id: 'negociando', label: 'Negociando',          color: '#a78bfa' },
+  { id: 'confirmado', label: 'Confirmado',          color: '#34d399' },
+]
+
+// ─── Hooks ───────────────────────────────────────────────────────────────────
+function useStages() {
+  const [stages, setStages] = useState(() => {
+    try {
+      const s = localStorage.getItem('lumora_stages')
+      return s ? JSON.parse(s) : DEFAULT_STAGES
+    } catch { return DEFAULT_STAGES }
+  })
+  const save = (next) => {
+    setStages(next)
+    localStorage.setItem('lumora_stages', JSON.stringify(next))
+  }
+  return [stages, save]
+}
+
+// ─── Stage Manager ───────────────────────────────────────────────────────────
+const PRESET_COLORS = ['#64748b','#38bdf8','#34d399','#fb923c','#a78bfa','#f472b6','#fbbf24','#ef4444']
+
+function StageManager({ stages, onSave, onClose }) {
+  const [rows, setRows] = useState(stages.map(s => ({ ...s })))
+
+  const update = (i, field, val) =>
+    setRows(r => r.map((s, idx) => idx === i ? { ...s, [field]: val } : s))
+
+  const remove = (i) => setRows(r => r.filter((_, idx) => idx !== i))
+
+  const add = () => setRows(r => [...r, {
+    id: 'stage_' + Date.now(),
+    label: 'Nueva etapa',
+    color: PRESET_COLORS[r.length % PRESET_COLORS.length],
+  }])
+
+  return (
+    <div className={styles.smOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className={styles.smBox}>
+        <div className={styles.smHeader}>
+          <h3 className={styles.smTitle}>Configurar embudos</h3>
+          <button className={styles.smClose} onClick={onClose}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div className={styles.smTableWrap}>
+          <table className={styles.smTable}>
+            <thead>
+              <tr>
+                <th className={styles.smTh}>Color</th>
+                <th className={styles.smTh}>Nombre del embudo</th>
+                <th className={styles.smTh}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((s, i) => (
+                <tr key={s.id} className={styles.smRow}>
+                  <td className={styles.smTd}>
+                    <div className={styles.smColorCell}>
+                      <div className={styles.smColorDot} style={{ background: s.color }} />
+                      <div className={styles.smPresets}>
+                        {PRESET_COLORS.map(c => (
+                          <button
+                            key={c}
+                            className={`${styles.smPreset} ${s.color === c ? styles.smPresetActive : ''}`}
+                            style={{ background: c }}
+                            onClick={() => update(i, 'color', c)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </td>
+                  <td className={styles.smTd}>
+                    <input
+                      className={styles.smNameInput}
+                      value={s.label}
+                      onChange={e => update(i, 'label', e.target.value)}
+                    />
+                  </td>
+                  <td className={styles.smTd}>
+                    <button
+                      className={styles.smDeleteBtn}
+                      onClick={() => remove(i)}
+                      disabled={rows.length <= 1}
+                      title="Eliminar"
+                    >✕</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className={styles.smFooter}>
+          <button className={styles.smAddBtn} onClick={add}>+ Agregar etapa</button>
+          <button className={styles.smSaveBtn} onClick={() => { onSave(rows); onClose() }}>
+            Guardar cambios
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Nuevo Lead Modal ────────────────────────────────────────────────────────
 const TIPOS_EVENTO = ['Boda', 'XV Años', 'Corporativo', 'Graduación', 'Bautizo', 'Cumpleaños', 'Otro']
 
 function NuevoLeadModal({ onClose, onCreated }) {
   const [saving, setSaving] = useState(false)
   const [error,  setError]  = useState('')
-  const [form, setForm] = useState({ nombre: '', telefono: '', tipoEvento: 'Boda', fechaEvento: '', presupuesto: '' })
+  const [form, setForm] = useState({ nombre: '', telefono: '', tipoEvento: '', fechaEvento: '', presupuesto: '' })
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
 
   const handleSubmit = async e => {
@@ -45,24 +158,27 @@ function NuevoLeadModal({ onClose, onCreated }) {
               <input placeholder="+52 55 1234 5678" value={form.telefono} onChange={set('telefono')} required />
             </div>
             <div className={styles.leadField}>
-              <label>Tipo de evento</label>
+              <label>Tipo de evento <span className={styles.optLabel}>(opcional)</span></label>
               <select value={form.tipoEvento} onChange={set('tipoEvento')}>
+                <option value="">Sin evento vinculado</option>
                 {TIPOS_EVENTO.map(t => <option key={t}>{t}</option>)}
               </select>
             </div>
             <div className={styles.leadField}>
-              <label>Fecha estimada</label>
+              <label>Fecha estimada <span className={styles.optLabel}>(opcional)</span></label>
               <input placeholder="Jul 2026" value={form.fechaEvento} onChange={set('fechaEvento')} />
             </div>
-            <div className={styles.leadField} style={{ gridColumn:'1/-1' }}>
-              <label>Presupuesto estimado ($)</label>
+            <div className={styles.leadField} style={{ gridColumn: '1/-1' }}>
+              <label>Presupuesto estimado ($) <span className={styles.optLabel}>(opcional)</span></label>
               <input type="number" placeholder="85000" min="0" value={form.presupuesto} onChange={set('presupuesto')} />
             </div>
           </div>
           {error && <p className={styles.leadError}>{error}</p>}
           <div className={styles.leadModalActions}>
             <button type="button" className={styles.leadBtnSecondary} onClick={onClose}>Cancelar</button>
-            <button type="submit" className={styles.leadBtnPrimary} disabled={saving}>{saving ? 'Guardando…' : 'Crear lead →'}</button>
+            <button type="submit" className={styles.leadBtnPrimary} disabled={saving}>
+              {saving ? 'Guardando…' : 'Crear lead →'}
+            </button>
           </div>
         </form>
       </div>
@@ -70,60 +186,169 @@ function NuevoLeadModal({ onClose, onCreated }) {
   )
 }
 
-const STAGES = [
-  { id: 'nuevo',      label: 'Nuevo',             color: '#64748b', bg: 'rgba(100,116,139,0.12)' },
-  { id: 'contactado', label: 'Contactado',         color: '#38bdf8', bg: 'rgba(56,189,248,0.12)'  },
-  { id: 'cotizacion', label: 'Cotización enviada', color: '#fb923c', bg: 'rgba(251,146,60,0.12)'  },
-  { id: 'negociando', label: 'Negociando',         color: '#a78bfa', bg: 'rgba(167,139,250,0.12)' },
-  { id: 'confirmado', label: 'Confirmado',         color: '#34d399', bg: 'rgba(52,211,153,0.12)'  },
-]
+// ─── Chat Modal ──────────────────────────────────────────────────────────────
+function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
+  const [lead,    setLead]    = useState(initLead)
+  const [message, setMessage] = useState('')
+  const [sending, setSending] = useState(false)
+  const bottomRef = useRef(null)
 
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [lead.mensajes])
+
+  // Poll for new messages every 3s
+  useEffect(() => {
+    const id = setInterval(async () => {
+      try {
+        const updated = await leadsApi.getById(lead.id)
+        setLead(updated)
+        onLeadUpdate(lead.id, { ultimoMsg: updated.ultimoMsg, noLeidos: 0, hora: updated.hora })
+      } catch {}
+    }, 3000)
+    return () => clearInterval(id)
+  }, [lead.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const send = async () => {
+    const text = message.trim()
+    if (!text || sending) return
+    setSending(true)
+    setMessage('')
+    const tempMsg = {
+      id: `tmp_${Date.now()}`,
+      texto: text,
+      tipo: 'out',
+      hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+    }
+    setLead(l => ({ ...l, mensajes: [...l.mensajes, tempMsg], ultimoMsg: text }))
+    onLeadUpdate(lead.id, { ultimoMsg: text })
+    try { await leadsApi.sendMessage(lead.id, text, 'outbound') } catch {}
+    finally { setSending(false) }
+  }
+
+  const changeStage = async (stageId) => {
+    setLead(l => ({ ...l, stage: stageId }))
+    onLeadUpdate(lead.id, { stage: stageId })
+    await leadsApi.update(lead.id, { stage: stageId }).catch(() => {})
+  }
+
+  const currentStage = stages.find(s => s.id === lead.stage) ?? stages[0]
+
+  return (
+    <div className={styles.chatOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className={styles.chatModalBox}>
+
+        {/* Header */}
+        <div className={styles.chatModalHeader}>
+          <div className={styles.chatModalAvatar}>{lead.avatar}</div>
+          <div className={styles.chatModalInfo}>
+            <span className={styles.chatModalName}>{lead.nombre}</span>
+            <span className={styles.chatModalSub}>
+              {lead.telefono && <span>{lead.telefono}</span>}
+              {lead.evento && <span className={styles.chatModalEvento}> · {lead.evento}</span>}
+              {lead.presupuesto && lead.presupuesto !== '$0' && (
+                <span className={styles.chatModalBudget}> · {lead.presupuesto}</span>
+              )}
+            </span>
+          </div>
+          <select
+            className={styles.chatStageSelect}
+            value={lead.stage}
+            style={{ color: currentStage?.color, borderColor: (currentStage?.color ?? '#64748b') + '55' }}
+            onChange={e => changeStage(e.target.value)}
+          >
+            {stages.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+          </select>
+          <button className={styles.chatCloseBtn} onClick={onClose}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Messages */}
+        <div className={styles.chatModalMsgs}>
+          {lead.mensajes.length === 0 && (
+            <p className={styles.chatEmpty}>Sin mensajes aún. ¡Escribe el primero!</p>
+          )}
+          {lead.mensajes.map(m => (
+            <div key={m.id} className={`${styles.chatMsgWrap} ${m.tipo === 'out' ? styles.chatMsgOut : ''}`}>
+              <div className={`${styles.chatBubble} ${m.tipo === 'out' ? styles.chatBubbleOut : styles.chatBubbleIn}`}>
+                <p>{m.texto}</p>
+                <span className={styles.chatBubbleTime}>{m.hora}</span>
+              </div>
+            </div>
+          ))}
+          <div ref={bottomRef} />
+        </div>
+
+        {/* Input */}
+        <div className={styles.chatInputArea}>
+          <textarea
+            className={styles.chatInput}
+            placeholder="Escribe un mensaje… (Enter para enviar)"
+            value={message}
+            rows={1}
+            onChange={e => setMessage(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+          />
+          <button className={styles.chatSendBtn} onClick={send} disabled={!message.trim() || sending}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main Page ───────────────────────────────────────────────────────────────
 export default function ChatPage() {
-  const [leads,       setLeads]       = useState([])
-  const [loading,     setLoading]     = useState(true)
-  const [leadActivo,  setLeadActivo]  = useState(null)
-  const [mensaje,     setMensaje]     = useState('')
-  const [dragging,    setDragging]    = useState(null)
-  const [dragOver,    setDragOver]    = useState(null)
-  const [mobileTab,   setMobileTab]   = useState('chats')
-  const [showCreate,  setShowCreate]  = useState(false)
+  const [stages,           saveStages]          = useStages()
+  const [leads,            setLeads]            = useState([])
+  const [loading,          setLoading]          = useState(true)
+  const [activeLead,       setActiveLead]       = useState(null)
+  const [dragging,         setDragging]         = useState(null)
+  const [dragOver,         setDragOver]         = useState(null)
+  const [mobileTab,        setMobileTab]        = useState('chats')
+  const [showCreate,       setShowCreate]       = useState(false)
+  const [showStageManager, setShowStageManager] = useState(false)
+
+  const loadLeads = useCallback(async () => {
+    try { setLeads(await leadsApi.getAll()) }
+    catch {}
+    finally { setLoading(false) }
+  }, [])
 
   useEffect(() => {
-    leadsApi.getAll()
-      .then(setLeads)
-      .catch(() => setLeads([]))
-      .finally(() => setLoading(false))
-  }, [])
+    loadLeads()
+    const id = setInterval(loadLeads, 10000) // poll every 10s for incoming messages
+    return () => clearInterval(id)
+  }, [loadLeads])
 
   const byStage = (stageId) => leads.filter(l => l.stage === stageId)
 
-  const totalPresupuesto = leads
-    .filter(l => l.stage === 'confirmado')
+  const lastStageId   = stages[stages.length - 1]?.id
+  const totalConfirmado = leads
+    .filter(l => l.stage === lastStageId)
     .reduce((acc, l) => acc + parseInt((l.presupuesto || '$0').replace(/[$,]/g, '')), 0)
-
   const totalNoLeidos = leads.filter(l => l.noLeidos > 0).length
 
   const abrirChat = (lead) => {
-    setLeadActivo(lead)
-    setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, noLeidos: 0 } : l))
-    leadsApi.markRead(lead.id).catch(() => {})
+    setActiveLead(lead)
+    if (lead.noLeidos > 0) {
+      setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, noLeidos: 0 } : l))
+      leadsApi.markRead(lead.id).catch(() => {})
+    }
   }
 
-  const enviarMensaje = async () => {
-    if (!mensaje.trim() || !leadActivo) return
-    const texto = mensaje
-    setMensaje('')
-    const nuevoMsg = { id: Date.now(), texto, tipo: 'out', hora: 'Ahora' }
-    setLeads(prev => prev.map(l =>
-      l.id === leadActivo.id ? { ...l, mensajes: [...l.mensajes, nuevoMsg], ultimoMsg: texto } : l
-    ))
-    setLeadActivo(prev => ({ ...prev, mensajes: [...prev.mensajes, nuevoMsg] }))
-    await leadsApi.sendMessage(leadActivo.id, texto, 'outbound').catch(() => {})
-  }
+  const handleLeadUpdate = (id, changes) =>
+    setLeads(prev => prev.map(l => l.id === id ? { ...l, ...changes } : l))
 
   const moverStage = async (leadId, nuevoStage) => {
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, stage: nuevoStage } : l))
-    if (leadActivo?.id === leadId) setLeadActivo(prev => ({ ...prev, stage: nuevoStage }))
     await leadsApi.update(leadId, { stage: nuevoStage }).catch(() => {})
   }
 
@@ -139,9 +364,25 @@ export default function ChatPage() {
       {showCreate && (
         <NuevoLeadModal
           onClose={() => setShowCreate(false)}
-          onCreated={lead => setLeads(prev => [lead, ...prev])}
+          onCreated={lead => { setLeads(prev => [lead, ...prev]); setActiveLead(lead) }}
         />
       )}
+      {showStageManager && (
+        <StageManager stages={stages} onSave={saveStages} onClose={() => setShowStageManager(false)} />
+      )}
+      {activeLead && (
+        <ChatModal
+          lead={activeLead}
+          stages={stages}
+          onClose={() => setActiveLead(null)}
+          onLeadUpdate={(id, changes) => {
+            handleLeadUpdate(id, changes)
+            setActiveLead(prev => prev?.id === id ? { ...prev, ...changes } : prev)
+          }}
+        />
+      )}
+
+      {/* Header */}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Pipeline de chats</h1>
@@ -149,22 +390,28 @@ export default function ChatPage() {
         </div>
         <div className={styles.headerStats}>
           <div className={styles.statChip}>
-            <span className={styles.statChipVal}>${totalPresupuesto.toLocaleString()}</span>
-            <span className={styles.statChipLabel}>Confirmado</span>
+            <span className={styles.statChipVal}>${totalConfirmado.toLocaleString()}</span>
+            <span className={styles.statChipLabel}>{stages[stages.length - 1]?.label ?? 'Confirmado'}</span>
           </div>
           <div className={styles.statChip}>
-            <span className={styles.statChipVal}>{byStage('negociando').length + byStage('cotizacion').length}</span>
+            <span className={styles.statChipVal}>{leads.filter(l => l.stage !== lastStageId).length}</span>
             <span className={styles.statChipLabel}>En proceso</span>
           </div>
+          <button className={styles.btnSettings} onClick={() => setShowStageManager(true)}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            Embudos
+          </button>
           <button className={styles.btnNew} onClick={() => setShowCreate(true)}>+ Nuevo lead</button>
         </div>
       </div>
 
-      {/* Mobile tab bar */}
+      {/* Mobile tabs */}
       <div className={styles.mobileTabs}>
         <button className={`${styles.mobileTab} ${mobileTab === 'chats' ? styles.mobileTabActive : ''}`} onClick={() => setMobileTab('chats')}>
-          Chats
-          {totalNoLeidos > 0 && <span className={styles.mobileTabBadge}>{totalNoLeidos}</span>}
+          Chats {totalNoLeidos > 0 && <span className={styles.mobileTabBadge}>{totalNoLeidos}</span>}
         </button>
         <button className={`${styles.mobileTab} ${mobileTab === 'pipeline' ? styles.mobileTabActive : ''}`} onClick={() => setMobileTab('pipeline')}>
           Pipeline
@@ -173,8 +420,8 @@ export default function ChatPage() {
 
       {/* Mobile chat list */}
       <div className={`${styles.mobileList} ${mobileTab === 'chats' ? styles.mobileListVisible : ''}`}>
-        {loading && <div style={{ textAlign:'center', padding:40, color:'var(--text-muted)', fontSize:14 }}>Cargando…</div>}
-        {STAGES.map(stage => {
+        {loading && <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)', fontSize: 14 }}>Cargando…</div>}
+        {stages.map(stage => {
           const items = byStage(stage.id)
           if (items.length === 0) return null
           return (
@@ -182,7 +429,7 @@ export default function ChatPage() {
               <div className={styles.mobileGroupLabel}>
                 <span className={styles.mobileGroupDot} style={{ background: stage.color }} />
                 {stage.label}
-                <span className={styles.mobileGroupCount} style={{ color: stage.color, background: stage.bg }}>{items.length}</span>
+                <span className={styles.mobileGroupCount} style={{ color: stage.color, background: stage.color + '20' }}>{items.length}</span>
               </div>
               {items.map(lead => (
                 <button key={lead.id} className={styles.mobileRow} onClick={() => abrirChat(lead)}>
@@ -196,7 +443,7 @@ export default function ChatPage() {
                       <span className={styles.mobileRowMsg}>{lead.ultimoMsg}</span>
                       {lead.noLeidos > 0 && <span className={styles.unread}>{lead.noLeidos}</span>}
                     </div>
-                    <span className={styles.mobileRowEvento}>{lead.evento} · {lead.presupuesto}</span>
+                    <span className={styles.mobileRowEvento}>{lead.evento || lead.telefono}</span>
                   </div>
                 </button>
               ))}
@@ -208,93 +455,50 @@ export default function ChatPage() {
       {/* Kanban board */}
       <div className={`${styles.board} ${mobileTab === 'pipeline' ? styles.boardMobileVisible : ''}`}>
         {loading
-          ? <div style={{ color:'var(--text-muted)', fontSize:14, padding:20 }}>Cargando…</div>
-          : STAGES.map(stage => {
-            const cols = byStage(stage.id)
-            return (
-              <div key={stage.id}
-                className={`${styles.column} ${dragOver === stage.id ? styles.columnDragOver : ''}`}
-                onDragOver={e => { e.preventDefault(); setDragOver(stage.id) }}
-                onDragLeave={() => setDragOver(null)}
-                onDrop={e => handleDrop(e, stage.id)}>
-                <div className={styles.colHeader} style={{ borderColor: stage.color }}>
-                  <div className={styles.colTitleWrap}>
-                    <span className={styles.colDot} style={{ background: stage.color }} />
-                    <span className={styles.colTitle}>{stage.label}</span>
-                  </div>
-                  <span className={styles.colCount} style={{ background: stage.bg, color: stage.color }}>{cols.length}</span>
-                </div>
-                <div className={styles.cards}>
-                  {cols.map(lead => (
-                    <div key={lead.id}
-                      className={`${styles.card} ${leadActivo?.id === lead.id ? styles.cardActive : ''}`}
-                      draggable onDragStart={e => handleDragStart(e, lead)} onClick={() => abrirChat(lead)}>
-                      <div className={styles.cardTop}>
-                        <div className={styles.cardAvatar}>{lead.avatar}</div>
-                        <div className={styles.cardInfo}>
-                          <span className={styles.cardName}>{lead.nombre}</span>
-                          <span className={styles.cardEvento}>{lead.evento}</span>
-                        </div>
-                        {lead.noLeidos > 0 && <span className={styles.unread}>{lead.noLeidos}</span>}
-                      </div>
-                      <p className={styles.cardMsg}>{lead.ultimoMsg}</p>
-                      <div className={styles.cardFooter}>
-                        <span className={styles.cardPresupuesto}>{lead.presupuesto}</span>
-                        <span className={styles.cardHora}>{lead.hora}</span>
-                      </div>
+          ? <div style={{ color: 'var(--text-muted)', fontSize: 14, padding: 20 }}>Cargando…</div>
+          : stages.map(stage => {
+              const cols = byStage(stage.id)
+              return (
+                <div key={stage.id}
+                  className={`${styles.column} ${dragOver === stage.id ? styles.columnDragOver : ''}`}
+                  onDragOver={e => { e.preventDefault(); setDragOver(stage.id) }}
+                  onDragLeave={() => setDragOver(null)}
+                  onDrop={e => handleDrop(e, stage.id)}>
+                  <div className={styles.colHeader} style={{ borderColor: stage.color }}>
+                    <div className={styles.colTitleWrap}>
+                      <span className={styles.colDot} style={{ background: stage.color }} />
+                      <span className={styles.colTitle}>{stage.label}</span>
                     </div>
-                  ))}
-                  {cols.length === 0 && <div className={styles.emptyCol}>Arrastra aquí</div>}
+                    <span className={styles.colCount} style={{ background: stage.color + '20', color: stage.color }}>{cols.length}</span>
+                  </div>
+                  <div className={styles.cards}>
+                    {cols.map(lead => (
+                      <div key={lead.id}
+                        className={`${styles.card} ${activeLead?.id === lead.id ? styles.cardActive : ''}`}
+                        draggable onDragStart={e => handleDragStart(e, lead)}
+                        onClick={() => abrirChat(lead)}>
+                        <div className={styles.cardTop}>
+                          <div className={styles.cardAvatar}>{lead.avatar}</div>
+                          <div className={styles.cardInfo}>
+                            <span className={styles.cardName}>{lead.nombre}</span>
+                            <span className={styles.cardEvento}>{lead.evento || lead.telefono}</span>
+                          </div>
+                          {lead.noLeidos > 0 && <span className={styles.unread}>{lead.noLeidos}</span>}
+                        </div>
+                        <p className={styles.cardMsg}>{lead.ultimoMsg}</p>
+                        <div className={styles.cardFooter}>
+                          <span className={styles.cardPresupuesto}>{lead.presupuesto !== '$0' ? lead.presupuesto : ''}</span>
+                          <span className={styles.cardHora}>{lead.hora}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {cols.length === 0 && <div className={styles.emptyCol}>Arrastra aquí</div>}
+                  </div>
                 </div>
-              </div>
-            )
-          })
+              )
+            })
         }
       </div>
-
-      {/* Chat panel */}
-      {leadActivo && (
-        <div className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <button className={styles.backBtn} onClick={() => setLeadActivo(null)} aria-label="Volver">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6"/>
-              </svg>
-            </button>
-            <div className={styles.panelAvatar}>{leadActivo.avatar}</div>
-            <div className={styles.panelInfo}>
-              <span className={styles.panelName}>{leadActivo.nombre}</span>
-              <span className={styles.panelEvento}>{leadActivo.evento} · {leadActivo.presupuesto}</span>
-            </div>
-            <div className={styles.panelActions}>
-              <select className={styles.stageSelect} value={leadActivo.stage} onChange={e => moverStage(leadActivo.id, e.target.value)}>
-                {STAGES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
-              </select>
-              <button className={styles.closeBtn} onClick={() => setLeadActivo(null)}>✕</button>
-            </div>
-          </div>
-          <div className={styles.messages}>
-            {leadActivo.mensajes.map(m => (
-              <div key={m.id} className={`${styles.msgWrap} ${m.tipo === 'out' ? styles.msgOut : ''}`}>
-                <div className={`${styles.bubble} ${m.tipo === 'out' ? styles.bubbleOut : styles.bubbleIn}`}>
-                  <p>{m.texto}</p>
-                  <span className={styles.hora}>{m.hora}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className={styles.inputArea}>
-            <input className={styles.msgInput} placeholder="Escribe un mensaje..."
-              value={mensaje} onChange={e => setMensaje(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && enviarMensaje()} />
-            <button className={styles.sendBtn} onClick={enviarMensaje}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

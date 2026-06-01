@@ -13,6 +13,7 @@ public interface ILeadService
     Task<LeadResponse?> UpdateAsync(string orgId, string id, UpdateLeadRequest req);
     Task<bool> DeleteAsync(string orgId, string id);
     Task<LeadMessageResponse?> SendMessageAsync(string orgId, string leadId, SendLeadMessageRequest req);
+    Task HandleInboundAsync(string orgId, string phone, string body);
 }
 
 public class LeadService(LumoraDbContext db, IWaServerService waServer) : ILeadService
@@ -111,6 +112,52 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer) : ILeadS
             _ = waServer.SendAsync(orgId, lead.Phone, req.Body);
 
         return ToMessageResponse(message);
+    }
+
+    public async Task HandleInboundAsync(string orgId, string phone, string body)
+    {
+        // Normalize: strip WA suffix, keep digits only
+        phone = phone.Replace("@c.us", "").Replace("@s.whatsapp.net", "").Trim();
+
+        // Match on last 10 digits so "+52 55 1234 5678", "5215512345678", "5512345678" all match
+        var last10 = phone.Length >= 10 ? phone[^10..] : phone;
+
+        var lead = await db.Leads
+            .Include(l => l.Messages)
+            .FirstOrDefaultAsync(l => l.OrgId == orgId && l.Phone.EndsWith(last10));
+
+        if (lead is null)
+        {
+            lead = new Lead
+            {
+                Id        = Guid.NewGuid().ToString(),
+                OrgId     = orgId,
+                Name      = phone,
+                Phone     = phone,
+                Stage     = "nuevo",
+                UnreadCount = 0,
+                CreatedAt = DateTime.UtcNow,
+            };
+            await db.Leads.AddAsync(lead);
+            await db.SaveChangesAsync();
+        }
+
+        var message = new LeadMessage
+        {
+            Id        = Guid.NewGuid().ToString(),
+            LeadId    = lead.Id,
+            OrgId     = orgId,
+            Body      = body,
+            Direction = "inbound",
+            SentAt    = DateTime.UtcNow,
+        };
+        await db.LeadMessages.AddAsync(message);
+
+        lead.LastMessage   = body;
+        lead.LastMessageAt = message.SentAt;
+        lead.UnreadCount++;
+
+        await db.SaveChangesAsync();
     }
 
     private static LeadResponse ToResponse(Lead l) => new(
