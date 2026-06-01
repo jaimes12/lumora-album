@@ -84,16 +84,31 @@ else
 
 builder.Services.AddAuthorization();
 
-// CORS
+// CORS — allow configured origins + any Railway subdomain + localhost
 var allowedOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins")
-    .Get<string[]>() ?? ["http://localhost:5173"];
+    .Get<string[]>() ?? [];
+
+// Extra origins from environment variable (comma-separated)
+var envOrigins = (Environment.GetEnvironmentVariable("CORS_ORIGINS") ?? "")
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+var allOrigins = allowedOrigins.Concat(envOrigins).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
 builder.Services.AddCors(opts =>
     opts.AddDefaultPolicy(policy =>
-        policy.WithOrigins(allowedOrigins)
-              .AllowAnyHeader()
-              .AllowAnyMethod()
+        policy
+            .SetIsOriginAllowed(origin =>
+            {
+                if (allOrigins.Contains(origin)) return true;
+                if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri)) return false;
+                // Allow any Railway subdomain and localhost
+                return uri.Host.EndsWith(".up.railway.app", StringComparison.OrdinalIgnoreCase)
+                    || uri.Host == "localhost"
+                    || uri.Host == "127.0.0.1";
+            })
+            .AllowAnyHeader()
+            .AllowAnyMethod()
     )
 );
 
@@ -134,10 +149,16 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o =>
 var app = builder.Build();
 
 // Auto-migrate / ensure schema exists
-using (var scope = app.Services.CreateScope())
+try
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<LumoraDbContext>();
     await db.Database.EnsureCreatedAsync();
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "DB startup error — app will continue without schema init");
 }
 
 app.UseSwagger();
