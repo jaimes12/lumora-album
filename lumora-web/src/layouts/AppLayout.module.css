@@ -105,6 +105,375 @@
 
 .navLabel { white-space: nowrap; }
 
+/* ── Mi Plan section ── */
+.planSection {
+  padding: 10px 10px 6px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.planSectionHead { padding: 0 4px 2px; }
+
+.planSectionLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.planWidget {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--accent-dim, rgba(124,106,247,0.08));
+  border: 1px solid rgba(124,106,247,0.2);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+}
+
+.planWidget:hover {
+  background: rgba(124,106,247,0.14);
+  border-color: rgba(124,106,247,0.35);
+}
+
+.planWidgetTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.planWidgetName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-2, #c4b5fd);
+}
+
+.planWidgetPrice {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.planWidgetBar {
+  height: 4px;
+  background: rgba(124,106,247,0.15);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.planWidgetBarFill {
+  height: 100%;
+  background: var(--accent, #a78bfa);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.planWidgetMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.planWidgetManage {
+  color: var(--accent-2, #c4b5fd);
+  font-weight: 600;
+}
+
+/* ── Plan Modal ── */
+.planOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: waFade 0.18s ease;
+}
+
+.planModal {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 460px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+  animation: waPop 0.22s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.planHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.planHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.planIconWrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--accent-dim, rgba(124,106,247,0.12));
+  color: var(--accent-2, #c4b5fd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.planModalTitle {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.planBody {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.planTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.planNameWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.planBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-2, #c4b5fd);
+  background: var(--accent-dim, rgba(124,106,247,0.12));
+  border: 1px solid rgba(124,106,247,0.25);
+  padding: 3px 10px;
+  border-radius: 20px;
+  width: fit-content;
+}
+
+.planPriceRow {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.planPrice {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.planCiclo {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.planNextBill {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.planNextLabel {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.planNextDate {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Usage bars */
+.planUsage {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.planUsageRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.planUsageLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.planBar {
+  height: 6px;
+  background: var(--bg);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.planBarFill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+/* Features / Historial sections inside modal */
+.planBodySection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.planSectionTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.planFeatures {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.planFeatureItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.planFeatureItem svg {
+  flex-shrink: 0;
+  color: #34d399;
+}
+
+/* Historial */
+.planHistorial {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.planHistRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.planHistRow:last-child {
+  border-bottom: none;
+}
+
+.planHistLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.planHistFecha {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.planHistMetodo {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.planHistRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.planHistMonto {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.planHistEstado {
+  font-size: 11px;
+  font-weight: 600;
+  color: #34d399;
+}
+
+.planUpgradeBtn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent, #a78bfa);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.planUpgradeBtn:hover {
+  opacity: 0.88;
+}
+
 /* Settings toggles */
 .settingsArea {
   display: flex;

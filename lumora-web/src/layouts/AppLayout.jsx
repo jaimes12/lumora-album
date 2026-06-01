@@ -28,7 +28,7 @@ const NAV_KEYS = [
   },
   {
     to: '/app/ventas', key: 'ventas',
-    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
   },
   {
     to: '/app/contratos', key: 'contratos',
@@ -136,6 +136,129 @@ function WhatsAppModal({ onClose, onConnect }) {
   )
 }
 
+/* ── Plan data (mock) ── */
+const PLAN = {
+  nombre: 'Pro',
+  precio: 599,
+  ciclo: 'mensual',
+  proximoPago: '28 Jun 2026',
+  eventos: { usados: 14, limite: 50 },
+  almacenamiento: { usados: 3.2, limite: 10 },
+  features: ['Eventos ilimitados hasta 50/mes', 'CRM de clientes', 'Gestión de proveedores', 'Contratos digitales', 'WhatsApp integrado', 'Soporte prioritario'],
+  historial: [
+    { fecha: '28 May 2026', monto: 599, estado: 'Pagado',   metodo: 'Visa •••• 4242' },
+    { fecha: '28 Abr 2026', monto: 599, estado: 'Pagado',   metodo: 'Visa •••• 4242' },
+    { fecha: '28 Mar 2026', monto: 599, estado: 'Pagado',   metodo: 'Visa •••• 4242' },
+    { fecha: '28 Feb 2026', monto: 599, estado: 'Pagado',   metodo: 'Visa •••• 4242' },
+    { fecha: '28 Ene 2026', monto: 599, estado: 'Pagado',   metodo: 'Visa •••• 4242' },
+  ],
+}
+
+function PlanModal({ onClose }) {
+  const usedPct  = Math.round((PLAN.eventos.usados / PLAN.eventos.limite) * 100)
+  const storePct = Math.round((PLAN.almacenamiento.usados / PLAN.almacenamiento.limite) * 100)
+
+  return (
+    <div className={styles.planOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className={styles.planModal}>
+
+        {/* Header */}
+        <div className={styles.planHeader}>
+          <div className={styles.planHeaderLeft}>
+            <div className={styles.planIconWrap}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <span className={styles.planModalTitle}>Mi Plan</span>
+          </div>
+          <button className={styles.waClose} onClick={onClose}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div className={styles.planBody}>
+
+          {/* Plan badge + price */}
+          <div className={styles.planTop}>
+            <div className={styles.planNameWrap}>
+              <span className={styles.planBadge}>{PLAN.nombre}</span>
+              <div className={styles.planPriceRow}>
+                <span className={styles.planPrice}>${PLAN.precio}</span>
+                <span className={styles.planCiclo}>/ {PLAN.ciclo}</span>
+              </div>
+            </div>
+            <div className={styles.planNextBill}>
+              <span className={styles.planNextLabel}>Próximo pago</span>
+              <span className={styles.planNextDate}>{PLAN.proximoPago}</span>
+            </div>
+          </div>
+
+          {/* Usage bars */}
+          <div className={styles.planUsage}>
+            <div className={styles.planUsageRow}>
+              <div className={styles.planUsageLabels}>
+                <span>Eventos</span>
+                <span>{PLAN.eventos.usados} / {PLAN.eventos.limite}</span>
+              </div>
+              <div className={styles.planBar}>
+                <div className={styles.planBarFill} style={{ width: `${usedPct}%`, background: usedPct > 80 ? '#fb923c' : 'var(--accent, #a78bfa)' }} />
+              </div>
+            </div>
+            <div className={styles.planUsageRow}>
+              <div className={styles.planUsageLabels}>
+                <span>Almacenamiento</span>
+                <span>{PLAN.almacenamiento.usados} GB / {PLAN.almacenamiento.limite} GB</span>
+              </div>
+              <div className={styles.planBar}>
+                <div className={styles.planBarFill} style={{ width: `${storePct}%`, background: 'var(--accent, #a78bfa)' }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Features */}
+          <div className={styles.planBodySection}>
+            <p className={styles.planSectionTitle}>Incluido en tu plan</p>
+            <ul className={styles.planFeatures}>
+              {PLAN.features.map((f, i) => (
+                <li key={i} className={styles.planFeatureItem}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Payment history */}
+          <div className={styles.planBodySection}>
+            <p className={styles.planSectionTitle}>Historial de pagos</p>
+            <div className={styles.planHistorial}>
+              {PLAN.historial.map((p, i) => (
+                <div key={i} className={styles.planHistRow}>
+                  <div className={styles.planHistLeft}>
+                    <span className={styles.planHistFecha}>{p.fecha}</span>
+                    <span className={styles.planHistMetodo}>{p.metodo}</span>
+                  </div>
+                  <div className={styles.planHistRight}>
+                    <span className={styles.planHistMonto}>${p.monto}</span>
+                    <span className={styles.planHistEstado}>{p.estado}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA */}
+          <button className={styles.planUpgradeBtn}>
+            Actualizar plan →
+          </button>
+
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ── Layout ── */
 export default function AppLayout() {
   const navigate = useNavigate()
@@ -144,6 +267,7 @@ export default function AppLayout() {
   const [waPhone,     setWaPhone]     = useState('')
   const [showWaModal, setShowWaModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [planOpen,    setPlanOpen]    = useState(false)
 
   // Close sidebar on route change
   useEffect(() => {
@@ -173,6 +297,7 @@ export default function AppLayout() {
           onConnect={handleConnect}
         />
       )}
+      {planOpen && <PlanModal onClose={() => setPlanOpen(false)} />}
 
       {/* Mobile top bar */}
       <div className={styles.topBar}>
@@ -242,6 +367,29 @@ export default function AppLayout() {
                 <span>Conectar WhatsApp</span>
               </button>
             )}
+          </div>
+
+          {/* Mi Plan */}
+          <div className={styles.planSection}>
+            <div className={styles.planSectionHead}>
+              <span className={styles.planSectionLabel}>Mi Plan</span>
+            </div>
+            <button className={styles.planWidget} onClick={() => setPlanOpen(true)}>
+              <div className={styles.planWidgetTop}>
+                <span className={styles.planWidgetName}>{PLAN.nombre}</span>
+                <span className={styles.planWidgetPrice}>${PLAN.precio}/mes</span>
+              </div>
+              <div className={styles.planWidgetBar}>
+                <div
+                  className={styles.planWidgetBarFill}
+                  style={{ width: `${Math.round((PLAN.eventos.usados / PLAN.eventos.limite) * 100)}%` }}
+                />
+              </div>
+              <div className={styles.planWidgetMeta}>
+                <span>{PLAN.eventos.usados}/{PLAN.eventos.limite} eventos</span>
+                <span className={styles.planWidgetManage}>Gestionar →</span>
+              </div>
+            </button>
           </div>
 
           {/* Settings */}
