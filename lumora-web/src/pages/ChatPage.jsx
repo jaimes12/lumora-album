@@ -186,6 +186,26 @@ function NuevoLeadModal({ onClose, onCreated }) {
   )
 }
 
+// ─── Tick component (message status) ────────────────────────────────────────
+function Tick({ saved }) {
+  // saved=false → single ✓ (optimistic, en camino)
+  // saved=true  → doble ✓✓ (confirmado por servidor)
+  return (
+    <svg className={styles.tickIcon} viewBox="0 0 16 11" fill="none">
+      {saved && (
+        <path d="M1 5.5L4.5 9 7.5 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+      )}
+      <path
+        d={saved ? "M5 5.5L9 9 15 2" : "M1 5.5L5 9 13 2"}
+        stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+// true if a name looks like a raw phone number (no spaces, mostly digits)
+const isPhoneNumber = (s) => s && /^[\d\s\-\+\(\)]{7,}$/.test(s.trim())
+
 // ─── Chat Modal ──────────────────────────────────────────────────────────────
 function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
   const [lead,    setLead]    = useState(initLead)
@@ -193,37 +213,50 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
   const [sending, setSending] = useState(false)
   const bottomRef = useRef(null)
 
+  const fetchLead = useCallback(async () => {
+    try {
+      const updated = await leadsApi.getById(lead.id)
+      setLead(updated)
+      onLeadUpdate(lead.id, { ultimoMsg: updated.ultimoMsg, noLeidos: 0, hora: updated.hora })
+    } catch {}
+  }, [lead.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Scroll to bottom when messages change
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [lead.mensajes])
 
-  // Poll for new messages every 3s
+  // Poll every 3s + re-fetch when window regains focus
   useEffect(() => {
-    const id = setInterval(async () => {
-      try {
-        const updated = await leadsApi.getById(lead.id)
-        setLead(updated)
-        onLeadUpdate(lead.id, { ultimoMsg: updated.ultimoMsg, noLeidos: 0, hora: updated.hora })
-      } catch {}
-    }, 3000)
-    return () => clearInterval(id)
-  }, [lead.id]) // eslint-disable-line react-hooks/exhaustive-deps
+    fetchLead() // immediate on open
+    const id = setInterval(fetchLead, 3000)
+    const onFocus = () => fetchLead()
+    window.addEventListener('focus', onFocus)
+    return () => { clearInterval(id); window.removeEventListener('focus', onFocus) }
+  }, [fetchLead])
 
   const send = async () => {
     const text = message.trim()
     if (!text || sending) return
     setSending(true)
     setMessage('')
+    const tempId = `tmp_${Date.now()}`
     const tempMsg = {
-      id: `tmp_${Date.now()}`,
+      id: tempId,
       texto: text,
       tipo: 'out',
       hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
     }
     setLead(l => ({ ...l, mensajes: [...l.mensajes, tempMsg], ultimoMsg: text }))
     onLeadUpdate(lead.id, { ultimoMsg: text })
-    try { await leadsApi.sendMessage(lead.id, text, 'outbound') } catch {}
+    try {
+      await leadsApi.sendMessage(lead.id, text, 'outbound')
+      // Replace temp msg with saved one on next poll; for now mark as saved
+      setLead(l => ({
+        ...l,
+        mensajes: l.mensajes.map(m => m.id === tempId ? { ...m, id: `sent_${Date.now()}` } : m),
+      }))
+    } catch {}
     finally { setSending(false) }
   }
 
@@ -234,6 +267,9 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
   }
 
   const currentStage = stages.find(s => s.id === lead.stage) ?? stages[0]
+  const nameIsPhone  = isPhoneNumber(lead.nombre)
+  const displayName  = nameIsPhone ? lead.telefono : lead.nombre
+  const showPhone    = !nameIsPhone && lead.telefono && lead.telefono !== lead.nombre
 
   return (
     <div className={styles.chatOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
@@ -241,12 +277,18 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
 
         {/* Header */}
         <div className={styles.chatModalHeader}>
-          <div className={styles.chatModalAvatar}>{lead.avatar}</div>
+          <div className={styles.chatModalAvatar}
+            style={nameIsPhone ? { background: '#334155', fontSize: 10 } : {}}>
+            {nameIsPhone
+              ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 5.49 5.49l1.97-1.34a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              : lead.avatar
+            }
+          </div>
           <div className={styles.chatModalInfo}>
-            <span className={styles.chatModalName}>{lead.nombre}</span>
+            <span className={styles.chatModalName}>{displayName}</span>
             <span className={styles.chatModalSub}>
-              {lead.telefono && <span>{lead.telefono}</span>}
-              {lead.evento && <span className={styles.chatModalEvento}> · {lead.evento}</span>}
+              {showPhone && <span>{lead.telefono}</span>}
+              {lead.evento && <span className={styles.chatModalEvento}>{showPhone ? ' · ' : ''}{lead.evento}</span>}
               {lead.presupuesto && lead.presupuesto !== '$0' && (
                 <span className={styles.chatModalBudget}> · {lead.presupuesto}</span>
               )}
@@ -272,14 +314,21 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
           {lead.mensajes.length === 0 && (
             <p className={styles.chatEmpty}>Sin mensajes aún. ¡Escribe el primero!</p>
           )}
-          {lead.mensajes.map(m => (
-            <div key={m.id} className={`${styles.chatMsgWrap} ${m.tipo === 'out' ? styles.chatMsgOut : ''}`}>
-              <div className={`${styles.chatBubble} ${m.tipo === 'out' ? styles.chatBubbleOut : styles.chatBubbleIn}`}>
-                <p>{m.texto}</p>
-                <span className={styles.chatBubbleTime}>{m.hora}</span>
+          {lead.mensajes.map(m => {
+            const isTmp   = m.id.startsWith('tmp_')
+            const isSaved = !isTmp
+            return (
+              <div key={m.id} className={`${styles.chatMsgWrap} ${m.tipo === 'out' ? styles.chatMsgOut : ''}`}>
+                <div className={`${styles.chatBubble} ${m.tipo === 'out' ? styles.chatBubbleOut : styles.chatBubbleIn}`}>
+                  <p>{m.texto}</p>
+                  <div className={styles.chatBubbleMeta}>
+                    <span className={styles.chatBubbleTime}>{m.hora}</span>
+                    {m.tipo === 'out' && <Tick saved={isSaved} />}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
           <div ref={bottomRef} />
         </div>
 

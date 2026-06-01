@@ -867,10 +867,21 @@
   background: var(--accent); color: #fff;
   border-bottom-right-radius: 4px;
 }
-.chatBubbleTime {
-  display: block; font-size: 10px; margin-top: 4px;
-  opacity: 0.65; text-align: right;
+.chatBubbleMeta {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 3px; margin-top: 3px;
 }
+
+.chatBubbleTime {
+  font-size: 10px; opacity: 0.65; white-space: nowrap;
+}
+
+.tickIcon {
+  width: 14px; height: 10px; flex-shrink: 0;
+  opacity: 0.7;
+}
+.chatBubbleOut .tickIcon { color: rgba(255,255,255,0.9); }
+.chatBubbleIn  .tickIcon { color: var(--text-muted); }
 
 .chatInputArea {
   display: flex; align-items: flex-end; gap: 8px;
