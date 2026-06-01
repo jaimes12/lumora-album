@@ -10,7 +10,7 @@ namespace lumora_api.Controllers;
 [Authorize]
 public class WhatsappController(IWhatsappService whatsapp) : ControllerBase
 {
-    private string OrgId => User.FindFirst("user_id")?.Value ?? User.FindFirst("sub")?.Value ?? string.Empty;
+    private string OrgId => User.FindFirst("org_id")?.Value ?? User.FindFirst("user_id")?.Value ?? User.FindFirst("sub")?.Value ?? string.Empty;
 
     // ── Chats ──────────────────────────────────────────────
 

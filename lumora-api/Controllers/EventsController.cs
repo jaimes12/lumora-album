@@ -10,7 +10,7 @@ namespace lumora_api.Controllers;
 [Authorize]
 public class EventsController(IEventService events) : ControllerBase
 {
-    private string OrgId => User.FindFirst("user_id")?.Value ?? User.FindFirst("sub")?.Value ?? string.Empty;
+    private string OrgId => User.FindFirst("org_id")?.Value ?? User.FindFirst("user_id")?.Value ?? User.FindFirst("sub")?.Value ?? string.Empty;
 
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] string? status) =>
@@ -40,4 +40,13 @@ public class EventsController(IEventService events) : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id) =>
         await events.DeleteAsync(OrgId, id) ? NoContent() : NotFound();
+
+    [HttpPost("{id}/payments")]
+    public async Task<IActionResult> AddPayment(string id, [FromBody] CreatePaymentRequest req)
+    {
+        var ev = await events.GetByIdAsync(OrgId, id);
+        if (ev is null) return NotFound();
+        var payment = await events.AddPaymentAsync(OrgId, id, req);
+        return Ok(payment);
+    }
 }

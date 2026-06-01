@@ -14,6 +14,10 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
     public DbSet<SaleItem> SaleItems => Set<SaleItem>();
     public DbSet<WhatsappChat> WhatsappChats => Set<WhatsappChat>();
     public DbSet<WhatsappMessage> WhatsappMessages => Set<WhatsappMessage>();
+    public DbSet<Contract> Contracts => Set<Contract>();
+    public DbSet<Lead> Leads => Set<Lead>();
+    public DbSet<LeadMessage> LeadMessages => Set<LeadMessage>();
+    public DbSet<EventPayment> EventPayments => Set<EventPayment>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -66,6 +70,35 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
             .HasOne(m => m.Chat)
             .WithMany(c => c.Messages)
             .HasForeignKey(m => m.ChatId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Contract -> Client
+        mb.Entity<Contract>()
+            .HasOne(c => c.Client)
+            .WithMany()
+            .HasForeignKey(c => c.ClientId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Contract -> Event (nullable)
+        mb.Entity<Contract>()
+            .HasOne(c => c.Event)
+            .WithMany()
+            .HasForeignKey(c => c.EventId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Lead -> LeadMessages
+        mb.Entity<LeadMessage>()
+            .HasOne(m => m.Lead)
+            .WithMany(l => l.Messages)
+            .HasForeignKey(m => m.LeadId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // EventPayment -> Event
+        mb.Entity<EventPayment>()
+            .HasOne(p => p.Event)
+            .WithMany()
+            .HasForeignKey(p => p.EventId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

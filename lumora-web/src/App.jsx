@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { SettingsProvider } from './context/SettingsContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 
 // Landing components
 import Navbar from './components/Navbar'
@@ -22,6 +23,7 @@ import ProveedoresPage from './pages/ProveedoresPage'
 import VentasPage from './pages/VentasPage'
 import ContratosPage from './pages/ContratosPage'
 import CalendarioPage from './pages/CalendarioPage'
+import LoginPage from './pages/LoginPage'
 
 function LandingPage() {
   return (
@@ -38,32 +40,66 @@ function LandingPage() {
   )
 }
 
+function PrivateRoute({ children }) {
+  const { user, isLoading } = useAuth()
+  if (isLoading) return (
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'var(--bg)',
+      color: 'var(--text-muted)',
+      fontSize: '14px',
+      gap: '10px',
+    }}>
+      <div style={{
+        width: 18, height: 18,
+        border: '2px solid var(--border)',
+        borderTopColor: 'var(--accent)',
+        borderRadius: '50%',
+        animation: 'spin 0.7s linear infinite',
+      }} />
+      Cargando…
+    </div>
+  )
+  return user ? children : <Navigate to="/login" replace />
+}
+
 export default function App() {
   return (
     <SettingsProvider>
-    <BrowserRouter>
-      <Routes>
-        {/* Landing */}
-        <Route path="/" element={<LandingPage />} />
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Landing */}
+            <Route path="/" element={<LandingPage />} />
 
-        {/* App shell */}
-        <Route path="/app" element={<AppLayout />}>
-          <Route index element={<Navigate to="/app/dashboard" replace />} />
-          <Route path="dashboard"   element={<DashboardPage />} />
-          <Route path="eventos"     element={<EventosPage />} />
-          <Route path="eventos/:id" element={<EventoDetallePage />} />
-          <Route path="clientes"    element={<ClientesPage />} />
-          <Route path="chats"       element={<ChatPage />} />
-          <Route path="proveedores" element={<ProveedoresPage />} />
-          <Route path="ventas"      element={<VentasPage />} />
-          <Route path="contratos"   element={<ContratosPage />} />
-          <Route path="calendario"  element={<CalendarioPage />} />
-        </Route>
+            {/* Auth */}
+            <Route path="/login" element={<LoginPage />} />
 
-        {/* Catch-all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+            {/* App shell — protected */}
+            <Route
+              path="/app"
+              element={<PrivateRoute><AppLayout /></PrivateRoute>}
+            >
+              <Route index element={<Navigate to="/app/dashboard" replace />} />
+              <Route path="dashboard"   element={<DashboardPage />} />
+              <Route path="eventos"     element={<EventosPage />} />
+              <Route path="eventos/:id" element={<EventoDetallePage />} />
+              <Route path="clientes"    element={<ClientesPage />} />
+              <Route path="chats"       element={<ChatPage />} />
+              <Route path="proveedores" element={<ProveedoresPage />} />
+              <Route path="ventas"      element={<VentasPage />} />
+              <Route path="contratos"   element={<ContratosPage />} />
+              <Route path="calendario"  element={<CalendarioPage />} />
+            </Route>
+
+            {/* Catch-all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </SettingsProvider>
   )
 }

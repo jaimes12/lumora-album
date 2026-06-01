@@ -25,5 +25,8 @@ public class User
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    [Column("password_hash")]
+    public string? PasswordHash { get; set; }
+
     public Organization? Organization { get; set; }
 }

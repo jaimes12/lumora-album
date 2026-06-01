@@ -20,9 +20,23 @@ public record UpdateEventRequest(
     int? GuestCount, string? Notes
 );
 
+public record CreatePaymentRequest(
+    [Required] string Concept,
+    [Required] decimal Amount,
+    string Method = "transfer",
+    DateTime? PaidAt = null
+);
+
+public record PaymentInfo(
+    string Id, string Concept, decimal Amount,
+    string Method, DateTime PaidAt
+);
+
 public record EventResponse(
     string Id, string Name, string Type, string Status,
-    string ClientId, string? VenueId, string? Notes,
+    string ClientId, string? ClientName,
+    string? VenueId, string? Notes,
     decimal Budget, int GuestCount,
-    DateTime EventDate, DateTime CreatedAt
+    DateTime EventDate, DateTime CreatedAt,
+    List<PaymentInfo> Payments
 );

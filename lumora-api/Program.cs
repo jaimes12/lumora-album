@@ -1,3 +1,4 @@
+using System.Text;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using lumora_api.Data;
@@ -39,22 +40,47 @@ builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IVendorService, VendorService>();
 builder.Services.AddScoped<ISaleService, SaleService>();
 builder.Services.AddScoped<IWhatsappService, WhatsappService>();
+builder.Services.AddScoped<IContractService, ContractService>();
+builder.Services.AddScoped<ILeadService, LeadService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
-// Auth — Firebase ID tokens via JWT
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.Authority = $"https://securetoken.google.com/{projectId}";
-        options.TokenValidationParameters = new TokenValidationParameters
+// Auth
+var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "lumora-dev-secret-key-change-in-production-32chars";
+
+if (firebaseConfigured)
+{
+    builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
         {
-            ValidateIssuer = true,
-            ValidIssuer = $"https://securetoken.google.com/{projectId}",
-            ValidateAudience = true,
-            ValidAudience = projectId,
-            ValidateLifetime = true
-        };
-    });
+            options.Authority = $"https://securetoken.google.com/{projectId}";
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = $"https://securetoken.google.com/{projectId}",
+                ValidateAudience = true,
+                ValidAudience = projectId,
+                ValidateLifetime = true
+            };
+        });
+}
+else
+{
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(opts =>
+        {
+            opts.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = "lumora-api",
+                ValidateAudience = true,
+                ValidAudience = "lumora-web",
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
+            };
+        });
+}
 
 builder.Services.AddAuthorization();
 
@@ -106,6 +132,13 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o =>
 });
 
 var app = builder.Build();
+
+// Auto-migrate / ensure schema exists
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<LumoraDbContext>();
+    await db.Database.EnsureCreatedAsync();
+}
 
 app.UseSwagger();
 app.UseSwaggerUI();

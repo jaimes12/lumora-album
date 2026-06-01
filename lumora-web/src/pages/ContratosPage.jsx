@@ -1,6 +1,9 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import styles from './ContratosPage.module.css'
-import { CLIENTES, EVENTOS, fmt } from '../data/eventosData'
+import { fmt } from '../data/eventosData'
+import { contratosApi } from '../api/contratosApi'
+import { clientesApi } from '../api/clientesApi'
+import { eventosApi } from '../api/eventosApi'
 import logoFull from '../assets/lumora-logo.png'
 
 /* ─── Contract templates ──────────────────────────────────── */
@@ -211,11 +214,19 @@ function ContractPreview({ template, form, contratoRef }) {
 export default function ContratosPage() {
   const [vista,       setVista]       = useState('lista')   // lista | nuevo
   const [template,    setTemplate]    = useState(null)
-  const [contratos,   setContratos]   = useState(CONTRATOS_INIT)
+  const [contratos,   setContratos]   = useState([])
   const [contratoActivo, setContratoActivo] = useState(null)
   const contratoRef = useRef(null)
 
-  const clientesList = Object.values(CLIENTES)
+  const [clientesList, setClientesList] = useState([])
+  const [eventosList,  setEventosList]  = useState([])
+
+  useEffect(() => {
+    contratosApi.getAll().then(setContratos).catch(() => setContratos([]))
+    clientesApi.getAll().then(setClientesList).catch(() => setClientesList([]))
+    eventosApi.getAll().then(setEventosList).catch(() => setEventosList([]))
+  }, [])
+
   const [form, setForm] = useState({
     clienteId: '', clienteNombre: '', clienteRFC: '', domicilioCliente: '',
     eventoId: '', nombreEvento: '', fechaEvento: '', fechaFirma: '',
@@ -227,16 +238,16 @@ export default function ContratosPage() {
   })
 
   const eventosFiltrados = form.clienteId
-    ? EVENTOS.filter(e => e.clienteId === form.clienteId)
-    : EVENTOS
+    ? eventosList.filter(e => e.clienteId === form.clienteId)
+    : eventosList
 
   const handleClienteChange = (clienteId) => {
-    const c = CLIENTES[clienteId]
+    const c = clientesList.find(x => x.id === clienteId)
     setForm(f => ({ ...f, clienteId, clienteNombre: c?.nombre || '' }))
   }
 
   const handleEventoChange = (eventoId) => {
-    const ev = EVENTOS.find(e => e.id === eventoId)
+    const ev = eventosList.find(e => e.id === eventoId)
     setForm(f => ({
       ...f, eventoId,
       nombreEvento: ev?.nombre || '',
@@ -316,7 +327,10 @@ export default function ContratosPage() {
     setTimeout(() => { win.focus(); win.print() }, 600)
   }
 
-  const guardarContrato = () => {
+  const resetForm = () => setForm({ clienteId:'', clienteNombre:'', clienteRFC:'', domicilioCliente:'', eventoId:'', nombreEvento:'', fechaEvento:'', fechaFirma:'', venue:'', invitados:'', ciudad:'Ciudad de México', nombreFestejada:'', chambelanes:'14', total:'', anticipo:'', liquidacion:'', pctAnticipo:'50', diasLiquidacion:'15', totalLetras:'', servicios:[], notas:'' })
+
+  const guardarContrato = async () => {
+    const totalNum = parseFloat((form.total || '0').replace(/[$,]/g, '')) || 0
     const nuevo = {
       id: `ct${Date.now()}`,
       template: template?.id || 'boda',
@@ -326,10 +340,23 @@ export default function ContratosPage() {
       estado:  'borrador',
       total:   form.total || '$0',
     }
+    // Persist to API if client selected
+    if (form.clienteId) {
+      contratosApi.create({
+        clientId: form.clienteId,
+        eventId: form.eventoId || null,
+        template: template?.id || 'general',
+        title: form.nombreEvento || `Contrato ${template?.nombre || ''}`,
+        total: totalNum,
+        notes: form.notas || null,
+      }).then(saved => {
+        setContratos(c => [{ ...nuevo, id: saved.id }, ...c.filter(x => x.id !== nuevo.id)])
+      }).catch(() => {})
+    }
     setContratos(c => [nuevo, ...c])
     setVista('lista')
     setTemplate(null)
-    setForm({ clienteId:'', clienteNombre:'', clienteRFC:'', domicilioCliente:'', eventoId:'', nombreEvento:'', fechaEvento:'', fechaFirma:'', venue:'', invitados:'', ciudad:'Ciudad de México', nombreFestejada:'', chambelanes:'14', total:'', anticipo:'', liquidacion:'', pctAnticipo:'50', diasLiquidacion:'15', totalLetras:'', servicios:[], notas:'' })
+    resetForm()
   }
 
   if (vista === 'nuevo') {
@@ -397,6 +424,7 @@ export default function ContratosPage() {
                       <select value={form.clienteId} onChange={e => handleClienteChange(e.target.value)}>
                         <option value="">— Seleccionar cliente —</option>
                         {clientesList.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+
                       </select>
                     </div>
                     <div className={styles.formField}>
