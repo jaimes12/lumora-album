@@ -30,9 +30,10 @@ var connectionString =
     ?? Environment.GetEnvironmentVariable("MYSQL_URL")
     ?? "Server=zephyr.proxy.rlwy.net;Port=22140;Database=railway;User=root;Password=ieVDKlaSitDJTjSPqxlhDtdNchFHoLgE;AllowPublicKeyRetrieval=true;SslMode=none;";
 
+// Use hardcoded version — AutoDetect makes a sync DB call at startup and can crash the app
 builder.Services.AddDbContext<LumoraDbContext>(opts =>
-    opts.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString),
-        mySqlOpts => mySqlOpts.EnableRetryOnFailure(3)));
+    opts.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 35)),
+        mySqlOpts => mySqlOpts.EnableRetryOnFailure(5)));
 
 // Business services
 builder.Services.AddScoped<IEventService, EventService>();
@@ -161,10 +162,22 @@ catch (Exception ex)
     logger.LogError(ex, "DB startup error — app will continue without schema init");
 }
 
+// CORS must be first — ensures Access-Control-Allow-Origin appears even on error responses
+app.UseCors();
+
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseCors();
+// Global exception handler — returns JSON and preserves CORS headers
+app.UseExceptionHandler(errApp => errApp.Run(async ctx =>
+{
+    ctx.Response.StatusCode = 500;
+    ctx.Response.ContentType = "application/json";
+    var feature = ctx.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+    var msg = feature?.Error?.Message ?? "Internal server error";
+    await ctx.Response.WriteAsync($"{{\"error\":\"{msg}\"}}");
+}));
+
 app.UseAuthentication();
 app.UseAuthorization();
 

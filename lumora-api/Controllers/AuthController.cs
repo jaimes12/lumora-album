@@ -22,13 +22,24 @@ public class AuthController(IAuthService auth) : ControllerBase
         {
             return Conflict(new { message = ex.Message });
         }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error al registrar", detail = ex.Message });
+        }
     }
 
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<IActionResult> Login([FromBody] LoginRequest req)
     {
-        var result = await auth.LoginAsync(req);
-        return result is null ? Unauthorized("Credenciales incorrectas") : Ok(result);
+        try
+        {
+            var result = await auth.LoginAsync(req);
+            return result is null ? Unauthorized(new { message = "Credenciales incorrectas" }) : Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error al iniciar sesión", detail = ex.Message });
+        }
     }
 }
