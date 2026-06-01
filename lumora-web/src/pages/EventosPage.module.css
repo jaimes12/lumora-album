@@ -865,3 +865,192 @@
 }
 .modalBtnPrimary:hover { opacity: 0.88; }
 .modalBtnPrimary:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Steps ── */
+.modalSteps {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 12px;
+}
+.stepDot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.stepDotActive {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+.stepLine {
+  width: 24px;
+  height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+}
+
+.stepBody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Cliente search ── */
+.clienteSearch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 12px;
+  transition: border-color 0.15s;
+}
+.clienteSearch:focus-within { border-color: var(--accent); }
+.clienteSearch svg { flex-shrink: 0; color: var(--text-muted); }
+.clienteSearch input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: var(--text);
+  font-family: inherit;
+}
+.clienteSearch input::placeholder { color: var(--text-muted); }
+
+.clienteList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 6px;
+}
+.clienteList::-webkit-scrollbar { width: 3px; }
+.clienteList::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.clienteHint {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 16px 0;
+  margin: 0;
+}
+
+.clienteRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 0.12s;
+}
+.clienteRow:hover { background: var(--bg-2); }
+.clienteRowSelected { background: rgba(124,106,247,0.1) !important; }
+
+.clienteRowAvatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.clienteRowInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.clienteRowNombre {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.clienteRowSub {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.step1Actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.btnNuevoCliente {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px dashed var(--border);
+  color: var(--accent-2);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btnNuevoCliente:hover {
+  border-color: var(--accent);
+  background: rgba(124,106,247,0.06);
+}
+
+/* ── Cliente seleccionado chip ── */
+.clienteChipSel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(124,106,247,0.08);
+  border: 1px solid rgba(124,106,247,0.25);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+.clienteChipSel span {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.cambiarClienteBtn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: var(--accent-2);
+  cursor: pointer;
+  font-weight: 600;
+  padding: 2px 6px;
+}
+.cambiarClienteBtn:hover { text-decoration: underline; }

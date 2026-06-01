@@ -8,34 +8,67 @@ import styles from './EventosPage.module.css'
 const TIPOS = ['Boda', 'XV Años', 'Corporativo', 'Graduación', 'Bautizo', 'Cumpleaños', 'Reunión', 'Otro']
 
 function NuevoEventoModal({ onClose, onCreated }) {
-  const [clientes,  setClientes]  = useState([])
-  const [saving,    setSaving]    = useState(false)
-  const [error,     setError]     = useState('')
+  const [step,        setStep]        = useState(1) // 1 = cliente, 2 = evento
+  const [clientes,    setClientes]    = useState([])
+  const [loadingC,    setLoadingC]    = useState(true)
+  const [busqueda,    setBusqueda]    = useState('')
+  const [clienteSel,  setClienteSel]  = useState(null) // { id, nombre, email, telefono }
+  const [modoNuevo,   setModoNuevo]   = useState(false) // crear cliente inline
+  const [nuevoCliente,setNuevoCliente]= useState({ nombre: '', email: '', telefono: '', empresa: '' })
+  const [savingC,     setSavingC]     = useState(false)
+  const [saving,      setSaving]      = useState(false)
+  const [error,       setError]       = useState('')
   const [form, setForm] = useState({
-    nombre: '', tipo: 'Boda', clienteId: '', fecha: '', hora: '18:00',
+    nombre: '', tipo: 'Boda', fecha: '', hora: '18:00',
     venue: '', invitados: '', presupuesto: '', notas: '',
   })
 
   useEffect(() => {
-    clientesApi.getAll().then(setClientes).catch(() => {})
+    clientesApi.getAll()
+      .then(setClientes)
+      .catch(() => {})
+      .finally(() => setLoadingC(false))
   }, [])
 
-  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
+  const setF  = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
+  const setNC = k => e => setNuevoCliente(f => ({ ...f, [k]: e.target.value }))
 
-  const handleSubmit = async e => {
+  const clientesFiltrados = clientes.filter(c =>
+    c.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+    (c.email || '').toLowerCase().includes(busqueda.toLowerCase()) ||
+    (c.telefono || '').includes(busqueda)
+  )
+
+  // ── Step 1: guardar nuevo cliente ──
+  const crearCliente = async () => {
+    if (!nuevoCliente.nombre.trim()) { setError('El nombre es obligatorio'); return }
+    setSavingC(true); setError('')
+    try {
+      const c = await clientesApi.create({
+        name: nuevoCliente.nombre,
+        email: nuevoCliente.email || null,
+        phone: nuevoCliente.telefono || null,
+        company: nuevoCliente.empresa || null,
+      })
+      setClientes(prev => [c, ...prev])
+      setClienteSel(c)
+      setModoNuevo(false)
+      setStep(2)
+    } catch (err) { setError(err.message || 'Error al crear cliente') }
+    finally { setSavingC(false) }
+  }
+
+  // ── Step 2: guardar evento ──
+  const crearEvento = async e => {
     e.preventDefault()
-    if (!form.nombre || !form.fecha || !form.clienteId) {
-      setError('Nombre, fecha y cliente son obligatorios')
-      return
-    }
-    setSaving(true)
-    setError('')
+    if (!form.nombre || !form.fecha) { setError('Nombre y fecha son obligatorios'); return }
+    setSaving(true); setError('')
     try {
       const eventDate = new Date(`${form.fecha}T${form.hora || '12:00'}:00`)
       const nuevo = await eventosApi.create({
         name: form.nombre,
         type: form.tipo,
-        clientId: form.clienteId,
+        clientId: clienteSel.id,
         eventDate: eventDate.toISOString(),
         budget: parseFloat(form.presupuesto) || 0,
         guestCount: parseInt(form.invitados) || 0,
@@ -44,76 +77,187 @@ function NuevoEventoModal({ onClose, onCreated }) {
       })
       onCreated(nuevo)
       onClose()
-    } catch (err) {
-      setError(err.message || 'Error al crear evento')
-    } finally {
-      setSaving(false)
-    }
+    } catch (err) { setError(err.message || 'Error al crear evento') }
+    finally { setSaving(false) }
   }
 
   return (
     <div className={styles.modalOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
       <div className={styles.modal}>
+
+        {/* Header con steps */}
         <div className={styles.modalHeader}>
-          <h2 className={styles.modalTitle}>Nuevo evento</h2>
+          <div className={styles.modalSteps}>
+            <span className={`${styles.stepDot} ${step >= 1 ? styles.stepDotActive : ''}`}>1</span>
+            <span className={styles.stepLine} />
+            <span className={`${styles.stepDot} ${step >= 2 ? styles.stepDotActive : ''}`}>2</span>
+          </div>
+          <h2 className={styles.modalTitle}>
+            {step === 1 ? 'Seleccionar cliente' : `Datos del evento`}
+          </h2>
           <button className={styles.modalClose} onClick={onClose}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
         </div>
-        <form className={styles.modalForm} onSubmit={handleSubmit}>
-          <div className={styles.modalGrid}>
-            <div className={styles.modalField} style={{ gridColumn: '1/-1' }}>
-              <label>Nombre del evento *</label>
-              <input placeholder="Ej: Boda García & Ruiz" value={form.nombre} onChange={set('nombre')} required />
+
+        {/* ── STEP 1: Cliente ── */}
+        {step === 1 && !modoNuevo && (
+          <div className={styles.stepBody}>
+            <div className={styles.clienteSearch}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input
+                placeholder="Buscar cliente por nombre, email o teléfono..."
+                value={busqueda}
+                onChange={e => setBusqueda(e.target.value)}
+                autoFocus
+              />
             </div>
-            <div className={styles.modalField}>
-              <label>Tipo</label>
-              <select value={form.tipo} onChange={set('tipo')}>
-                {TIPOS.map(t => <option key={t}>{t}</option>)}
-              </select>
+
+            <div className={styles.clienteList}>
+              {loadingC && <p className={styles.clienteHint}>Cargando clientes…</p>}
+              {!loadingC && clientesFiltrados.length === 0 && (
+                <p className={styles.clienteHint}>
+                  {busqueda ? `Sin resultados para "${busqueda}"` : 'Sin clientes aún'}
+                </p>
+              )}
+              {clientesFiltrados.map(c => (
+                <button
+                  key={c.id}
+                  className={`${styles.clienteRow} ${clienteSel?.id === c.id ? styles.clienteRowSelected : ''}`}
+                  onClick={() => setClienteSel(c)}
+                >
+                  <div className={styles.clienteRowAvatar}>{c.avatar}</div>
+                  <div className={styles.clienteRowInfo}>
+                    <span className={styles.clienteRowNombre}>{c.nombre}</span>
+                    <span className={styles.clienteRowSub}>{c.email || c.telefono || 'Sin contacto'}</span>
+                  </div>
+                  {clienteSel?.id === c.id && (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  )}
+                </button>
+              ))}
             </div>
-            <div className={styles.modalField}>
-              <label>Cliente *</label>
-              <select value={form.clienteId} onChange={set('clienteId')} required>
-                <option value="">— Seleccionar —</option>
-                {clientes.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-              </select>
-            </div>
-            <div className={styles.modalField}>
-              <label>Fecha *</label>
-              <input type="date" value={form.fecha} onChange={set('fecha')} required />
-            </div>
-            <div className={styles.modalField}>
-              <label>Hora</label>
-              <input type="time" value={form.hora} onChange={set('hora')} />
-            </div>
-            <div className={styles.modalField}>
-              <label>Venue</label>
-              <input placeholder="Hacienda San Lucas..." value={form.venue} onChange={set('venue')} />
-            </div>
-            <div className={styles.modalField}>
-              <label>Invitados</label>
-              <input type="number" placeholder="150" min="1" value={form.invitados} onChange={set('invitados')} />
-            </div>
-            <div className={styles.modalField} style={{ gridColumn: '1/-1' }}>
-              <label>Presupuesto ($)</label>
-              <input type="number" placeholder="85000" min="0" value={form.presupuesto} onChange={set('presupuesto')} />
-            </div>
-            <div className={styles.modalField} style={{ gridColumn: '1/-1' }}>
-              <label>Notas</label>
-              <textarea placeholder="Detalles importantes del evento..." value={form.notas} onChange={set('notas')} rows={3} />
+
+            {error && <p className={styles.modalError}>{error}</p>}
+
+            <div className={styles.step1Actions}>
+              <button className={styles.btnNuevoCliente} onClick={() => { setModoNuevo(true); setError('') }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Crear nuevo cliente
+              </button>
+              <button
+                className={styles.modalBtnPrimary}
+                disabled={!clienteSel}
+                onClick={() => { setError(''); setStep(2) }}
+              >
+                Continuar →
+              </button>
             </div>
           </div>
-          {error && <p className={styles.modalError}>{error}</p>}
-          <div className={styles.modalActions}>
-            <button type="button" className={styles.modalBtnSecondary} onClick={onClose}>Cancelar</button>
-            <button type="submit" className={styles.modalBtnPrimary} disabled={saving}>
-              {saving ? 'Guardando…' : 'Crear evento →'}
-            </button>
+        )}
+
+        {/* ── STEP 1b: Formulario nuevo cliente inline ── */}
+        {step === 1 && modoNuevo && (
+          <div className={styles.stepBody}>
+            <p className={styles.clienteHint} style={{ marginBottom: 4 }}>Completa los datos del nuevo cliente:</p>
+            <div className={styles.modalGrid}>
+              <div className={styles.modalField} style={{ gridColumn: '1/-1' }}>
+                <label>Nombre completo *</label>
+                <input placeholder="Fernanda García Reyes" value={nuevoCliente.nombre} onChange={setNC('nombre')} autoFocus />
+              </div>
+              <div className={styles.modalField}>
+                <label>Email</label>
+                <input type="email" placeholder="correo@email.com" value={nuevoCliente.email} onChange={setNC('email')} />
+              </div>
+              <div className={styles.modalField}>
+                <label>Teléfono</label>
+                <input placeholder="+52 55 1234 5678" value={nuevoCliente.telefono} onChange={setNC('telefono')} />
+              </div>
+              <div className={styles.modalField} style={{ gridColumn: '1/-1' }}>
+                <label>Empresa / Familia</label>
+                <input placeholder="Familia García" value={nuevoCliente.empresa} onChange={setNC('empresa')} />
+              </div>
+            </div>
+            {error && <p className={styles.modalError}>{error}</p>}
+            <div className={styles.modalActions}>
+              <button className={styles.modalBtnSecondary} onClick={() => { setModoNuevo(false); setError('') }}>
+                ← Regresar
+              </button>
+              <button className={styles.modalBtnPrimary} disabled={savingC} onClick={crearCliente}>
+                {savingC ? 'Guardando…' : 'Crear y continuar →'}
+              </button>
+            </div>
           </div>
-        </form>
+        )}
+
+        {/* ── STEP 2: Datos del evento ── */}
+        {step === 2 && (
+          <form className={styles.stepBody} onSubmit={crearEvento}>
+            {/* Cliente seleccionado (chip) */}
+            <div className={styles.clienteChipSel}>
+              <div className={styles.clienteRowAvatar} style={{ width: 28, height: 28, fontSize: 10 }}>{clienteSel.avatar}</div>
+              <span>{clienteSel.nombre}</span>
+              <button type="button" className={styles.cambiarClienteBtn} onClick={() => { setStep(1); setError('') }}>
+                Cambiar
+              </button>
+            </div>
+
+            <div className={styles.modalGrid}>
+              <div className={styles.modalField} style={{ gridColumn: '1/-1' }}>
+                <label>Nombre del evento *</label>
+                <input placeholder="Ej: Boda García & Ruiz" value={form.nombre} onChange={setF('nombre')} required autoFocus />
+              </div>
+              <div className={styles.modalField}>
+                <label>Tipo</label>
+                <select value={form.tipo} onChange={setF('tipo')}>
+                  {TIPOS.map(t => <option key={t}>{t}</option>)}
+                </select>
+              </div>
+              <div className={styles.modalField}>
+                <label>Fecha *</label>
+                <input type="date" value={form.fecha} onChange={setF('fecha')} required />
+              </div>
+              <div className={styles.modalField}>
+                <label>Hora</label>
+                <input type="time" value={form.hora} onChange={setF('hora')} />
+              </div>
+              <div className={styles.modalField}>
+                <label>Venue</label>
+                <input placeholder="Hacienda San Lucas..." value={form.venue} onChange={setF('venue')} />
+              </div>
+              <div className={styles.modalField}>
+                <label>Invitados</label>
+                <input type="number" placeholder="150" min="1" value={form.invitados} onChange={setF('invitados')} />
+              </div>
+              <div className={styles.modalField} style={{ gridColumn: '1/-1' }}>
+                <label>Presupuesto ($)</label>
+                <input type="number" placeholder="85000" min="0" value={form.presupuesto} onChange={setF('presupuesto')} />
+              </div>
+              <div className={styles.modalField} style={{ gridColumn: '1/-1' }}>
+                <label>Notas</label>
+                <textarea placeholder="Detalles importantes..." value={form.notas} onChange={setF('notas')} rows={3} />
+              </div>
+            </div>
+            {error && <p className={styles.modalError}>{error}</p>}
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.modalBtnSecondary} onClick={() => { setStep(1); setError('') }}>
+                ← Regresar
+              </button>
+              <button type="submit" className={styles.modalBtnPrimary} disabled={saving}>
+                {saving ? 'Guardando…' : 'Crear evento →'}
+              </button>
+            </div>
+          </form>
+        )}
+
       </div>
     </div>
   )
