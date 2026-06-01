@@ -111,9 +111,12 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
             .OnDelete(DeleteBehavior.Cascade);
 
         // ── Pomelo 8.x GUID fix ──────────────────────────────────────────────
-        // SetValueConverter on metadata doesn't set ProviderClrType, so Pomelo
-        // still calls reader.GetGuid(). We must use the Fluent API HasConversion<string>()
-        // which sets BOTH the converter AND ProviderClrType = string, forcing GetString().
+        // HasConversion<string>() on a string property is a no-op in EF Core (identity
+        // conversion is discarded), so property.GetValueConverter() stays null and Pomelo
+        // falls back to reader.GetGuid() for char(36) columns → cast exception.
+        // Using an explicit ValueConverter instance forces a non-null converter, which
+        // makes Pomelo call GetString() regardless of the underlying MySQL column type.
+        var stringConverter = new ValueConverter<string, string>(v => v, v => v);
         foreach (var entityType in mb.Model.GetEntityTypes().ToList())
         {
             foreach (var property in entityType.GetProperties()
@@ -126,7 +129,7 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
 
                 mb.Entity(entityType.ClrType)
                     .Property(property.Name)
-                    .HasConversion<string>();
+                    .HasConversion(stringConverter);
             }
         }
     }
