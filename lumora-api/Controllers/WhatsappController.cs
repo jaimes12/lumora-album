@@ -18,7 +18,8 @@ public class WhatsappController(IWhatsappService whatsapp, IWaServerService waSe
     [AllowAnonymous]
     public async Task<IActionResult> Webhook([FromBody] WaWebhookPayload payload)
     {
-        if (string.IsNullOrWhiteSpace(payload.Body)) return Ok();
+        // Skip only when there is truly nothing to process (no text AND no media)
+        if (string.IsNullOrWhiteSpace(payload.Body) && string.IsNullOrWhiteSpace(payload.MediaData)) return Ok();
         if (!payload.ClientName.StartsWith("lm_")) return Ok();
         if (payload.From.EndsWith("@g.us")) return Ok(); // skip groups
 
@@ -28,9 +29,9 @@ public class WhatsappController(IWhatsappService whatsapp, IWaServerService waSe
         var phone = !string.IsNullOrWhiteSpace(payload.Number) ? payload.Number : payload.From;
 
         if (payload.Direction == "outbound")
-            await leads.HandleOutboundAsync(orgId, phone, payload.Body, payload.MediaData, payload.MediaType);
+            await leads.HandleOutboundAsync(orgId, phone, payload.Body ?? "", payload.MediaData, payload.MediaType);
         else
-            await leads.HandleInboundAsync(orgId, phone, payload.Body, payload.Pushname, payload.MediaData, payload.MediaType);
+            await leads.HandleInboundAsync(orgId, phone, payload.Body ?? "", payload.Pushname, payload.MediaData, payload.MediaType);
         return Ok();
     }
 

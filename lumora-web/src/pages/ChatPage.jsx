@@ -362,11 +362,13 @@ const isPhoneNumber = (s) => s && /^[\d\s\-\+\(\)]{7,}$/.test(s.trim())
 
 // ─── Chat Modal ──────────────────────────────────────────────────────────────
 function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
-  const [lead,     setLead]     = useState(initLead)
-  const [message,  setMessage]  = useState('')
-  const [sending,  setSending]  = useState(false)
-  const [showInfo, setShowInfo] = useState(true)
-  const bottomRef = useRef(null)
+  const [lead,       setLead]       = useState(initLead)
+  const [message,    setMessage]    = useState('')
+  const [sending,    setSending]    = useState(false)
+  const [showInfo,   setShowInfo]   = useState(true)
+  const [mediaFile,  setMediaFile]  = useState(null)  // { name, dataUrl, base64, mimeType }
+  const bottomRef  = useRef(null)
+  const fileInputRef = useRef(null)
 
   const fetchLead = useCallback(async () => {
     try {
@@ -390,23 +392,48 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
     return () => { clearInterval(id); window.removeEventListener('focus', onFocus) }
   }, [fetchLead])
 
+  const pickFile = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result
+      // dataUrl = "data:image/jpeg;base64,AAAA..." → extract base64 part
+      const base64 = dataUrl.split(',')[1]
+      setMediaFile({ name: file.name, dataUrl, base64, mimeType: file.type })
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
+  const clearMedia = () => setMediaFile(null)
+
   const send = async () => {
     const text = message.trim()
-    if (!text || sending) return
+    if (!text && !mediaFile) return
+    if (sending) return
     setSending(true)
     setMessage('')
+    const capturedMedia = mediaFile
+    setMediaFile(null)
+
     const tempId = `tmp_${Date.now()}`
     const tempMsg = {
       id: tempId,
       texto: text,
       tipo: 'out',
+      mediaUrl:  capturedMedia?.dataUrl ?? null,
+      mediaType: capturedMedia?.mimeType ?? null,
       hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
     }
-    setLead(l => ({ ...l, mensajes: [...l.mensajes, tempMsg], ultimoMsg: text }))
-    onLeadUpdate(lead.id, { ultimoMsg: text })
+    const summary = text || (capturedMedia ? `[${capturedMedia.mimeType.startsWith('image') ? 'Imagen' : 'Audio'}]` : '')
+    setLead(l => ({ ...l, mensajes: [...l.mensajes, tempMsg], ultimoMsg: summary }))
+    onLeadUpdate(lead.id, { ultimoMsg: summary })
     try {
-      await leadsApi.sendMessage(lead.id, text, 'outbound')
-      // Replace temp msg with saved one on next poll; for now mark as saved
+      await leadsApi.sendMessage(
+        lead.id, text || null, 'outbound',
+        capturedMedia?.base64 ?? null, capturedMedia?.mimeType ?? null
+      )
       setLead(l => ({
         ...l,
         mensajes: l.mensajes.map(m => m.id === tempId ? { ...m, id: `sent_${Date.now()}` } : m),
@@ -510,8 +537,41 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
               <div ref={bottomRef} />
             </div>
 
+            {/* Media preview */}
+            {mediaFile && (
+              <div className={styles.chatMediaPreview}>
+                {mediaFile.mimeType.startsWith('image') ? (
+                  <img src={mediaFile.dataUrl} className={styles.chatMediaPreviewThumb} alt="preview" />
+                ) : (
+                  <div className={styles.chatMediaPreviewAudio}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                    {mediaFile.name}
+                  </div>
+                )}
+                <button className={styles.chatMediaPreviewClose} onClick={clearMedia} title="Quitar">✕</button>
+              </div>
+            )}
+
             {/* Input */}
             <div className={styles.chatInputArea}>
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,audio/*"
+                style={{ display: 'none' }}
+                onChange={pickFile}
+              />
+              <button
+                className={styles.chatAttachBtn}
+                onClick={() => fileInputRef.current?.click()}
+                title="Adjuntar imagen o audio"
+                type="button"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                </svg>
+              </button>
               <textarea
                 className={styles.chatInput}
                 placeholder="Escribe un mensaje… (Enter para enviar)"
@@ -520,7 +580,7 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
                 onChange={e => setMessage(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
               />
-              <button className={styles.chatSendBtn} onClick={send} disabled={!message.trim() || sending}>
+              <button className={styles.chatSendBtn} onClick={send} disabled={(!message.trim() && !mediaFile) || sending}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
                 </svg>

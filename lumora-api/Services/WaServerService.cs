@@ -10,7 +10,7 @@ public interface IWaServerService
     Task<WaConnectionStatus> GetStatusAsync(string orgId);
     Task ConnectAsync(string orgId);
     Task DisconnectAsync(string orgId);
-    Task<bool> SendAsync(string orgId, string phone, string message);
+    Task<bool> SendAsync(string orgId, string phone, string message, string? mediaUrl = null, string? mediaType = null);
 }
 
 public class WaServerService(IHttpClientFactory factory, ILogger<WaServerService> log) : IWaServerService
@@ -73,18 +73,16 @@ public class WaServerService(IHttpClientFactory factory, ILogger<WaServerService
         }
     }
 
-    public async Task<bool> SendAsync(string orgId, string phone, string message)
+    public async Task<bool> SendAsync(string orgId, string phone, string message, string? mediaUrl = null, string? mediaType = null)
     {
         try
         {
-            var body = JsonSerializer.Serialize(new
-            {
-                phone,
-                message,
-                clientName = ClientName(orgId),
-                country = "mx"
-            });
-            var res = await Http.PostAsync("/api/whatsapp/send",
+            object payload = mediaUrl is not null
+                ? new { phone, message, clientName = ClientName(orgId), country = "mx", mediaUrl, mediaType }
+                : new { phone, message, clientName = ClientName(orgId), country = "mx" };
+
+            var body = JsonSerializer.Serialize(payload);
+            var res  = await Http.PostAsync("/api/whatsapp/send",
                 new StringContent(body, Encoding.UTF8, "application/json"));
             return res.IsSuccessStatusCode;
         }

@@ -43,7 +43,7 @@ public record MessageResponse(
 public record WaWebhookPayload(
     string  ClientName,     // e.g. "lm_ba22ec7e_6745_..."
     string  From,           // PHONE@c.us — recipient for outbound, sender for inbound
-    string  Body,
+    string? Body,           // nullable — images/audio may have no caption
     long?   Timestamp,
     string? Pushname,
     string? Number,         // clean digits from @c.us form of From

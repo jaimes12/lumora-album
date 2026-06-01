@@ -21,8 +21,10 @@ public record UpdateLeadRequest(
 );
 
 public record SendLeadMessageRequest(
-    [Required] string Body,
-    [Required] string Direction
+    string? Body,
+    [Required] string Direction,
+    string? MediaData,
+    string? MediaType
 );
 
 public record LeadMessageResponse(

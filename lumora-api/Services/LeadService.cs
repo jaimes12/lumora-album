@@ -93,18 +93,26 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer, IR2Servi
             .FirstOrDefaultAsync(l => l.Id == leadId && l.OrgId == orgId);
         if (lead is null) return null;
 
+        var mediaUrl  = await UploadMediaIfPresent(req.MediaData, req.MediaType);
+        var mime      = req.MediaType?.Split(';')[0].Trim();
+        var summary   = string.IsNullOrWhiteSpace(req.Body) && mediaUrl is not null
+            ? $"[{(mime?.StartsWith("image") == true ? "Imagen" : "Audio")}]"
+            : req.Body ?? "";
+
         var message = new LeadMessage
         {
-            Id = Guid.NewGuid().ToString(),
-            LeadId = leadId,
-            OrgId = orgId,
-            Body = req.Body,
+            Id        = Guid.NewGuid().ToString(),
+            LeadId    = leadId,
+            OrgId     = orgId,
+            Body      = summary,
             Direction = req.Direction,
-            SentAt = DateTime.UtcNow
+            MediaUrl  = mediaUrl,
+            MediaType = mime,
+            SentAt    = DateTime.UtcNow
         };
         await db.LeadMessages.AddAsync(message);
 
-        lead.LastMessage = req.Body;
+        lead.LastMessage   = summary;
         lead.LastMessageAt = message.SentAt;
         if (req.Direction == "inbound")
             lead.UnreadCount++;
@@ -113,7 +121,7 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer, IR2Servi
 
         // Fire-and-forget WA send — DB save already succeeded, WA failure is non-fatal
         if (req.Direction == "outbound" && !string.IsNullOrWhiteSpace(lead.Phone))
-            _ = waServer.SendAsync(orgId, lead.Phone, req.Body);
+            _ = waServer.SendAsync(orgId, lead.Phone, req.Body ?? "", mediaUrl, mime);
 
         return ToMessageResponse(message);
     }

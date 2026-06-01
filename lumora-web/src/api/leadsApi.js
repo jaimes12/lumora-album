@@ -38,6 +38,7 @@ export const leadsApi = {
   update:      (id, data) => api.patch(`/api/leads/${id}`, data).then(toFrontend),
   delete:      (id)    => api.delete(`/api/leads/${id}`),
   deleteAll:   ()      => api.delete('/api/leads'),
-  sendMessage: (id, body, direction = 'outbound') => api.post(`/api/leads/${id}/messages`, { body, direction }),
+  sendMessage: (id, body, direction = 'outbound', mediaData = null, mediaType = null) =>
+    api.post(`/api/leads/${id}/messages`, { body: body || null, direction, mediaData, mediaType }),
   markRead:    (id)    => api.patch(`/api/leads/${id}/read`, {}),
 }
