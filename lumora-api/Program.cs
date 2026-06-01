@@ -30,6 +30,12 @@ var connectionString =
     ?? Environment.GetEnvironmentVariable("MYSQL_URL")
     ?? "Server=zephyr.proxy.rlwy.net;Port=22140;Database=railway;User=root;Password=ieVDKlaSitDJTjSPqxlhDtdNchFHoLgE;AllowPublicKeyRetrieval=true;SslMode=none;";
 
+// GuidFormat=None: tells MySqlConnector never to auto-convert char(36) values to System.Guid.
+// Without this, Pomelo calls reader.GetGuid() for char(36) columns and EF Core then
+// fails to assign the resulting System.Guid to a string property.
+if (!connectionString.Contains("GuidFormat", StringComparison.OrdinalIgnoreCase))
+    connectionString += ";GuidFormat=None";
+
 // Use hardcoded version — AutoDetect makes a sync DB call at startup and can crash the app
 builder.Services.AddDbContext<LumoraDbContext>(opts =>
     opts.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 35)),
