@@ -744,3 +744,26 @@
   .panelActions { gap: 6px; }
   .stageSelect { font-size: 11px; padding: 4px 8px; max-width: 120px; }
 }
+
+/* ── New Lead Modal ── */
+.leadOverlay { position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:500;padding:20px; }
+.leadModal { background:var(--bg-1);border:1px solid var(--border);border-radius:18px;width:100%;max-width:460px;padding:24px;animation:lmIn 0.18s ease; }
+@keyframes lmIn { from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none} }
+.leadModalHeader { display:flex;align-items:center;justify-content:space-between;margin-bottom:20px; }
+.leadModalTitle { font-size:17px;font-weight:700;color:var(--text); }
+.leadModalClose { width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--bg-2);color:var(--text-muted);cursor:pointer;font-size:14px;transition:all 0.15s; }
+.leadModalClose:hover { color:var(--text); }
+.leadModalForm { display:flex;flex-direction:column;gap:14px; }
+.leadGrid { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+.leadField { display:flex;flex-direction:column;gap:5px; }
+.leadField label { font-size:12px;font-weight:600;color:var(--text-muted); }
+.leadField input,.leadField select { background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;transition:border-color 0.15s;font-family:inherit;width:100%;box-sizing:border-box; }
+.leadField input:focus,.leadField select:focus { border-color:var(--accent); }
+.leadField input::placeholder { color:var(--text-muted); }
+.leadError { font-size:13px;color:#f87171;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.2);border-radius:8px;padding:10px 12px;margin:0; }
+.leadModalActions { display:flex;gap:10px;justify-content:flex-end; }
+.leadBtnSecondary { padding:9px 18px;border-radius:9px;border:1px solid var(--border);background:var(--bg-2);color:var(--text-muted);font-size:13px;font-weight:500;cursor:pointer; }
+.leadBtnSecondary:hover { color:var(--text); }
+.leadBtnPrimary { padding:9px 18px;border-radius:9px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.15s; }
+.leadBtnPrimary:hover { opacity:0.88; }
+.leadBtnPrimary:disabled { opacity:0.5;cursor:default; }

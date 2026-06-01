@@ -1,6 +1,123 @@
 import { useState, useEffect } from 'react'
 import { ventasApi } from '../api/ventasApi'
+import { clientesApi } from '../api/clientesApi'
+import { eventosApi } from '../api/eventosApi'
 import styles from './VentasPage.module.css'
+
+function NuevaCotizacionModal({ onClose, onCreated }) {
+  const [clientes,  setClientes]  = useState([])
+  const [eventos,   setEventos]   = useState([])
+  const [saving,    setSaving]    = useState(false)
+  const [error,     setError]     = useState('')
+  const [items,     setItems]     = useState([{ descripcion: '', cantidad: 1, precio: '' }])
+  const [form, setForm] = useState({ clienteId: '', eventoId: '', notas: '', impuesto: '0' })
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
+
+  useEffect(() => {
+    clientesApi.getAll().then(setClientes).catch(() => {})
+    eventosApi.getAll().then(setEventos).catch(() => {})
+  }, [])
+
+  const setItem = (i, k, v) => setItems(prev => prev.map((it, idx) => idx === i ? { ...it, [k]: v } : it))
+  const addItem = () => setItems(prev => [...prev, { descripcion: '', cantidad: 1, precio: '' }])
+  const removeItem = i => setItems(prev => prev.filter((_, idx) => idx !== i))
+
+  const subtotal = items.reduce((s, it) => s + (parseFloat(it.precio) || 0) * (parseInt(it.cantidad) || 1), 0)
+  const tax = parseFloat(form.impuesto) || 0
+
+  const handleSubmit = async e => {
+    e.preventDefault()
+    if (!form.clienteId) { setError('Selecciona un cliente'); return }
+    if (items.every(it => !it.descripcion)) { setError('Agrega al menos un concepto'); return }
+    setSaving(true); setError('')
+    try {
+      const apiItems = items.filter(it => it.descripcion).map((it, i) => ({
+        description: it.descripcion,
+        quantity: parseInt(it.cantidad) || 1,
+        unitPrice: parseFloat(it.precio) || 0,
+        sortOrder: i,
+      }))
+      const nueva = await ventasApi.create({
+        clientId: form.clienteId,
+        eventId: form.eventoId || null,
+        type: 'quote',
+        items: apiItems,
+        tax,
+        notes: form.notas || null,
+      })
+      onCreated(nueva); onClose()
+    } catch (err) { setError(err.message || 'Error al crear cotización') }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <div className={styles.modalOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className={styles.modal}>
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>Nueva cotización</h2>
+          <button className={styles.modalClose} onClick={onClose}>✕</button>
+        </div>
+        <form className={styles.modalForm} onSubmit={handleSubmit}>
+          <div className={styles.modalGrid}>
+            <div className={styles.modalField}>
+              <label>Cliente *</label>
+              <select value={form.clienteId} onChange={set('clienteId')} required>
+                <option value="">— Seleccionar —</option>
+                {clientes.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+              </select>
+            </div>
+            <div className={styles.modalField}>
+              <label>Evento (opcional)</label>
+              <select value={form.eventoId} onChange={set('eventoId')}>
+                <option value="">— Ninguno —</option>
+                {eventos.map(e => <option key={e.id} value={e.id}>{e.nombre}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className={styles.itemsSection}>
+            <div className={styles.itemsHeader}>
+              <span className={styles.itemsLabel}>Conceptos</span>
+              <button type="button" className={styles.addItemBtn} onClick={addItem}>+ Agregar</button>
+            </div>
+            {items.map((it, i) => (
+              <div key={i} className={styles.itemRow}>
+                <input className={styles.itemDesc} placeholder="Descripción del servicio" value={it.descripcion}
+                  onChange={e => setItem(i, 'descripcion', e.target.value)} />
+                <input className={styles.itemNum} type="number" placeholder="Cant." min="1" value={it.cantidad}
+                  onChange={e => setItem(i, 'cantidad', e.target.value)} />
+                <input className={styles.itemNum} type="number" placeholder="Precio" min="0" value={it.precio}
+                  onChange={e => setItem(i, 'precio', e.target.value)} />
+                {items.length > 1 && (
+                  <button type="button" className={styles.removeItemBtn} onClick={() => removeItem(i)}>✕</button>
+                )}
+              </div>
+            ))}
+            <div className={styles.itemsTotal}>
+              <span>Subtotal: <strong>${subtotal.toLocaleString('es-MX')}</strong></span>
+              <div className={styles.taxRow}>
+                <label>IVA / impuesto ($):</label>
+                <input className={styles.taxInput} type="number" min="0" value={form.impuesto} onChange={set('impuesto')} />
+              </div>
+              <span>Total: <strong>${(subtotal + tax).toLocaleString('es-MX')}</strong></span>
+            </div>
+          </div>
+
+          <div className={styles.modalField}>
+            <label>Notas</label>
+            <textarea placeholder="Condiciones, validez, etc." value={form.notas} onChange={set('notas')} rows={2} />
+          </div>
+
+          {error && <p className={styles.modalError}>{error}</p>}
+          <div className={styles.modalActions}>
+            <button type="button" className={styles.modalBtnSecondary} onClick={onClose}>Cancelar</button>
+            <button type="submit" className={styles.modalBtnPrimary} disabled={saving}>{saving ? 'Guardando…' : 'Crear cotización →'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
 
 const COT_META = {
   approved: { label: 'Aprobada',  cls: 'approved' },
@@ -21,9 +138,10 @@ const FAC_META = {
 }
 
 export default function VentasPage() {
-  const [ventas,  setVentas]  = useState([])
-  const [loading, setLoading] = useState(true)
-  const [tab,     setTab]     = useState('cotizaciones')
+  const [ventas,      setVentas]      = useState([])
+  const [loading,     setLoading]     = useState(true)
+  const [tab,         setTab]         = useState('cotizaciones')
+  const [showCreate,  setShowCreate]  = useState(false)
 
   useEffect(() => {
     ventasApi.getAll()
@@ -51,12 +169,18 @@ export default function VentasPage() {
 
   return (
     <div className={styles.page}>
+      {showCreate && (
+        <NuevaCotizacionModal
+          onClose={() => setShowCreate(false)}
+          onCreated={v => setVentas(prev => [v, ...prev])}
+        />
+      )}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Ventas</h1>
           <p className={styles.sub}>Cotizaciones y facturación</p>
         </div>
-        <button className={styles.btnPrimary}>
+        <button className={styles.btnPrimary} onClick={() => setShowCreate(true)}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>

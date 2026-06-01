@@ -2,6 +2,64 @@ import { useState, useEffect } from 'react'
 import { clientesApi } from '../api/clientesApi'
 import styles from './ClientesPage.module.css'
 
+function NuevoClienteModal({ onClose, onCreated }) {
+  const [saving, setSaving] = useState(false)
+  const [error,  setError]  = useState('')
+  const [form, setForm] = useState({ nombre: '', email: '', telefono: '', empresa: '', notas: '' })
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
+
+  const handleSubmit = async e => {
+    e.preventDefault()
+    if (!form.nombre) { setError('El nombre es obligatorio'); return }
+    setSaving(true); setError('')
+    try {
+      const nuevo = await clientesApi.create({ name: form.nombre, email: form.email || null, phone: form.telefono || null, company: form.empresa || null, notes: form.notas || null })
+      onCreated(nuevo); onClose()
+    } catch (err) { setError(err.message || 'Error al crear cliente') }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <div className={styles.modalOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className={styles.modal}>
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>Nuevo cliente</h2>
+          <button className={styles.modalClose} onClick={onClose}>✕</button>
+        </div>
+        <form className={styles.modalForm} onSubmit={handleSubmit}>
+          <div className={styles.modalGrid}>
+            <div className={styles.modalField} style={{ gridColumn:'1/-1' }}>
+              <label>Nombre completo *</label>
+              <input placeholder="Fernanda García Reyes" value={form.nombre} onChange={set('nombre')} required />
+            </div>
+            <div className={styles.modalField}>
+              <label>Email</label>
+              <input type="email" placeholder="correo@email.com" value={form.email} onChange={set('email')} />
+            </div>
+            <div className={styles.modalField}>
+              <label>Teléfono</label>
+              <input placeholder="+52 55 1234 5678" value={form.telefono} onChange={set('telefono')} />
+            </div>
+            <div className={styles.modalField} style={{ gridColumn:'1/-1' }}>
+              <label>Empresa / Familia</label>
+              <input placeholder="Familia García" value={form.empresa} onChange={set('empresa')} />
+            </div>
+            <div className={styles.modalField} style={{ gridColumn:'1/-1' }}>
+              <label>Notas</label>
+              <textarea placeholder="Información relevante del cliente..." value={form.notas} onChange={set('notas')} rows={3} />
+            </div>
+          </div>
+          {error && <p className={styles.modalError}>{error}</p>}
+          <div className={styles.modalActions}>
+            <button type="button" className={styles.modalBtnSecondary} onClick={onClose}>Cancelar</button>
+            <button type="submit" className={styles.modalBtnPrimary} disabled={saving}>{saving ? 'Guardando…' : 'Crear cliente →'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 const ETAPA_META = {
   lead:     { label: 'Lead',      cls: 'lead'     },
   prospect: { label: 'Prospecto', cls: 'prospect' },
@@ -15,6 +73,7 @@ export default function ClientesPage() {
   const [search,       setSearch]       = useState('')
   const [selected,     setSelected]     = useState(null)
   const [filterEtapa,  setFilterEtapa]  = useState('todos')
+  const [showCreate,   setShowCreate]   = useState(false)
 
   useEffect(() => {
     clientesApi.getAll()
@@ -39,12 +98,18 @@ export default function ClientesPage() {
 
   return (
     <div className={styles.page}>
+      {showCreate && (
+        <NuevoClienteModal
+          onClose={() => setShowCreate(false)}
+          onCreated={c => setClientes(prev => [c, ...prev])}
+        />
+      )}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Clientes</h1>
           <p className={styles.sub}>{clientes.length} clientes en tu CRM</p>
         </div>
-        <button className={styles.btnPrimary}>
+        <button className={styles.btnPrimary} onClick={() => setShowCreate(true)}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>

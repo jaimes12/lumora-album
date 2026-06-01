@@ -345,3 +345,27 @@
     border-radius: 18px 18px 0 0;
   }
 }
+
+/* ── Create Modal ── */
+.createOverlay { position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:500;padding:20px; }
+.createModal { background:var(--bg-1);border:1px solid var(--border);border-radius:18px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:24px;animation:cModalIn 0.18s ease; }
+@keyframes cModalIn { from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none} }
+.createHeader { display:flex;align-items:center;justify-content:space-between;margin-bottom:20px; }
+.createTitle { font-size:17px;font-weight:700;color:var(--text); }
+.createClose { width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--bg-2);color:var(--text-muted);cursor:pointer;font-size:14px;transition:all 0.15s; }
+.createClose:hover { color:var(--text); }
+.createForm { display:flex;flex-direction:column;gap:14px; }
+.createGrid { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+.createField { display:flex;flex-direction:column;gap:5px; }
+.createField label { font-size:12px;font-weight:600;color:var(--text-muted); }
+.createField input,.createField select,.createField textarea { background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;transition:border-color 0.15s;font-family:inherit;width:100%;box-sizing:border-box; }
+.createField input:focus,.createField select:focus,.createField textarea:focus { border-color:var(--accent); }
+.createField input::placeholder,.createField textarea::placeholder { color:var(--text-muted); }
+.createField textarea { resize:vertical; }
+.createError { font-size:13px;color:#f87171;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.2);border-radius:8px;padding:10px 12px;margin:0; }
+.createActions { display:flex;gap:10px;justify-content:flex-end; }
+.createBtnSecondary { padding:9px 18px;border-radius:9px;border:1px solid var(--border);background:var(--bg-2);color:var(--text-muted);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s; }
+.createBtnSecondary:hover { color:var(--text); }
+.createBtnPrimary { padding:9px 18px;border-radius:9px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.15s; }
+.createBtnPrimary:hover { opacity:0.88; }
+.createBtnPrimary:disabled { opacity:0.5;cursor:default; }

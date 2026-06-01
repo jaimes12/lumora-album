@@ -2,6 +2,74 @@ import { useState, useEffect } from 'react'
 import { leadsApi } from '../api/leadsApi'
 import styles from './ChatPage.module.css'
 
+const TIPOS_EVENTO = ['Boda', 'XV Años', 'Corporativo', 'Graduación', 'Bautizo', 'Cumpleaños', 'Otro']
+
+function NuevoLeadModal({ onClose, onCreated }) {
+  const [saving, setSaving] = useState(false)
+  const [error,  setError]  = useState('')
+  const [form, setForm] = useState({ nombre: '', telefono: '', tipoEvento: 'Boda', fechaEvento: '', presupuesto: '' })
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
+
+  const handleSubmit = async e => {
+    e.preventDefault()
+    if (!form.nombre || !form.telefono) { setError('Nombre y teléfono son obligatorios'); return }
+    setSaving(true); setError('')
+    try {
+      const nuevo = await leadsApi.create({
+        name: form.nombre,
+        phone: form.telefono,
+        eventType: form.tipoEvento || null,
+        eventDate: form.fechaEvento || null,
+        budget: form.presupuesto ? parseFloat(form.presupuesto) : null,
+      })
+      onCreated(nuevo); onClose()
+    } catch (err) { setError(err.message || 'Error al crear lead') }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <div className={styles.leadOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className={styles.leadModal}>
+        <div className={styles.leadModalHeader}>
+          <h2 className={styles.leadModalTitle}>Nuevo lead</h2>
+          <button className={styles.leadModalClose} onClick={onClose}>✕</button>
+        </div>
+        <form className={styles.leadModalForm} onSubmit={handleSubmit}>
+          <div className={styles.leadGrid}>
+            <div className={styles.leadField}>
+              <label>Nombre *</label>
+              <input placeholder="Valeria Torres" value={form.nombre} onChange={set('nombre')} required />
+            </div>
+            <div className={styles.leadField}>
+              <label>Teléfono *</label>
+              <input placeholder="+52 55 1234 5678" value={form.telefono} onChange={set('telefono')} required />
+            </div>
+            <div className={styles.leadField}>
+              <label>Tipo de evento</label>
+              <select value={form.tipoEvento} onChange={set('tipoEvento')}>
+                {TIPOS_EVENTO.map(t => <option key={t}>{t}</option>)}
+              </select>
+            </div>
+            <div className={styles.leadField}>
+              <label>Fecha estimada</label>
+              <input placeholder="Jul 2026" value={form.fechaEvento} onChange={set('fechaEvento')} />
+            </div>
+            <div className={styles.leadField} style={{ gridColumn:'1/-1' }}>
+              <label>Presupuesto estimado ($)</label>
+              <input type="number" placeholder="85000" min="0" value={form.presupuesto} onChange={set('presupuesto')} />
+            </div>
+          </div>
+          {error && <p className={styles.leadError}>{error}</p>}
+          <div className={styles.leadModalActions}>
+            <button type="button" className={styles.leadBtnSecondary} onClick={onClose}>Cancelar</button>
+            <button type="submit" className={styles.leadBtnPrimary} disabled={saving}>{saving ? 'Guardando…' : 'Crear lead →'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 const STAGES = [
   { id: 'nuevo',      label: 'Nuevo',             color: '#64748b', bg: 'rgba(100,116,139,0.12)' },
   { id: 'contactado', label: 'Contactado',         color: '#38bdf8', bg: 'rgba(56,189,248,0.12)'  },
@@ -18,6 +86,7 @@ export default function ChatPage() {
   const [dragging,    setDragging]    = useState(null)
   const [dragOver,    setDragOver]    = useState(null)
   const [mobileTab,   setMobileTab]   = useState('chats')
+  const [showCreate,  setShowCreate]  = useState(false)
 
   useEffect(() => {
     leadsApi.getAll()
@@ -67,6 +136,12 @@ export default function ChatPage() {
 
   return (
     <div className={styles.page}>
+      {showCreate && (
+        <NuevoLeadModal
+          onClose={() => setShowCreate(false)}
+          onCreated={lead => setLeads(prev => [lead, ...prev])}
+        />
+      )}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Pipeline de chats</h1>
@@ -81,7 +156,7 @@ export default function ChatPage() {
             <span className={styles.statChipVal}>{byStage('negociando').length + byStage('cotizacion').length}</span>
             <span className={styles.statChipLabel}>En proceso</span>
           </div>
-          <button className={styles.btnNew}>+ Nuevo lead</button>
+          <button className={styles.btnNew} onClick={() => setShowCreate(true)}>+ Nuevo lead</button>
         </div>
       </div>
 

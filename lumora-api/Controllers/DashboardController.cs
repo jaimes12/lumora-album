@@ -18,49 +18,66 @@ public class DashboardController(LumoraDbContext db) : ControllerBase
         var now = DateTime.UtcNow;
         var orgId = OrgId;
 
-        var eventsThisMonth = await db.Events
-            .CountAsync(e => e.OrgId == orgId
-                && e.EventDate.Month == now.Month
-                && e.EventDate.Year == now.Year);
+        int eventsThisMonth = 0, newClientsThisMonth = 0, pendingSales = 0;
+        decimal revenueThisMonth = 0;
+        object upcomingEvents = Array.Empty<object>();
 
-        var revenueThisMonth = await db.EventPayments
-            .Where(p => p.OrgId == orgId
-                && p.PaidAt.Month == now.Month
-                && p.PaidAt.Year == now.Year)
-            .SumAsync(p => (decimal?)p.Amount) ?? 0m;
-
-        var newClientsThisMonth = await db.Clients
-            .CountAsync(c => c.OrgId == orgId
-                && c.CreatedAt.Month == now.Month
-                && c.CreatedAt.Year == now.Year);
-
-        var pendingSales = await db.Sales
-            .CountAsync(s => s.OrgId == orgId
-                && (s.Status == "draft" || s.Status == "sent"));
-
-        var upcomingEvents = await db.Events
-            .Include(e => e.Client)
-            .Where(e => e.OrgId == orgId && e.EventDate >= now)
-            .OrderBy(e => e.EventDate)
-            .Take(5)
-            .Select(e => new
-            {
-                id = e.Id,
-                name = e.Name,
-                type = e.Type,
-                status = e.Status,
-                eventDate = e.EventDate,
-                clientName = e.Client != null ? e.Client.Name : string.Empty
-            })
-            .ToListAsync();
-
-        return Ok(new
+        try
         {
-            eventsThisMonth,
-            revenueThisMonth,
-            newClientsThisMonth,
-            pendingSales,
-            upcomingEvents
-        });
+            eventsThisMonth = await db.Events
+                .CountAsync(e => e.OrgId == orgId
+                    && e.EventDate.Month == now.Month
+                    && e.EventDate.Year == now.Year);
+        }
+        catch { }
+
+        try
+        {
+            revenueThisMonth = await db.EventPayments
+                .Where(p => p.OrgId == orgId
+                    && p.PaidAt.Month == now.Month
+                    && p.PaidAt.Year == now.Year)
+                .SumAsync(p => (decimal?)p.Amount) ?? 0m;
+        }
+        catch { }
+
+        try
+        {
+            newClientsThisMonth = await db.Clients
+                .CountAsync(c => c.OrgId == orgId
+                    && c.CreatedAt.Month == now.Month
+                    && c.CreatedAt.Year == now.Year);
+        }
+        catch { }
+
+        try
+        {
+            pendingSales = await db.Sales
+                .CountAsync(s => s.OrgId == orgId
+                    && (s.Status == "draft" || s.Status == "sent"));
+        }
+        catch { }
+
+        try
+        {
+            upcomingEvents = await db.Events
+                .Include(e => e.Client)
+                .Where(e => e.OrgId == orgId && e.EventDate >= now)
+                .OrderBy(e => e.EventDate)
+                .Take(5)
+                .Select(e => new
+                {
+                    id = e.Id,
+                    name = e.Name,
+                    type = e.Type,
+                    status = e.Status,
+                    eventDate = e.EventDate,
+                    clientName = e.Client != null ? e.Client.Name : string.Empty
+                })
+                .ToListAsync();
+        }
+        catch { }
+
+        return Ok(new { eventsThisMonth, revenueThisMonth, newClientsThisMonth, pendingSales, upcomingEvents });
     }
 }

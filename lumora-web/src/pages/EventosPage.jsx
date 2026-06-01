@@ -1,13 +1,129 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { eventosApi } from '../api/eventosApi'
+import { clientesApi } from '../api/clientesApi'
 import { ESTADO_META, TIPO_EMOJI } from '../data/eventosData'
 import styles from './EventosPage.module.css'
 
+const TIPOS = ['Boda', 'XV Años', 'Corporativo', 'Graduación', 'Bautizo', 'Cumpleaños', 'Reunión', 'Otro']
+
+function NuevoEventoModal({ onClose, onCreated }) {
+  const [clientes,  setClientes]  = useState([])
+  const [saving,    setSaving]    = useState(false)
+  const [error,     setError]     = useState('')
+  const [form, setForm] = useState({
+    nombre: '', tipo: 'Boda', clienteId: '', fecha: '', hora: '18:00',
+    venue: '', invitados: '', presupuesto: '', notas: '',
+  })
+
+  useEffect(() => {
+    clientesApi.getAll().then(setClientes).catch(() => {})
+  }, [])
+
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
+
+  const handleSubmit = async e => {
+    e.preventDefault()
+    if (!form.nombre || !form.fecha || !form.clienteId) {
+      setError('Nombre, fecha y cliente son obligatorios')
+      return
+    }
+    setSaving(true)
+    setError('')
+    try {
+      const eventDate = new Date(`${form.fecha}T${form.hora || '12:00'}:00`)
+      const nuevo = await eventosApi.create({
+        name: form.nombre,
+        type: form.tipo,
+        clientId: form.clienteId,
+        eventDate: eventDate.toISOString(),
+        budget: parseFloat(form.presupuesto) || 0,
+        guestCount: parseInt(form.invitados) || 0,
+        venueId: form.venue || null,
+        notes: form.notas || null,
+      })
+      onCreated(nuevo)
+      onClose()
+    } catch (err) {
+      setError(err.message || 'Error al crear evento')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className={styles.modalOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className={styles.modal}>
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>Nuevo evento</h2>
+          <button className={styles.modalClose} onClick={onClose}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <form className={styles.modalForm} onSubmit={handleSubmit}>
+          <div className={styles.modalGrid}>
+            <div className={styles.modalField} style={{ gridColumn: '1/-1' }}>
+              <label>Nombre del evento *</label>
+              <input placeholder="Ej: Boda García & Ruiz" value={form.nombre} onChange={set('nombre')} required />
+            </div>
+            <div className={styles.modalField}>
+              <label>Tipo</label>
+              <select value={form.tipo} onChange={set('tipo')}>
+                {TIPOS.map(t => <option key={t}>{t}</option>)}
+              </select>
+            </div>
+            <div className={styles.modalField}>
+              <label>Cliente *</label>
+              <select value={form.clienteId} onChange={set('clienteId')} required>
+                <option value="">— Seleccionar —</option>
+                {clientes.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+              </select>
+            </div>
+            <div className={styles.modalField}>
+              <label>Fecha *</label>
+              <input type="date" value={form.fecha} onChange={set('fecha')} required />
+            </div>
+            <div className={styles.modalField}>
+              <label>Hora</label>
+              <input type="time" value={form.hora} onChange={set('hora')} />
+            </div>
+            <div className={styles.modalField}>
+              <label>Venue</label>
+              <input placeholder="Hacienda San Lucas..." value={form.venue} onChange={set('venue')} />
+            </div>
+            <div className={styles.modalField}>
+              <label>Invitados</label>
+              <input type="number" placeholder="150" min="1" value={form.invitados} onChange={set('invitados')} />
+            </div>
+            <div className={styles.modalField} style={{ gridColumn: '1/-1' }}>
+              <label>Presupuesto ($)</label>
+              <input type="number" placeholder="85000" min="0" value={form.presupuesto} onChange={set('presupuesto')} />
+            </div>
+            <div className={styles.modalField} style={{ gridColumn: '1/-1' }}>
+              <label>Notas</label>
+              <textarea placeholder="Detalles importantes del evento..." value={form.notas} onChange={set('notas')} rows={3} />
+            </div>
+          </div>
+          {error && <p className={styles.modalError}>{error}</p>}
+          <div className={styles.modalActions}>
+            <button type="button" className={styles.modalBtnSecondary} onClick={onClose}>Cancelar</button>
+            <button type="submit" className={styles.modalBtnPrimary} disabled={saving}>
+              {saving ? 'Guardando…' : 'Crear evento →'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 export default function EventosPage() {
-  const [eventos, setEventos] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [filter, setFilter]   = useState('todos')
+  const [eventos,     setEventos]     = useState([])
+  const [loading,     setLoading]     = useState(true)
+  const [filter,      setFilter]      = useState('todos')
+  const [showCreate,  setShowCreate]  = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -29,12 +145,19 @@ export default function EventosPage() {
 
   return (
     <div className={styles.page}>
+      {showCreate && (
+        <NuevoEventoModal
+          onClose={() => setShowCreate(false)}
+          onCreated={ev => setEventos(prev => [ev, ...prev])}
+        />
+      )}
+
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Eventos</h1>
           <p className={styles.sub}>{eventos.length} eventos · {counts.confirmed} confirmados</p>
         </div>
-        <button className={styles.btnPrimary}>
+        <button className={styles.btnPrimary} onClick={() => setShowCreate(true)}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
@@ -59,8 +182,9 @@ export default function EventosPage() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '60px 0', fontSize: 14 }}>
-          Sin eventos{filter !== 'todos' ? ` con estado "${ESTADO_META[filter]?.label}"` : ''}
+        <div className={styles.empty}>
+          <p>Sin eventos{filter !== 'todos' ? ` con estado "${ESTADO_META[filter]?.label}"` : ''}</p>
+          <button className={styles.btnPrimary} onClick={() => setShowCreate(true)}>+ Crear primer evento</button>
         </div>
       ) : (
         <div className={styles.grid}>
