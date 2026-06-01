@@ -898,6 +898,7 @@
   accent-color: var(--accent);
 }
 .chatMediaCaption { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+.chatMediaPlaceholder { font-size: 13px; opacity: 0.6; font-style: italic; }
 
 .chatInputArea {
   display: flex; align-items: flex-end; gap: 8px;

@@ -389,15 +389,21 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
   const [sendError,  setSendError]  = useState('')
   const [showInfo,   setShowInfo]   = useState(true)
   const [mediaFile,  setMediaFile]  = useState(null)  // { name, dataUrl, base64, mimeType }
-  const bottomRef    = useRef(null)
-  const fileInputRef = useRef(null)
-  const sendingRef   = useRef(false)  // pauses fetchLead poll during upload
+  const bottomRef     = useRef(null)
+  const fileInputRef  = useRef(null)
+  const sendingRef    = useRef(false)   // pauses fetchLead poll during upload
+  const localMediaRef = useRef({})      // { [serverMsgId]: dataUrl } — R2 fallback
 
   const fetchLead = useCallback(async () => {
     if (sendingRef.current) return  // don't overwrite UI while upload is in progress
     try {
       const updated = await leadsApi.getById(lead.id)
-      setLead(updated)
+      // Restore local data URLs for messages where R2 upload returned null
+      const local = localMediaRef.current
+      const mensajes = updated.mensajes.map(m =>
+        (!m.mediaUrl && local[m.id]) ? { ...m, mediaUrl: local[m.id] } : m
+      )
+      setLead({ ...updated, mensajes })
       onLeadUpdate(lead.id, { ultimoMsg: updated.ultimoMsg, noLeidos: 0, hora: updated.hora })
     } catch {}
   }, [lead.id]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -471,18 +477,26 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
     setLead(l => ({ ...l, mensajes: [...l.mensajes, tempMsg], ultimoMsg: summary }))
     onLeadUpdate(lead.id, { ultimoMsg: summary })
     try {
-      await leadsApi.sendMessage(
+      const saved = await leadsApi.sendMessage(
         lead.id, text || null, 'outbound',
         capturedMedia?.base64 ?? null, capturedMedia?.mimeType ?? null
       )
+      // If R2 didn't return a URL, keep the local data URL as fallback
+      if (saved?.id && capturedMedia?.dataUrl && !saved.mediaUrl) {
+        localMediaRef.current[saved.id] = capturedMedia.dataUrl
+      }
+      const newId = saved?.id ?? `sent_${Date.now()}`
       setLead(l => ({
         ...l,
-        mensajes: l.mensajes.map(m => m.id === tempId ? { ...m, id: `sent_${Date.now()}` } : m),
+        mensajes: l.mensajes.map(m =>
+          m.id === tempId
+            ? { ...m, id: newId, mediaUrl: saved?.mediaUrl || m.mediaUrl }
+            : m
+        ),
       }))
     } catch {
       setSendError('No se pudo enviar')
       setTimeout(() => setSendError(''), 3000)
-      // remove the failed temp message so UI stays clean
       setLead(l => ({ ...l, mensajes: l.mensajes.filter(m => m.id !== tempId) }))
     } finally {
       setSending(false)
@@ -564,16 +578,20 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
                 return (
                   <div key={m.id} className={`${styles.chatMsgWrap} ${m.tipo === 'out' ? styles.chatMsgOut : ''}`}>
                     <div className={`${styles.chatBubble} ${m.tipo === 'out' ? styles.chatBubbleOut : styles.chatBubbleIn}`}>
-                      {isImage && m.mediaUrl && (
-                        <a href={m.mediaUrl} target="_blank" rel="noreferrer" className={styles.chatMediaImg}>
-                          <img src={m.mediaUrl} alt="imagen" loading="lazy" />
-                        </a>
+                      {isImage && m.mediaUrl
+                        ? <a href={m.mediaUrl} target="_blank" rel="noreferrer" className={styles.chatMediaImg}>
+                            <img src={m.mediaUrl} alt="imagen" loading="lazy" />
+                          </a>
+                        : isImage && <span className={styles.chatMediaPlaceholder}>📷 Imagen</span>
+                      }
+                      {isAudio && m.mediaUrl
+                        ? <audio className={styles.chatMediaAudio} controls preload="none" src={m.mediaUrl} />
+                        : isAudio && <span className={styles.chatMediaPlaceholder}>🎵 Audio</span>
+                      }
+                      {!isImage && !isAudio && m.texto && <p>{m.texto}</p>}
+                      {isImage && m.mediaUrl && m.texto && m.texto !== '[Imagen]' && (
+                        <p className={styles.chatMediaCaption}>{m.texto}</p>
                       )}
-                      {isAudio && m.mediaUrl && (
-                        <audio className={styles.chatMediaAudio} controls preload="none" src={m.mediaUrl} />
-                      )}
-                      {m.texto && !isImage && <p>{m.texto}</p>}
-                      {m.texto && isImage && m.texto !== '[Imagen]' && <p className={styles.chatMediaCaption}>{m.texto}</p>}
                       <div className={styles.chatBubbleMeta}>
                         <span className={styles.chatBubbleTime}>{m.hora}</span>
                         {m.tipo === 'out' && <Tick saved={isSaved} />}
