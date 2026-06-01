@@ -1012,3 +1012,84 @@
   transition: opacity 0.15s;
 }
 .smSaveBtn:hover { opacity: 0.85; }
+
+/* Danger zone */
+.smDanger {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px;
+  border-top: 1px dashed rgba(248,113,113,0.3);
+  background: rgba(248,113,113,0.04);
+}
+.smDangerLabel { font-size: 11px; font-weight: 600; color: #f87171; text-transform: uppercase; letter-spacing: 0.05em; }
+.smDangerBtn {
+  padding: 7px 14px; border-radius: 8px;
+  border: 1px solid rgba(248,113,113,0.4); background: transparent;
+  color: #f87171; font-size: 12px; cursor: pointer;
+  transition: all 0.15s;
+}
+.smDangerBtn:hover { background: rgba(248,113,113,0.12); }
+
+/* ── Chat modal wider variant ── */
+.chatModalBoxWide { max-width: 860px !important; }
+
+/* ── Chat modal body (chat + info side by side) ── */
+.chatModalContent {
+  display: flex; flex: 1; overflow: hidden;
+}
+
+.chatLeft {
+  display: flex; flex-direction: column; flex: 1; overflow: hidden;
+}
+
+/* ── Info toggle button ── */
+.chatInfoBtn {
+  width: 30px; height: 30px; border-radius: 8px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--text-muted); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; flex-shrink: 0;
+}
+.chatInfoBtn:hover   { color: var(--text); background: var(--bg-2); }
+.chatInfoBtnActive   { color: var(--accent) !important; border-color: var(--accent) !important; background: rgba(167,139,250,0.1) !important; }
+
+/* ── Contact Info Panel ── */
+.infoPanel {
+  width: 240px; flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  padding: 14px 14px 16px;
+  overflow-y: auto;
+  display: flex; flex-direction: column; gap: 8px;
+  background: var(--bg-2);
+}
+
+.infoPanelTitle {
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.06em; margin: 0;
+}
+
+.infoSep { height: 1px; background: var(--border); margin: 2px 0; }
+
+.infoField { display: flex; flex-direction: column; gap: 3px; }
+
+.infoLabel { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+
+.infoInput {
+  background: var(--bg-1); border: 1px solid var(--border);
+  border-radius: 7px; padding: 6px 9px;
+  font-size: 12px; color: var(--text); outline: none;
+  font-family: inherit; width: 100%; box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+.infoInput:focus { border-color: var(--accent); }
+.infoInput::placeholder { color: var(--text-muted); }
+
+.infoPanelSave {
+  margin-top: 4px;
+  padding: 8px; border-radius: 8px;
+  border: none; background: var(--accent); color: #fff;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: opacity 0.15s; width: 100%;
+}
+.infoPanelSave:hover:not(:disabled) { opacity: 0.85; }
+.infoPanelSave:disabled { opacity: 0.5; cursor: default; }
+.infoPanelSaved { background: #34d399 !important; }

@@ -29,7 +29,7 @@ function useStages() {
 // ─── Stage Manager ───────────────────────────────────────────────────────────
 const PRESET_COLORS = ['#64748b','#38bdf8','#34d399','#fb923c','#a78bfa','#f472b6','#fbbf24','#ef4444']
 
-function StageManager({ stages, onSave, onClose }) {
+function StageManager({ stages, onSave, onClose, onClearAll }) {
   const [rows, setRows] = useState(stages.map(s => ({ ...s })))
 
   const update = (i, field, val) =>
@@ -109,6 +109,17 @@ function StageManager({ stages, onSave, onClose }) {
             Guardar cambios
           </button>
         </div>
+
+        {/* Danger zone */}
+        <div className={styles.smDanger}>
+          <span className={styles.smDangerLabel}>Zona de peligro</span>
+          <button
+            className={styles.smDangerBtn}
+            onClick={onClearAll}
+          >
+            🗑 Limpiar todas las conversaciones
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -117,15 +128,28 @@ function StageManager({ stages, onSave, onClose }) {
 // ─── Nuevo Lead Modal ────────────────────────────────────────────────────────
 const TIPOS_EVENTO = ['Boda', 'XV Años', 'Corporativo', 'Graduación', 'Bautizo', 'Cumpleaños', 'Otro']
 
-function NuevoLeadModal({ onClose, onCreated }) {
-  const [saving, setSaving] = useState(false)
-  const [error,  setError]  = useState('')
+function NuevoLeadModal({ onClose, onCreated, leads }) {
+  const [saving,  setSaving]  = useState(false)
+  const [error,   setError]   = useState('')
+  const [warning, setWarning] = useState('')
   const [form, setForm] = useState({ nombre: '', telefono: '', tipoEvento: '', fechaEvento: '', presupuesto: '' })
-  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
+  const set = k => e => {
+    setError(''); setWarning('')
+    setForm(f => ({ ...f, [k]: e.target.value }))
+  }
+
+  const checkDuplicate = (phone) => {
+    const digits = phone.replace(/\D/g, '')
+    const last10 = digits.slice(-10)
+    if (last10.length < 6) return null
+    return (leads || []).find(l => l.telefono.replace(/\D/g, '').endsWith(last10))
+  }
 
   const handleSubmit = async e => {
     e.preventDefault()
     if (!form.nombre || !form.telefono) { setError('Nombre y teléfono son obligatorios'); return }
+    const dup = checkDuplicate(form.telefono)
+    if (dup) { setError(`Ya existe "${dup.nombre}" con ese número. Busca el chat existente.`); return }
     setSaving(true); setError('')
     try {
       const nuevo = await leadsApi.create({
@@ -186,6 +210,82 @@ function NuevoLeadModal({ onClose, onCreated }) {
   )
 }
 
+// ─── Contact Info Panel ──────────────────────────────────────────────────────
+const TIPOS_EVENTO_LIST = ['Boda', 'XV Años', 'Corporativo', 'Graduación', 'Bautizo', 'Cumpleaños', 'Otro']
+
+function ContactInfoPanel({ lead, onUpdate }) {
+  const [nombre,      setNombre]      = useState(lead.nombre)
+  const [telefono,    setTelefono]    = useState(lead.telefono)
+  const [tipoEvento,  setTipoEvento]  = useState(lead.eventTypeRaw || '')
+  const [fechaEvento, setFechaEvento] = useState(lead.eventDateRaw || '')
+  const [presupuesto, setPresupuesto] = useState(lead.budgetRaw != null ? String(lead.budgetRaw) : '')
+  const [saving,      setSaving]      = useState(false)
+  const [saved,       setSaved]       = useState(false)
+
+  const save = async () => {
+    setSaving(true)
+    try {
+      const updated = await leadsApi.update(lead.id, {
+        name:      nombre,
+        phone:     telefono,
+        eventType: tipoEvento  || null,
+        eventDate: fechaEvento || null,
+        budget:    presupuesto ? parseFloat(presupuesto) : null,
+      })
+      onUpdate(lead.id, {
+        nombre:      updated.nombre,
+        telefono:    updated.telefono,
+        avatar:      updated.avatar,
+        evento:      updated.evento,
+        presupuesto: updated.presupuesto,
+        eventTypeRaw: updated.eventTypeRaw,
+        eventDateRaw: updated.eventDateRaw,
+        budgetRaw:    updated.budgetRaw,
+      })
+      setSaved(true); setTimeout(() => setSaved(false), 2000)
+    } catch {}
+    finally { setSaving(false) }
+  }
+
+  return (
+    <div className={styles.infoPanel}>
+      <p className={styles.infoPanelTitle}>Datos del contacto</p>
+
+      <div className={styles.infoField}>
+        <label className={styles.infoLabel}>Nombre</label>
+        <input className={styles.infoInput} value={nombre} onChange={e => setNombre(e.target.value)} />
+      </div>
+      <div className={styles.infoField}>
+        <label className={styles.infoLabel}>Teléfono</label>
+        <input className={styles.infoInput} value={telefono} onChange={e => setTelefono(e.target.value)} />
+      </div>
+
+      <div className={styles.infoSep} />
+      <p className={styles.infoPanelTitle}>Evento</p>
+
+      <div className={styles.infoField}>
+        <label className={styles.infoLabel}>Tipo</label>
+        <select className={styles.infoInput} value={tipoEvento} onChange={e => setTipoEvento(e.target.value)}>
+          <option value="">Sin evento</option>
+          {TIPOS_EVENTO_LIST.map(t => <option key={t}>{t}</option>)}
+        </select>
+      </div>
+      <div className={styles.infoField}>
+        <label className={styles.infoLabel}>Fecha estimada</label>
+        <input className={styles.infoInput} placeholder="Jul 2026" value={fechaEvento} onChange={e => setFechaEvento(e.target.value)} />
+      </div>
+      <div className={styles.infoField}>
+        <label className={styles.infoLabel}>Presupuesto ($)</label>
+        <input className={styles.infoInput} type="number" placeholder="85000" value={presupuesto} onChange={e => setPresupuesto(e.target.value)} />
+      </div>
+
+      <button className={`${styles.infoPanelSave} ${saved ? styles.infoPanelSaved : ''}`} onClick={save} disabled={saving}>
+        {saved ? '✓ Guardado' : saving ? 'Guardando…' : 'Guardar cambios'}
+      </button>
+    </div>
+  )
+}
+
 // ─── Tick component (message status) ────────────────────────────────────────
 function Tick({ saved }) {
   // saved=false → single ✓ (optimistic, en camino)
@@ -208,9 +308,10 @@ const isPhoneNumber = (s) => s && /^[\d\s\-\+\(\)]{7,}$/.test(s.trim())
 
 // ─── Chat Modal ──────────────────────────────────────────────────────────────
 function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
-  const [lead,    setLead]    = useState(initLead)
-  const [message, setMessage] = useState('')
-  const [sending, setSending] = useState(false)
+  const [lead,     setLead]     = useState(initLead)
+  const [message,  setMessage]  = useState('')
+  const [sending,  setSending]  = useState(false)
+  const [showInfo, setShowInfo] = useState(true)
   const bottomRef = useRef(null)
 
   const fetchLead = useCallback(async () => {
@@ -273,12 +374,12 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
 
   return (
     <div className={styles.chatOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className={styles.chatModalBox}>
+      <div className={`${styles.chatModalBox} ${showInfo ? styles.chatModalBoxWide : ''}`}>
 
         {/* Header */}
         <div className={styles.chatModalHeader}>
           <div className={styles.chatModalAvatar}
-            style={nameIsPhone ? { background: '#334155', fontSize: 10 } : {}}>
+            style={nameIsPhone ? { background: '#334155' } : {}}>
             {nameIsPhone
               ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 5.49 5.49l1.97-1.34a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
               : lead.avatar
@@ -302,6 +403,16 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
           >
             {stages.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
           </select>
+          {/* Info toggle */}
+          <button
+            className={`${styles.chatInfoBtn} ${showInfo ? styles.chatInfoBtnActive : ''}`}
+            onClick={() => setShowInfo(v => !v)}
+            title="Datos del contacto"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+          </button>
           <button className={styles.chatCloseBtn} onClick={onClose}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -309,45 +420,60 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
           </button>
         </div>
 
-        {/* Messages */}
-        <div className={styles.chatModalMsgs}>
-          {lead.mensajes.length === 0 && (
-            <p className={styles.chatEmpty}>Sin mensajes aún. ¡Escribe el primero!</p>
-          )}
-          {lead.mensajes.map(m => {
-            const isTmp   = m.id.startsWith('tmp_')
-            const isSaved = !isTmp
-            return (
-              <div key={m.id} className={`${styles.chatMsgWrap} ${m.tipo === 'out' ? styles.chatMsgOut : ''}`}>
-                <div className={`${styles.chatBubble} ${m.tipo === 'out' ? styles.chatBubbleOut : styles.chatBubbleIn}`}>
-                  <p>{m.texto}</p>
-                  <div className={styles.chatBubbleMeta}>
-                    <span className={styles.chatBubbleTime}>{m.hora}</span>
-                    {m.tipo === 'out' && <Tick saved={isSaved} />}
+        {/* Body: chat left + info right */}
+        <div className={styles.chatModalContent}>
+          <div className={styles.chatLeft}>
+            {/* Messages */}
+            <div className={styles.chatModalMsgs}>
+              {lead.mensajes.length === 0 && (
+                <p className={styles.chatEmpty}>Sin mensajes aún. ¡Escribe el primero!</p>
+              )}
+              {lead.mensajes.map(m => {
+                const isSaved = !m.id.startsWith('tmp_')
+                return (
+                  <div key={m.id} className={`${styles.chatMsgWrap} ${m.tipo === 'out' ? styles.chatMsgOut : ''}`}>
+                    <div className={`${styles.chatBubble} ${m.tipo === 'out' ? styles.chatBubbleOut : styles.chatBubbleIn}`}>
+                      <p>{m.texto}</p>
+                      <div className={styles.chatBubbleMeta}>
+                        <span className={styles.chatBubbleTime}>{m.hora}</span>
+                        {m.tipo === 'out' && <Tick saved={isSaved} />}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            )
-          })}
-          <div ref={bottomRef} />
-        </div>
+                )
+              })}
+              <div ref={bottomRef} />
+            </div>
 
-        {/* Input */}
-        <div className={styles.chatInputArea}>
-          <textarea
-            className={styles.chatInput}
-            placeholder="Escribe un mensaje… (Enter para enviar)"
-            value={message}
-            rows={1}
-            onChange={e => setMessage(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
-          />
-          <button className={styles.chatSendBtn} onClick={send} disabled={!message.trim() || sending}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-            </svg>
-          </button>
-        </div>
+            {/* Input */}
+            <div className={styles.chatInputArea}>
+              <textarea
+                className={styles.chatInput}
+                placeholder="Escribe un mensaje… (Enter para enviar)"
+                value={message}
+                rows={1}
+                onChange={e => setMessage(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+              />
+              <button className={styles.chatSendBtn} onClick={send} disabled={!message.trim() || sending}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+            </div>
+          </div>{/* .chatLeft */}
+
+          {/* Info panel */}
+          {showInfo && (
+            <ContactInfoPanel
+              lead={lead}
+              onUpdate={(id, changes) => {
+                setLead(l => ({ ...l, ...changes }))
+                onLeadUpdate(id, changes)
+              }}
+            />
+          )}
+        </div>{/* .chatModalContent */}
       </div>
     </div>
   )
@@ -412,12 +538,24 @@ export default function ChatPage() {
     <div className={styles.page}>
       {showCreate && (
         <NuevoLeadModal
+          leads={leads}
           onClose={() => setShowCreate(false)}
           onCreated={lead => { setLeads(prev => [lead, ...prev]); setActiveLead(lead) }}
         />
       )}
       {showStageManager && (
-        <StageManager stages={stages} onSave={saveStages} onClose={() => setShowStageManager(false)} />
+        <StageManager
+          stages={stages}
+          onSave={saveStages}
+          onClose={() => setShowStageManager(false)}
+          onClearAll={async () => {
+            if (!window.confirm('¿Eliminar TODAS las conversaciones? Esta acción no se puede deshacer.')) return
+            await leadsApi.deleteAll().catch(() => {})
+            setLeads([])
+            setActiveLead(null)
+            setShowStageManager(false)
+          }}
+        />
       )}
       {activeLead && (
         <ChatModal

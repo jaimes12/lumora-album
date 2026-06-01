@@ -14,6 +14,7 @@ public interface ILeadService
     Task<bool> DeleteAsync(string orgId, string id);
     Task<LeadMessageResponse?> SendMessageAsync(string orgId, string leadId, SendLeadMessageRequest req);
     Task HandleInboundAsync(string orgId, string phone, string body);
+    Task<int> DeleteAllAsync(string orgId);
 }
 
 public class LeadService(LumoraDbContext db, IWaServerService waServer) : ILeadService
@@ -114,13 +115,22 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer) : ILeadS
         return ToMessageResponse(message);
     }
 
+    public async Task<int> DeleteAllAsync(string orgId)
+    {
+        var items = await db.Leads.Where(l => l.OrgId == orgId).ToListAsync();
+        db.Leads.RemoveRange(items); // lead_messages cascade via FK
+        await db.SaveChangesAsync();
+        return items.Count;
+    }
+
     public async Task HandleInboundAsync(string orgId, string phone, string body)
     {
-        // Normalize: strip WA suffix, keep digits only
-        phone = phone.Replace("@c.us", "").Replace("@s.whatsapp.net", "").Trim();
+        // Strip any WA suffix (@c.us, @s.whatsapp.net, @lid, @g.us, etc.)
+        phone = System.Text.RegularExpressions.Regex.Replace(phone, @"@\S+", "").Trim();
 
-        // Match on last 10 digits so "+52 55 1234 5678", "5215512345678", "5512345678" all match
-        var last10 = phone.Length >= 10 ? phone[^10..] : phone;
+        // Digits-only for matching: last 10 digits cover all country-code variants
+        var digits = System.Text.RegularExpressions.Regex.Replace(phone, @"\D", "");
+        var last10 = digits.Length >= 10 ? digits[^10..] : digits;
 
         var lead = await db.Leads
             .Include(l => l.Messages)
@@ -128,15 +138,16 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer) : ILeadS
 
         if (lead is null)
         {
+            // Store digits-only phone; use last 10 digits as display name
             lead = new Lead
             {
-                Id        = Guid.NewGuid().ToString(),
-                OrgId     = orgId,
-                Name      = phone,
-                Phone     = phone,
-                Stage     = "nuevo",
+                Id          = Guid.NewGuid().ToString(),
+                OrgId       = orgId,
+                Name        = digits.Length >= 10 ? digits[^10..] : digits,
+                Phone       = digits.Length > 0 ? digits : phone,
+                Stage       = "nuevo",
                 UnreadCount = 0,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt   = DateTime.UtcNow,
             };
             await db.Leads.AddAsync(lead);
             await db.SaveChangesAsync();

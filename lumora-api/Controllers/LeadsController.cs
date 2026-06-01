@@ -43,6 +43,13 @@ public class LeadsController(ILeadService leads, LumoraDbContext db) : Controlle
     public async Task<IActionResult> Delete(string id) =>
         await leads.DeleteAsync(OrgId, id) ? NoContent() : NotFound();
 
+    [HttpDelete]
+    public async Task<IActionResult> DeleteAll()
+    {
+        var count = await leads.DeleteAllAsync(OrgId);
+        return Ok(new { deleted = count });
+    }
+
     [HttpPost("{id}/messages")]
     public async Task<IActionResult> SendMessage(string id, [FromBody] SendLeadMessageRequest req)
     {
