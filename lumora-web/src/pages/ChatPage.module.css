@@ -475,20 +475,272 @@
   transform: scale(1.05);
 }
 
+/* ── Back button (visible on mobile only) ── */
+.backBtn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.backBtn:hover { color: var(--text); }
+
+/* ── Mobile tab bar (hidden on desktop) ── */
+.mobileTabs {
+  display: none;
+  flex-shrink: 0;
+}
+
+/* ── Mobile chat list (hidden on desktop) ── */
+.mobileList {
+  display: none;
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .header { gap: 10px; }
+
+  .header {
+    gap: 8px;
+  }
+
   .title { font-size: 18px; }
-  .headerStats { flex-wrap: wrap; }
+
+  .headerStats {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .statChip {
+    padding: 6px 12px;
+  }
+
+  /* Tab bar */
+  .mobileTabs {
+    display: flex;
+    gap: 6px;
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+  }
+
+  .mobileTab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 9px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .mobileTabActive {
+    background: var(--bg-2);
+    color: var(--text);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+
+  .mobileTabBadge {
+    background: var(--accent);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Chat list */
+  .mobileList {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .mobileListVisible {
+    display: flex;
+  }
+
+  .mobileGroup {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .mobileGroupLabel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-2);
+  }
+
+  .mobileGroupDot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .mobileGroupCount {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  .mobileRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 14px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: background 0.12s;
+  }
+
+  .mobileRow:last-child { border-bottom: none; }
+  .mobileRow:active { background: var(--bg-2); }
+
+  .mobileRowAvatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .mobileRowBody {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .mobileRowTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .mobileRowName {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobileRowHora {
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .mobileRowBottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .mobileRowMsg {
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+  }
+
+  .mobileRowEvento {
+    font-size: 11px;
+    color: var(--text-muted);
+    opacity: 0.6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Hide kanban on mobile unless pipeline tab */
+  .board {
+    display: none;
+  }
+
+  .boardMobileVisible {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+  }
+
   .column {
     min-width: 240px;
-    max-height: calc(100vh - 240px);
+    max-height: none;
+    flex: none;
   }
+
+  /* Panel — full screen on mobile */
   .panel {
+    position: fixed;
+    inset: 0;
     width: 100%;
-    left: 0;
-    z-index: 300;
+    z-index: 500;
+    animation: slideInMobile 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
+
+  @keyframes slideInMobile {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+
+  .backBtn { display: flex; }
+
+  /* Hide desktop close on mobile — back button replaces it */
+  .closeBtn { display: none; }
+
+  .panelHeader { padding: 12px 14px; gap: 10px; }
   .panelActions { gap: 6px; }
-  .stageSelect { font-size: 11px; padding: 4px 8px; }
+  .stageSelect { font-size: 11px; padding: 4px 8px; max-width: 120px; }
 }

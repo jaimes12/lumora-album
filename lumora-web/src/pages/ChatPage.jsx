@@ -130,6 +130,12 @@ export default function ChatPage() {
   const [leads, setLeads] = useState(LEADS)
   const [dragging, setDragging] = useState(null)
   const [dragOver, setDragOver] = useState(null)
+  const [mobileTab, setMobileTab] = useState('chats') // 'chats' | 'pipeline'
+
+  const abrirChat = (lead) => {
+    setLeadActivo(lead)
+    setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, noLeidos: 0 } : l))
+  }
 
   const byStage = (stageId) => leads.filter(l => l.stage === stageId)
 
@@ -166,8 +172,12 @@ export default function ChatPage() {
     setDragOver(null)
   }
 
+  const totalNoLeidos = leads.filter(l => l.noLeidos > 0).length
+
   return (
     <div className={styles.page}>
+
+      {/* ── Header ── */}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Pipeline de chats</h1>
@@ -186,7 +196,66 @@ export default function ChatPage() {
         </div>
       </div>
 
-      <div className={styles.board}>
+      {/* ── Mobile tab bar ── */}
+      <div className={styles.mobileTabs}>
+        <button
+          className={`${styles.mobileTab} ${mobileTab === 'chats' ? styles.mobileTabActive : ''}`}
+          onClick={() => setMobileTab('chats')}
+        >
+          Chats
+          {totalNoLeidos > 0 && <span className={styles.mobileTabBadge}>{totalNoLeidos}</span>}
+        </button>
+        <button
+          className={`${styles.mobileTab} ${mobileTab === 'pipeline' ? styles.mobileTabActive : ''}`}
+          onClick={() => setMobileTab('pipeline')}
+        >
+          Pipeline
+        </button>
+      </div>
+
+      {/* ── Mobile chat list ── */}
+      <div className={`${styles.mobileList} ${mobileTab === 'chats' ? styles.mobileListVisible : ''}`}>
+        {STAGES.map(stage => {
+          const items = byStage(stage.id)
+          if (items.length === 0) return null
+          return (
+            <div key={stage.id} className={styles.mobileGroup}>
+              <div className={styles.mobileGroupLabel}>
+                <span className={styles.mobileGroupDot} style={{ background: stage.color }} />
+                {stage.label}
+                <span className={styles.mobileGroupCount} style={{ color: stage.color, background: stage.bg }}>
+                  {items.length}
+                </span>
+              </div>
+              {items.map(lead => (
+                <button
+                  key={lead.id}
+                  className={styles.mobileRow}
+                  onClick={() => abrirChat(lead)}
+                >
+                  <div className={styles.mobileRowAvatar}>{lead.avatar}</div>
+                  <div className={styles.mobileRowBody}>
+                    <div className={styles.mobileRowTop}>
+                      <span className={styles.mobileRowName}>{lead.nombre}</span>
+                      <span className={styles.mobileRowHora}>{lead.hora}</span>
+                    </div>
+                    <div className={styles.mobileRowBottom}>
+                      <span className={styles.mobileRowMsg}>{lead.ultimoMsg}</span>
+                      {lead.noLeidos > 0 && (
+                        <span className={styles.unread}>{lead.noLeidos}</span>
+                      )}
+                    </div>
+                    <span className={styles.mobileRowEvento}>{lead.evento} · {lead.presupuesto}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* ── Kanban board (desktop always, mobile when pipeline tab) ── */}
+      <div className={`${styles.board} ${mobileTab === 'pipeline' ? styles.boardMobileVisible : ''}`}>
         {STAGES.map(stage => {
           const cols = byStage(stage.id)
           return (
@@ -214,7 +283,7 @@ export default function ChatPage() {
                     className={`${styles.card} ${leadActivo?.id === lead.id ? styles.cardActive : ''}`}
                     draggable
                     onDragStart={e => handleDragStart(e, lead)}
-                    onClick={() => setLeadActivo(lead)}
+                    onClick={() => abrirChat(lead)}
                   >
                     <div className={styles.cardTop}>
                       <div className={styles.cardAvatar}>{lead.avatar}</div>
@@ -243,10 +312,15 @@ export default function ChatPage() {
         })}
       </div>
 
-      {/* Side panel — conversation */}
+      {/* ── Chat panel ── */}
       {leadActivo && (
         <div className={styles.panel}>
           <div className={styles.panelHeader}>
+            <button className={styles.backBtn} onClick={() => setLeadActivo(null)} aria-label="Volver">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </button>
             <div className={styles.panelAvatar}>{leadActivo.avatar}</div>
             <div className={styles.panelInfo}>
               <span className={styles.panelName}>{leadActivo.nombre}</span>
