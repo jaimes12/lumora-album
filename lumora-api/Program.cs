@@ -158,15 +158,68 @@ try
     // Create any tables that don't exist yet
     await db.Database.EnsureCreatedAsync();
 
-    // Patch columns added after initial schema creation.
-    // Each ALTER is in its own try-catch — "Duplicate column" error means it already exists, which is fine.
-    foreach (var sql in new[]
+    // ── Fix Pomelo 8.x GUID cast issue ───────────────────────────────────────
+    // Pomelo reads char(36) columns using reader.GetGuid(), which returns
+    // System.Guid. Assigning that to a string property throws InvalidCastException.
+    // Changing column types to varchar(255) makes Pomelo use GetString() instead.
+    // Each statement is in its own try-catch so failures on missing tables are ignored.
+    var guidFixes = new[]
     {
-        "ALTER TABLE users ADD COLUMN password_hash VARCHAR(500) NULL;",
-    })
+        // organizations
+        "ALTER TABLE organizations MODIFY COLUMN id varchar(255) NOT NULL;",
+        // users
+        "ALTER TABLE users MODIFY COLUMN id varchar(255) NOT NULL;",
+        "ALTER TABLE users MODIFY COLUMN org_id varchar(255) NOT NULL;",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash varchar(500) NULL;",
+        // clients
+        "ALTER TABLE clients MODIFY COLUMN id varchar(255) NOT NULL;",
+        "ALTER TABLE clients MODIFY COLUMN org_id varchar(255) NOT NULL;",
+        // events
+        "ALTER TABLE events MODIFY COLUMN id varchar(255) NOT NULL;",
+        "ALTER TABLE events MODIFY COLUMN org_id varchar(255) NOT NULL;",
+        "ALTER TABLE events MODIFY COLUMN client_id varchar(255) NOT NULL DEFAULT '';",
+        // vendors
+        "ALTER TABLE vendors MODIFY COLUMN id varchar(255) NOT NULL;",
+        "ALTER TABLE vendors MODIFY COLUMN org_id varchar(255) NOT NULL;",
+        // sales
+        "ALTER TABLE sales MODIFY COLUMN id varchar(255) NOT NULL;",
+        "ALTER TABLE sales MODIFY COLUMN org_id varchar(255) NOT NULL;",
+        "ALTER TABLE sales MODIFY COLUMN client_id varchar(255) NOT NULL;",
+        "ALTER TABLE sales MODIFY COLUMN event_id varchar(255) NULL;",
+        // sale_items
+        "ALTER TABLE sale_items MODIFY COLUMN id varchar(255) NOT NULL;",
+        "ALTER TABLE sale_items MODIFY COLUMN sale_id varchar(255) NOT NULL;",
+        // whatsapp_chats
+        "ALTER TABLE whatsapp_chats MODIFY COLUMN id varchar(255) NOT NULL;",
+        "ALTER TABLE whatsapp_chats MODIFY COLUMN org_id varchar(255) NOT NULL;",
+        // whatsapp_messages
+        "ALTER TABLE whatsapp_messages MODIFY COLUMN id varchar(255) NOT NULL;",
+        "ALTER TABLE whatsapp_messages MODIFY COLUMN chat_id varchar(255) NOT NULL;",
+        "ALTER TABLE whatsapp_messages MODIFY COLUMN org_id varchar(255) NOT NULL;",
+        // contracts
+        "ALTER TABLE contracts MODIFY COLUMN id varchar(255) NOT NULL;",
+        "ALTER TABLE contracts MODIFY COLUMN org_id varchar(255) NOT NULL;",
+        "ALTER TABLE contracts MODIFY COLUMN client_id varchar(255) NOT NULL;",
+        "ALTER TABLE contracts MODIFY COLUMN event_id varchar(255) NULL;",
+        // leads
+        "ALTER TABLE leads MODIFY COLUMN id varchar(255) NOT NULL;",
+        "ALTER TABLE leads MODIFY COLUMN org_id varchar(255) NOT NULL;",
+        // lead_messages
+        "ALTER TABLE lead_messages MODIFY COLUMN id varchar(255) NOT NULL;",
+        "ALTER TABLE lead_messages MODIFY COLUMN lead_id varchar(255) NOT NULL;",
+        "ALTER TABLE lead_messages MODIFY COLUMN org_id varchar(255) NOT NULL;",
+        // event_payments
+        "ALTER TABLE event_payments MODIFY COLUMN id varchar(255) NOT NULL;",
+        "ALTER TABLE event_payments MODIFY COLUMN org_id varchar(255) NOT NULL;",
+        "ALTER TABLE event_payments MODIFY COLUMN event_id varchar(255) NOT NULL;",
+        // users password_hash fallback (no IF NOT EXISTS for older MySQL)
+        "ALTER TABLE users ADD COLUMN password_hash varchar(500) NULL;",
+    };
+
+    foreach (var sql in guidFixes)
     {
         try { await db.Database.ExecuteSqlRawAsync(sql); }
-        catch { /* column already exists — ignore */ }
+        catch { /* ignore: table may not exist or column already correct type */ }
     }
 }
 catch (Exception ex)
