@@ -158,11 +158,16 @@ try
     // Create any tables that don't exist yet
     await db.Database.EnsureCreatedAsync();
 
-    // Add columns that may be missing from existing tables (idempotent)
-    await db.Database.ExecuteSqlRawAsync(
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(500) NULL;");
-    await db.Database.ExecuteSqlRawAsync(
-        "ALTER TABLE events ADD COLUMN IF NOT EXISTS client_id VARCHAR(100) NOT NULL DEFAULT '';");
+    // Patch columns added after initial schema creation.
+    // Each ALTER is in its own try-catch — "Duplicate column" error means it already exists, which is fine.
+    foreach (var sql in new[]
+    {
+        "ALTER TABLE users ADD COLUMN password_hash VARCHAR(500) NULL;",
+    })
+    {
+        try { await db.Database.ExecuteSqlRawAsync(sql); }
+        catch { /* column already exists — ignore */ }
+    }
 }
 catch (Exception ex)
 {
