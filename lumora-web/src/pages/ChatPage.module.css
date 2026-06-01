@@ -877,8 +877,8 @@
 }
 
 .tickIcon {
-  width: 14px; height: 10px; flex-shrink: 0;
-  opacity: 0.7;
+  width: 16px; height: 10px; flex-shrink: 0;
+  opacity: 0.8;
 }
 .chatBubbleOut .tickIcon { color: rgba(255,255,255,0.9); }
 .chatBubbleIn  .tickIcon { color: var(--text-muted); }
@@ -917,6 +917,12 @@
 }
 .chatInput:focus { border-color: var(--accent); }
 .chatInput::placeholder { color: var(--text-muted); }
+
+.chatSendError {
+  font-size: 12px; color: #ef4444;
+  padding: 4px 14px 0;
+  background: var(--bg-2);
+}
 
 .chatAttachBtn {
   width: 36px; height: 36px; border-radius: 10px;

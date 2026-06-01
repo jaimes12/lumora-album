@@ -342,17 +342,15 @@ function ContactInfoPanel({ lead, onUpdate }) {
 
 // ─── Tick component (message status) ────────────────────────────────────────
 function Tick({ saved }) {
-  // saved=false → single ✓ (optimistic, en camino)
-  // saved=true  → doble ✓✓ (confirmado por servidor)
   return (
-    <svg className={styles.tickIcon} viewBox="0 0 16 11" fill="none">
-      {saved && (
-        <path d="M1 5.5L4.5 9 7.5 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-      )}
-      <path
-        d={saved ? "M5 5.5L9 9 15 2" : "M1 5.5L5 9 13 2"}
-        stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
-      />
+    <svg className={styles.tickIcon} viewBox="0 0 18 11" fill="none">
+      {saved
+        ? <>
+            <polyline points="1,6 4,9.5 9,3.5"  stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            <polyline points="5.5,6 8.5,9.5 17,1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </>
+        : <polyline points="1,6 5.5,9.5 17,1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      }
     </svg>
   )
 }
@@ -360,17 +358,43 @@ function Tick({ saved }) {
 // true if a name looks like a raw phone number (no spaces, mostly digits)
 const isPhoneNumber = (s) => s && /^[\d\s\-\+\(\)]{7,}$/.test(s.trim())
 
+// ─── Image compression (canvas) ─────────────────────────────────────────────
+function compressImage(file, maxPx = 1280, quality = 0.82) {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      let { width, height } = img
+      const max = Math.max(width, height)
+      if (max > maxPx) {
+        const r = maxPx / max
+        width  = Math.round(width  * r)
+        height = Math.round(height * r)
+      }
+      const canvas = document.createElement('canvas')
+      canvas.width = width; canvas.height = height
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+      URL.revokeObjectURL(url)
+      resolve(canvas.toDataURL('image/jpeg', quality))
+    }
+    img.src = url
+  })
+}
+
 // ─── Chat Modal ──────────────────────────────────────────────────────────────
 function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
   const [lead,       setLead]       = useState(initLead)
   const [message,    setMessage]    = useState('')
   const [sending,    setSending]    = useState(false)
+  const [sendError,  setSendError]  = useState('')
   const [showInfo,   setShowInfo]   = useState(true)
   const [mediaFile,  setMediaFile]  = useState(null)  // { name, dataUrl, base64, mimeType }
-  const bottomRef  = useRef(null)
+  const bottomRef    = useRef(null)
   const fileInputRef = useRef(null)
+  const sendingRef   = useRef(false)  // pauses fetchLead poll during upload
 
   const fetchLead = useCallback(async () => {
+    if (sendingRef.current) return  // don't overwrite UI while upload is in progress
     try {
       const updated = await leadsApi.getById(lead.id)
       setLead(updated)
@@ -392,18 +416,30 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
     return () => { clearInterval(id); window.removeEventListener('focus', onFocus) }
   }, [fetchLead])
 
-  const pickFile = (e) => {
+  const pickFile = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      const dataUrl = ev.target.result
-      // dataUrl = "data:image/jpeg;base64,AAAA..." → extract base64 part
-      const base64 = dataUrl.split(',')[1]
-      setMediaFile({ name: file.name, dataUrl, base64, mimeType: file.type })
-    }
-    reader.readAsDataURL(file)
     e.target.value = ''
+
+    if (file.type.startsWith('image')) {
+      // Compress before encoding to keep payload under 300 KB
+      const dataUrl  = await compressImage(file)
+      const base64   = dataUrl.split(',')[1]
+      setMediaFile({ name: file.name, dataUrl, base64, mimeType: 'image/jpeg' })
+    } else {
+      // Audio: 5 MB limit
+      if (file.size > 5 * 1024 * 1024) {
+        setSendError('Audio demasiado grande (máx 5 MB)')
+        setTimeout(() => setSendError(''), 3000)
+        return
+      }
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        const dataUrl = ev.target.result
+        setMediaFile({ name: file.name, dataUrl, base64: dataUrl.split(',')[1], mimeType: file.type })
+      }
+      reader.readAsDataURL(file)
+    }
   }
 
   const clearMedia = () => setMediaFile(null)
@@ -412,7 +448,10 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
     const text = message.trim()
     if (!text && !mediaFile) return
     if (sending) return
+
     setSending(true)
+    sendingRef.current = true
+    setSendError('')
     setMessage('')
     const capturedMedia = mediaFile
     setMediaFile(null)
@@ -426,7 +465,9 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
       mediaType: capturedMedia?.mimeType ?? null,
       hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
     }
-    const summary = text || (capturedMedia ? `[${capturedMedia.mimeType.startsWith('image') ? 'Imagen' : 'Audio'}]` : '')
+    const summary = text || (capturedMedia
+      ? `[${capturedMedia.mimeType.startsWith('image') ? 'Imagen' : 'Audio'}]`
+      : '')
     setLead(l => ({ ...l, mensajes: [...l.mensajes, tempMsg], ultimoMsg: summary }))
     onLeadUpdate(lead.id, { ultimoMsg: summary })
     try {
@@ -438,8 +479,15 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
         ...l,
         mensajes: l.mensajes.map(m => m.id === tempId ? { ...m, id: `sent_${Date.now()}` } : m),
       }))
-    } catch {}
-    finally { setSending(false) }
+    } catch {
+      setSendError('No se pudo enviar')
+      setTimeout(() => setSendError(''), 3000)
+      // remove the failed temp message so UI stays clean
+      setLead(l => ({ ...l, mensajes: l.mensajes.filter(m => m.id !== tempId) }))
+    } finally {
+      setSending(false)
+      sendingRef.current = false
+    }
   }
 
   const changeStage = async (stageId) => {
@@ -536,6 +584,9 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
               })}
               <div ref={bottomRef} />
             </div>
+
+            {/* Send error */}
+            {sendError && <p className={styles.chatSendError}>{sendError}</p>}
 
             {/* Media preview */}
             {mediaFile && (
