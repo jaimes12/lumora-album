@@ -154,7 +154,15 @@ try
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<LumoraDbContext>();
+
+    // Create any tables that don't exist yet
     await db.Database.EnsureCreatedAsync();
+
+    // Add columns that may be missing from existing tables (idempotent)
+    await db.Database.ExecuteSqlRawAsync(
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(500) NULL;");
+    await db.Database.ExecuteSqlRawAsync(
+        "ALTER TABLE events ADD COLUMN IF NOT EXISTS client_id VARCHAR(100) NOT NULL DEFAULT '';");
 }
 catch (Exception ex)
 {
