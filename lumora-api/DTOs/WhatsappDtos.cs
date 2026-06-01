@@ -41,10 +41,12 @@ public record MessageResponse(
 
 // Payload POSTed by the WA server when an inbound message arrives
 public record WaWebhookPayload(
-    string ClientName, // e.g. "lm_ba22ec7e_6745_..."
-    string From,       // e.g. "521234567890@c.us"
-    string Body,
-    long?  Timestamp
+    string  ClientName, // e.g. "lm_ba22ec7e_6745_..."
+    string  From,       // e.g. "521234567890@c.us" or resolved from @lid
+    string  Body,
+    long?   Timestamp,
+    string? Pushname,   // WA display name of the sender (contact.pushname)
+    string? Number      // clean phone digits from contact.number
 );
 
 // WA connection status returned to the frontend

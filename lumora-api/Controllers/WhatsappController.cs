@@ -25,7 +25,9 @@ public class WhatsappController(IWhatsappService whatsapp, IWaServerService waSe
         // lm_ba22ec7e_6745_4a8f_9c89_9a9e0f954474 → ba22ec7e-6745-4a8f-9c89-9a9e0f954474
         var orgId = payload.ClientName[3..].Replace('_', '-');
 
-        await leads.HandleInboundAsync(orgId, payload.From, payload.Body);
+        // Prefer the resolved number field over From when available
+        var phone = !string.IsNullOrWhiteSpace(payload.Number) ? payload.Number : payload.From;
+        await leads.HandleInboundAsync(orgId, phone, payload.Body, payload.Pushname);
         return Ok();
     }
 

@@ -13,7 +13,7 @@ public interface ILeadService
     Task<LeadResponse?> UpdateAsync(string orgId, string id, UpdateLeadRequest req);
     Task<bool> DeleteAsync(string orgId, string id);
     Task<LeadMessageResponse?> SendMessageAsync(string orgId, string leadId, SendLeadMessageRequest req);
-    Task HandleInboundAsync(string orgId, string phone, string body);
+    Task HandleInboundAsync(string orgId, string phone, string body, string? pushname = null);
     Task<int> DeleteAllAsync(string orgId);
 }
 
@@ -123,12 +123,12 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer) : ILeadS
         return items.Count;
     }
 
-    public async Task HandleInboundAsync(string orgId, string phone, string body)
+    public async Task HandleInboundAsync(string orgId, string phone, string body, string? pushname = null)
     {
         // Strip any WA suffix (@c.us, @s.whatsapp.net, @lid, @g.us, etc.)
         phone = System.Text.RegularExpressions.Regex.Replace(phone, @"@\S+", "").Trim();
 
-        // Digits-only for matching: last 10 digits cover all country-code variants
+        // Digits-only for matching: last 10 digits match regardless of country-code prefix
         var digits = System.Text.RegularExpressions.Regex.Replace(phone, @"\D", "");
         var last10 = digits.Length >= 10 ? digits[^10..] : digits;
 
@@ -138,12 +138,16 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer) : ILeadS
 
         if (lead is null)
         {
-            // Store digits-only phone; use last 10 digits as display name
+            // Use WhatsApp display name (pushname) when available, fall back to last 10 digits
+            var displayName = !string.IsNullOrWhiteSpace(pushname)
+                ? pushname
+                : digits.Length >= 10 ? digits[^10..] : digits;
+
             lead = new Lead
             {
                 Id          = Guid.NewGuid().ToString(),
                 OrgId       = orgId,
-                Name        = digits.Length >= 10 ? digits[^10..] : digits,
+                Name        = displayName,
                 Phone       = digits.Length > 0 ? digits : phone,
                 Stage       = "nuevo",
                 UnreadCount = 0,
@@ -151,6 +155,12 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer) : ILeadS
             };
             await db.Leads.AddAsync(lead);
             await db.SaveChangesAsync();
+        }
+        else if (!string.IsNullOrWhiteSpace(pushname)
+                 && (string.IsNullOrWhiteSpace(lead.Name) || lead.Name == last10))
+        {
+            // Upgrade name from a bare phone number to the real WA display name
+            lead.Name = pushname;
         }
 
         var message = new LeadMessage
