@@ -390,9 +390,9 @@ try
         "ALTER TABLE event_payments MODIFY COLUMN id        varchar(255) NOT NULL",
         "ALTER TABLE event_payments MODIFY COLUMN org_id    varchar(255) NOT NULL",
         "ALTER TABLE event_payments MODIFY COLUMN event_id  varchar(255) NOT NULL",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash varchar(500) NULL",
-        "ALTER TABLE lead_messages ADD COLUMN IF NOT EXISTS media_url  varchar(500) NULL",
-        "ALTER TABLE lead_messages ADD COLUMN IF NOT EXISTS media_type varchar(100) NULL",
+        "ALTER TABLE users         ADD COLUMN password_hash varchar(500) NULL",
+        "ALTER TABLE lead_messages ADD COLUMN media_url    varchar(500) NULL",
+        "ALTER TABLE lead_messages ADD COLUMN media_type   varchar(100) NULL",
     };
 
     try
