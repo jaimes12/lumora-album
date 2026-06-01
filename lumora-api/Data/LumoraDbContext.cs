@@ -111,22 +111,22 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
             .OnDelete(DeleteBehavior.Cascade);
 
         // ── Pomelo 8.x GUID fix ──────────────────────────────────────────────
-        // Pomelo applies a GUID value converter to string properties whose values
-        // look like UUIDs. This causes "Unable to cast System.Guid to System.String".
-        // Applying an identity string converter to every string property overrides
-        // Pomelo's automatic converter and forces plain string read/write.
-        var stringConverter = new ValueConverter<string, string>(v => v, v => v);
-        foreach (var entityType in mb.Model.GetEntityTypes())
+        // SetValueConverter on metadata doesn't set ProviderClrType, so Pomelo
+        // still calls reader.GetGuid(). We must use the Fluent API HasConversion<string>()
+        // which sets BOTH the converter AND ProviderClrType = string, forcing GetString().
+        foreach (var entityType in mb.Model.GetEntityTypes().ToList())
         {
             foreach (var property in entityType.GetProperties()
-                .Where(p => p.ClrType == typeof(string)))
+                .Where(p => p.ClrType == typeof(string))
+                .ToList())
             {
-                // Skip json columns (Tags) — they have their own handling
                 var colType = property.GetColumnType();
                 if (colType != null && colType.StartsWith("json", StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                property.SetValueConverter(stringConverter);
+                mb.Entity(entityType.ClrType)
+                    .Property(property.Name)
+                    .HasConversion<string>();
             }
         }
     }

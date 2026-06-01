@@ -158,68 +158,64 @@ try
     // Create any tables that don't exist yet
     await db.Database.EnsureCreatedAsync();
 
-    // ── Fix Pomelo 8.x GUID cast issue ───────────────────────────────────────
-    // Pomelo reads char(36) columns using reader.GetGuid(), which returns
-    // System.Guid. Assigning that to a string property throws InvalidCastException.
-    // Changing column types to varchar(255) makes Pomelo use GetString() instead.
-    // Each statement is in its own try-catch so failures on missing tables are ignored.
+    // ── Fix Pomelo 8.x GUID cast ─────────────────────────────────────────────
+    // Pomelo 8 maps char(36) to DbType.Guid and calls reader.GetGuid(), returning
+    // System.Guid which cannot be assigned to string properties.
+    // Fix: MODIFY all ID/FK columns to varchar(255) — Pomelo uses GetString() for varchar.
+    // Must disable FK checks first, otherwise MySQL refuses to modify referenced columns.
     var guidFixes = new[]
     {
-        // organizations
-        "ALTER TABLE organizations MODIFY COLUMN id varchar(255) NOT NULL;",
-        // users
-        "ALTER TABLE users MODIFY COLUMN id varchar(255) NOT NULL;",
-        "ALTER TABLE users MODIFY COLUMN org_id varchar(255) NOT NULL;",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash varchar(500) NULL;",
-        // clients
-        "ALTER TABLE clients MODIFY COLUMN id varchar(255) NOT NULL;",
-        "ALTER TABLE clients MODIFY COLUMN org_id varchar(255) NOT NULL;",
-        // events
-        "ALTER TABLE events MODIFY COLUMN id varchar(255) NOT NULL;",
-        "ALTER TABLE events MODIFY COLUMN org_id varchar(255) NOT NULL;",
-        "ALTER TABLE events MODIFY COLUMN client_id varchar(255) NOT NULL DEFAULT '';",
-        // vendors
-        "ALTER TABLE vendors MODIFY COLUMN id varchar(255) NOT NULL;",
-        "ALTER TABLE vendors MODIFY COLUMN org_id varchar(255) NOT NULL;",
-        // sales
-        "ALTER TABLE sales MODIFY COLUMN id varchar(255) NOT NULL;",
-        "ALTER TABLE sales MODIFY COLUMN org_id varchar(255) NOT NULL;",
-        "ALTER TABLE sales MODIFY COLUMN client_id varchar(255) NOT NULL;",
-        "ALTER TABLE sales MODIFY COLUMN event_id varchar(255) NULL;",
-        // sale_items
-        "ALTER TABLE sale_items MODIFY COLUMN id varchar(255) NOT NULL;",
-        "ALTER TABLE sale_items MODIFY COLUMN sale_id varchar(255) NOT NULL;",
-        // whatsapp_chats
-        "ALTER TABLE whatsapp_chats MODIFY COLUMN id varchar(255) NOT NULL;",
-        "ALTER TABLE whatsapp_chats MODIFY COLUMN org_id varchar(255) NOT NULL;",
-        // whatsapp_messages
-        "ALTER TABLE whatsapp_messages MODIFY COLUMN id varchar(255) NOT NULL;",
-        "ALTER TABLE whatsapp_messages MODIFY COLUMN chat_id varchar(255) NOT NULL;",
-        "ALTER TABLE whatsapp_messages MODIFY COLUMN org_id varchar(255) NOT NULL;",
-        // contracts
-        "ALTER TABLE contracts MODIFY COLUMN id varchar(255) NOT NULL;",
-        "ALTER TABLE contracts MODIFY COLUMN org_id varchar(255) NOT NULL;",
-        "ALTER TABLE contracts MODIFY COLUMN client_id varchar(255) NOT NULL;",
-        "ALTER TABLE contracts MODIFY COLUMN event_id varchar(255) NULL;",
-        // leads
-        "ALTER TABLE leads MODIFY COLUMN id varchar(255) NOT NULL;",
-        "ALTER TABLE leads MODIFY COLUMN org_id varchar(255) NOT NULL;",
-        // lead_messages
-        "ALTER TABLE lead_messages MODIFY COLUMN id varchar(255) NOT NULL;",
-        "ALTER TABLE lead_messages MODIFY COLUMN lead_id varchar(255) NOT NULL;",
-        "ALTER TABLE lead_messages MODIFY COLUMN org_id varchar(255) NOT NULL;",
-        // event_payments
-        "ALTER TABLE event_payments MODIFY COLUMN id varchar(255) NOT NULL;",
-        "ALTER TABLE event_payments MODIFY COLUMN org_id varchar(255) NOT NULL;",
-        "ALTER TABLE event_payments MODIFY COLUMN event_id varchar(255) NOT NULL;",
-        // users password_hash fallback (no IF NOT EXISTS for older MySQL)
-        "ALTER TABLE users ADD COLUMN password_hash varchar(500) NULL;",
+        "ALTER TABLE organizations MODIFY COLUMN id varchar(255) NOT NULL",
+        "ALTER TABLE users MODIFY COLUMN id varchar(255) NOT NULL",
+        "ALTER TABLE users MODIFY COLUMN org_id varchar(255) NOT NULL",
+        "ALTER TABLE clients MODIFY COLUMN id varchar(255) NOT NULL",
+        "ALTER TABLE clients MODIFY COLUMN org_id varchar(255) NOT NULL",
+        "ALTER TABLE events MODIFY COLUMN id varchar(255) NOT NULL",
+        "ALTER TABLE events MODIFY COLUMN org_id varchar(255) NOT NULL",
+        "ALTER TABLE events MODIFY COLUMN client_id varchar(255) NOT NULL DEFAULT ''",
+        "ALTER TABLE vendors MODIFY COLUMN id varchar(255) NOT NULL",
+        "ALTER TABLE vendors MODIFY COLUMN org_id varchar(255) NOT NULL",
+        "ALTER TABLE sales MODIFY COLUMN id varchar(255) NOT NULL",
+        "ALTER TABLE sales MODIFY COLUMN org_id varchar(255) NOT NULL",
+        "ALTER TABLE sales MODIFY COLUMN client_id varchar(255) NOT NULL",
+        "ALTER TABLE sales MODIFY COLUMN event_id varchar(255) NULL",
+        "ALTER TABLE sale_items MODIFY COLUMN id varchar(255) NOT NULL",
+        "ALTER TABLE sale_items MODIFY COLUMN sale_id varchar(255) NOT NULL",
+        "ALTER TABLE whatsapp_chats MODIFY COLUMN id varchar(255) NOT NULL",
+        "ALTER TABLE whatsapp_chats MODIFY COLUMN org_id varchar(255) NOT NULL",
+        "ALTER TABLE whatsapp_messages MODIFY COLUMN id varchar(255) NOT NULL",
+        "ALTER TABLE whatsapp_messages MODIFY COLUMN chat_id varchar(255) NOT NULL",
+        "ALTER TABLE whatsapp_messages MODIFY COLUMN org_id varchar(255) NOT NULL",
+        "ALTER TABLE contracts MODIFY COLUMN id varchar(255) NOT NULL",
+        "ALTER TABLE contracts MODIFY COLUMN org_id varchar(255) NOT NULL",
+        "ALTER TABLE contracts MODIFY COLUMN client_id varchar(255) NOT NULL",
+        "ALTER TABLE contracts MODIFY COLUMN event_id varchar(255) NULL",
+        "ALTER TABLE leads MODIFY COLUMN id varchar(255) NOT NULL",
+        "ALTER TABLE leads MODIFY COLUMN org_id varchar(255) NOT NULL",
+        "ALTER TABLE lead_messages MODIFY COLUMN id varchar(255) NOT NULL",
+        "ALTER TABLE lead_messages MODIFY COLUMN lead_id varchar(255) NOT NULL",
+        "ALTER TABLE lead_messages MODIFY COLUMN org_id varchar(255) NOT NULL",
+        "ALTER TABLE event_payments MODIFY COLUMN id varchar(255) NOT NULL",
+        "ALTER TABLE event_payments MODIFY COLUMN org_id varchar(255) NOT NULL",
+        "ALTER TABLE event_payments MODIFY COLUMN event_id varchar(255) NOT NULL",
+        // password_hash column
+        "ALTER TABLE users ADD COLUMN password_hash varchar(500) NULL",
     };
 
-    foreach (var sql in guidFixes)
+    try
     {
-        try { await db.Database.ExecuteSqlRawAsync(sql); }
-        catch { /* ignore: table may not exist or column already correct type */ }
+        // Disable FK checks so referenced columns can be modified
+        await db.Database.ExecuteSqlRawAsync("SET FOREIGN_KEY_CHECKS = 0");
+        foreach (var sql in guidFixes)
+        {
+            try { await db.Database.ExecuteSqlRawAsync(sql); }
+            catch { /* column already correct type or table missing — skip */ }
+        }
+    }
+    finally
+    {
+        try { await db.Database.ExecuteSqlRawAsync("SET FOREIGN_KEY_CHECKS = 1"); }
+        catch { }
     }
 }
 catch (Exception ex)
