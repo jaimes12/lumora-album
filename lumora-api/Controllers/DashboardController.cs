@@ -60,21 +60,28 @@ public class DashboardController(LumoraDbContext db) : ControllerBase
 
         try
         {
-            upcomingEvents = await db.Events
-                .Include(e => e.Client)
+            var events = await db.Events
                 .Where(e => e.OrgId == orgId && e.EventDate >= now)
                 .OrderBy(e => e.EventDate)
                 .Take(5)
-                .Select(e => new
-                {
-                    id = e.Id,
-                    name = e.Name,
-                    type = e.Type,
-                    status = e.Status,
-                    eventDate = e.EventDate,
-                    clientName = e.Client != null ? e.Client.Name : string.Empty
-                })
+                .Select(e => new { e.Id, e.Name, e.Type, e.Status, e.EventDate, e.ClientId })
                 .ToListAsync();
+
+            var clientIds = events.Select(e => e.ClientId).Distinct().ToList();
+            var clientNames = await db.Clients
+                .Where(c => clientIds.Contains(c.Id))
+                .Select(c => new { c.Id, c.Name })
+                .ToDictionaryAsync(c => c.Id, c => c.Name);
+
+            upcomingEvents = events.Select(e => new
+            {
+                id = e.Id,
+                name = e.Name,
+                type = e.Type,
+                status = e.Status,
+                eventDate = e.EventDate,
+                clientName = clientNames.TryGetValue(e.ClientId, out var cn) ? cn : string.Empty
+            }).ToList();
         }
         catch { }
 

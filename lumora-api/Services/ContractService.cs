@@ -16,6 +16,9 @@ public interface IContractService
 
 public class ContractService(LumoraDbContext db) : IContractService
 {
+    private async Task<string?> GetClientName(string clientId) =>
+        await db.Clients.Where(c => c.Id == clientId).Select(c => c.Name).FirstOrDefaultAsync();
+
     public async Task<ContractResponse> CreateAsync(string orgId, CreateContractRequest req)
     {
         var contract = new Contract
@@ -33,29 +36,35 @@ public class ContractService(LumoraDbContext db) : IContractService
         };
         await db.Contracts.AddAsync(contract);
         await db.SaveChangesAsync();
-        var client = await db.Clients.FindAsync(req.ClientId);
-        return ToResponse(contract, client?.Name);
+        return ToResponse(contract, await GetClientName(req.ClientId));
     }
 
     public async Task<ContractResponse?> GetByIdAsync(string orgId, string id)
     {
         var contract = await db.Contracts
-            .Include(c => c.Client)
             .FirstOrDefaultAsync(c => c.Id == id && c.OrgId == orgId);
-        return contract is null ? null : ToResponse(contract, contract.Client?.Name);
+        if (contract is null) return null;
+        return ToResponse(contract, await GetClientName(contract.ClientId));
     }
 
     public async Task<IEnumerable<ContractResponse>> GetByOrgAsync(string orgId, string? status = null)
     {
-        var query = db.Contracts.Include(c => c.Client).Where(c => c.OrgId == orgId);
+        var query = db.Contracts.Where(c => c.OrgId == orgId);
         if (status is not null) query = query.Where(c => c.Status == status);
         var list = await query.OrderByDescending(c => c.CreatedAt).ToListAsync();
-        return list.Select(c => ToResponse(c, c.Client?.Name));
+
+        var clientIds = list.Select(c => c.ClientId).Distinct().ToList();
+        var names = await db.Clients
+            .Where(c => clientIds.Contains(c.Id))
+            .Select(c => new { c.Id, c.Name })
+            .ToDictionaryAsync(c => c.Id, c => c.Name);
+
+        return list.Select(c => ToResponse(c, names.TryGetValue(c.ClientId, out var n) ? n : null));
     }
 
     public async Task<ContractResponse?> UpdateAsync(string orgId, string id, UpdateContractRequest req)
     {
-        var contract = await db.Contracts.Include(c => c.Client)
+        var contract = await db.Contracts
             .FirstOrDefaultAsync(c => c.Id == id && c.OrgId == orgId);
         if (contract is null) return null;
 
@@ -70,7 +79,7 @@ public class ContractService(LumoraDbContext db) : IContractService
             contract.SignedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
-        return ToResponse(contract, contract.Client?.Name);
+        return ToResponse(contract, await GetClientName(contract.ClientId));
     }
 
     public async Task<bool> DeleteAsync(string orgId, string id)
