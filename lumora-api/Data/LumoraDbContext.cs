@@ -1,5 +1,6 @@
 using lumora_api.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace lumora_api.Data;
 
@@ -108,5 +109,25 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
             .WithMany()
             .HasForeignKey(p => p.EventId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // ── Pomelo 8.x GUID fix ──────────────────────────────────────────────
+        // Pomelo applies a GUID value converter to string properties whose values
+        // look like UUIDs. This causes "Unable to cast System.Guid to System.String".
+        // Applying an identity string converter to every string property overrides
+        // Pomelo's automatic converter and forces plain string read/write.
+        var stringConverter = new ValueConverter<string, string>(v => v, v => v);
+        foreach (var entityType in mb.Model.GetEntityTypes())
+        {
+            foreach (var property in entityType.GetProperties()
+                .Where(p => p.ClrType == typeof(string)))
+            {
+                // Skip json columns (Tags) — they have their own handling
+                var colType = property.GetColumnType();
+                if (colType != null && colType.StartsWith("json", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                property.SetValueConverter(stringConverter);
+            }
+        }
     }
 }
