@@ -13,11 +13,14 @@ public interface ILeadService
     Task<LeadResponse?> UpdateAsync(string orgId, string id, UpdateLeadRequest req);
     Task<bool> DeleteAsync(string orgId, string id);
     Task<LeadMessageResponse?> SendMessageAsync(string orgId, string leadId, SendLeadMessageRequest req);
-    Task HandleInboundAsync(string orgId, string phone, string body, string? pushname = null);
+    Task HandleInboundAsync(string orgId, string phone, string body, string? pushname = null,
+        string? mediaData = null, string? mediaType = null);
+    Task HandleOutboundAsync(string orgId, string phone, string body,
+        string? mediaData = null, string? mediaType = null);
     Task<int> DeleteAllAsync(string orgId);
 }
 
-public class LeadService(LumoraDbContext db, IWaServerService waServer) : ILeadService
+public class LeadService(LumoraDbContext db, IWaServerService waServer, IR2Service r2) : ILeadService
 {
     public async Task<LeadResponse> CreateAsync(string orgId, CreateLeadRequest req)
     {
@@ -123,12 +126,89 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer) : ILeadS
         return items.Count;
     }
 
-    public async Task HandleInboundAsync(string orgId, string phone, string body, string? pushname = null)
+    public async Task HandleInboundAsync(string orgId, string phone, string body,
+        string? pushname = null, string? mediaData = null, string? mediaType = null)
     {
-        // Strip any WA suffix (@c.us, @s.whatsapp.net, @lid, @g.us, etc.)
-        phone = System.Text.RegularExpressions.Regex.Replace(phone, @"@\S+", "").Trim();
+        var (lead, last10) = await FindOrCreateLead(orgId, phone, pushname);
 
-        // Digits-only for matching: last 10 digits match regardless of country-code prefix
+        var mediaUrl = await UploadMediaIfPresent(mediaData, mediaType);
+        var summary  = string.IsNullOrWhiteSpace(body) && mediaUrl is not null
+            ? $"[{(mediaType?.StartsWith("image") == true ? "Imagen" : "Audio")}]"
+            : body;
+
+        var message = new LeadMessage
+        {
+            Id        = Guid.NewGuid().ToString(),
+            LeadId    = lead.Id,
+            OrgId     = orgId,
+            Body      = summary,
+            Direction = "inbound",
+            MediaUrl  = mediaUrl,
+            MediaType = mediaType,
+            SentAt    = DateTime.UtcNow,
+        };
+        await db.LeadMessages.AddAsync(message);
+
+        lead.LastMessage   = summary;
+        lead.LastMessageAt = message.SentAt;
+        lead.UnreadCount++;
+        await db.SaveChangesAsync();
+    }
+
+    // Sync a message sent from the user's own phone to an EXISTING lead.
+    // Does NOT create a new lead — only adds the message if the lead exists.
+    public async Task HandleOutboundAsync(string orgId, string phone, string body,
+        string? mediaData = null, string? mediaType = null)
+    {
+        phone = System.Text.RegularExpressions.Regex.Replace(phone, @"@\S+", "").Trim();
+        var digits = System.Text.RegularExpressions.Regex.Replace(phone, @"\D", "");
+        var last10 = digits.Length >= 10 ? digits[^10..] : digits;
+
+        var lead = await db.Leads.FirstOrDefaultAsync(l => l.OrgId == orgId && l.Phone.EndsWith(last10));
+        if (lead is null) return; // no existing conversation → skip
+
+        var mediaUrl = await UploadMediaIfPresent(mediaData, mediaType);
+        var summary  = string.IsNullOrWhiteSpace(body) && mediaUrl is not null
+            ? $"[{(mediaType?.StartsWith("image") == true ? "Imagen" : "Audio")}]"
+            : body;
+
+        var message = new LeadMessage
+        {
+            Id        = Guid.NewGuid().ToString(),
+            LeadId    = lead.Id,
+            OrgId     = orgId,
+            Body      = summary,
+            Direction = "outbound",
+            MediaUrl  = mediaUrl,
+            MediaType = mediaType,
+            SentAt    = DateTime.UtcNow,
+        };
+        await db.LeadMessages.AddAsync(message);
+
+        lead.LastMessage   = summary;
+        lead.LastMessageAt = message.SentAt;
+        await db.SaveChangesAsync();
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private async Task<string?> UploadMediaIfPresent(string? mediaData, string? mediaType)
+    {
+        if (string.IsNullOrWhiteSpace(mediaData) || string.IsNullOrWhiteSpace(mediaType))
+            return null;
+        try
+        {
+            var bytes = Convert.FromBase64String(mediaData);
+            // Normalize MIME (e.g. "audio/ogg; codecs=opus" → "audio/ogg")
+            var mime = mediaType.Split(';')[0].Trim();
+            return await r2.UploadAsync(bytes, mime);
+        }
+        catch { return null; }
+    }
+
+    private async Task<(Lead lead, string last10)> FindOrCreateLead(string orgId, string phone, string? pushname)
+    {
+        phone = System.Text.RegularExpressions.Regex.Replace(phone, @"@\S+", "").Trim();
         var digits = System.Text.RegularExpressions.Regex.Replace(phone, @"\D", "");
         var last10 = digits.Length >= 10 ? digits[^10..] : digits;
 
@@ -138,70 +218,31 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer) : ILeadS
 
         if (lead is null)
         {
-            // Use WhatsApp display name (pushname) when available, fall back to last 10 digits
-            var displayName = !string.IsNullOrWhiteSpace(pushname)
+            var name = !string.IsNullOrWhiteSpace(pushname)
                 ? pushname
                 : digits.Length >= 10 ? digits[^10..] : digits;
-
-            lead = new Lead
-            {
-                Id          = Guid.NewGuid().ToString(),
-                OrgId       = orgId,
-                Name        = displayName,
-                Phone       = digits.Length > 0 ? digits : phone,
-                Stage       = "nuevo",
-                UnreadCount = 0,
-                CreatedAt   = DateTime.UtcNow,
-            };
+            lead = new Lead { Id = Guid.NewGuid().ToString(), OrgId = orgId, Name = name,
+                Phone = digits.Length > 0 ? digits : phone, Stage = "nuevo", CreatedAt = DateTime.UtcNow };
             await db.Leads.AddAsync(lead);
             await db.SaveChangesAsync();
         }
         else if (!string.IsNullOrWhiteSpace(pushname)
                  && (string.IsNullOrWhiteSpace(lead.Name) || lead.Name == last10))
         {
-            // Upgrade name from a bare phone number to the real WA display name
             lead.Name = pushname;
         }
-
-        var message = new LeadMessage
-        {
-            Id        = Guid.NewGuid().ToString(),
-            LeadId    = lead.Id,
-            OrgId     = orgId,
-            Body      = body,
-            Direction = "inbound",
-            SentAt    = DateTime.UtcNow,
-        };
-        await db.LeadMessages.AddAsync(message);
-
-        lead.LastMessage   = body;
-        lead.LastMessageAt = message.SentAt;
-        lead.UnreadCount++;
-
-        await db.SaveChangesAsync();
+        return (lead, last10);
     }
 
     private static LeadResponse ToResponse(Lead l) => new(
-        l.Id,
-        l.ClientId,
-        l.Name,
-        l.Phone,
-        l.EventType,
-        l.EventDate,
-        l.Budget,
-        l.Stage,
-        l.LastMessage,
-        l.UnreadCount,
-        l.CreatedAt,
-        l.LastMessageAt,
+        l.Id, l.ClientId, l.Name, l.Phone, l.EventType, l.EventDate, l.Budget,
+        l.Stage, l.LastMessage, l.UnreadCount, l.CreatedAt, l.LastMessageAt,
         l.Messages.OrderBy(m => m.SentAt).Select(ToMessageResponse).ToList()
     );
 
     private static LeadMessageResponse ToMessageResponse(LeadMessage m) => new(
-        m.Id,
-        m.LeadId,
-        m.Body,
-        m.Direction,
-        m.SentAt
+        m.Id, m.LeadId, m.Body, m.Direction, m.MediaUrl, m.MediaType,
+        // Stamp as UTC so the browser converts to its local timezone correctly
+        DateTime.SpecifyKind(m.SentAt, DateTimeKind.Utc)
     );
 }

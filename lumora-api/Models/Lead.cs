@@ -68,6 +68,12 @@ public class LeadMessage
     [Column("direction")]
     public string Direction { get; set; } = "inbound"; // inbound|outbound
 
+    [Column("media_url")]
+    public string? MediaUrl { get; set; }
+
+    [Column("media_type")]
+    public string? MediaType { get; set; }
+
     [Column("sent_at")]
     public DateTime SentAt { get; set; } = DateTime.UtcNow;
 

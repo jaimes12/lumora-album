@@ -26,10 +26,12 @@ public record SendLeadMessageRequest(
 );
 
 public record LeadMessageResponse(
-    string Id,
-    string LeadId,
-    string Body,
-    string Direction,
+    string   Id,
+    string   LeadId,
+    string   Body,
+    string   Direction,
+    string?  MediaUrl,
+    string?  MediaType,
     DateTime SentAt
 );
 

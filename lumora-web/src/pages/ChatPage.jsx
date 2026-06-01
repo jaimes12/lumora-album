@@ -483,11 +483,22 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
                 <p className={styles.chatEmpty}>Sin mensajes aún. ¡Escribe el primero!</p>
               )}
               {lead.mensajes.map(m => {
-                const isSaved = !m.id.startsWith('tmp_')
+                const isSaved  = !m.id.startsWith('tmp_')
+                const isImage  = m.mediaType?.startsWith('image')
+                const isAudio  = m.mediaType?.startsWith('audio')
                 return (
                   <div key={m.id} className={`${styles.chatMsgWrap} ${m.tipo === 'out' ? styles.chatMsgOut : ''}`}>
                     <div className={`${styles.chatBubble} ${m.tipo === 'out' ? styles.chatBubbleOut : styles.chatBubbleIn}`}>
-                      <p>{m.texto}</p>
+                      {isImage && m.mediaUrl && (
+                        <a href={m.mediaUrl} target="_blank" rel="noreferrer" className={styles.chatMediaImg}>
+                          <img src={m.mediaUrl} alt="imagen" loading="lazy" />
+                        </a>
+                      )}
+                      {isAudio && m.mediaUrl && (
+                        <audio className={styles.chatMediaAudio} controls preload="none" src={m.mediaUrl} />
+                      )}
+                      {m.texto && !isImage && <p>{m.texto}</p>}
+                      {m.texto && isImage && m.texto !== '[Imagen]' && <p className={styles.chatMediaCaption}>{m.texto}</p>}
                       <div className={styles.chatBubbleMeta}>
                         <span className={styles.chatBubbleTime}>{m.hora}</span>
                         {m.tipo === 'out' && <Tick saved={isSaved} />}

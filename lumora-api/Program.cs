@@ -58,6 +58,7 @@ builder.Services.AddScoped<IVendorService, VendorService>();
 builder.Services.AddScoped<ISaleService, SaleService>();
 builder.Services.AddScoped<IWhatsappService, WhatsappService>();
 builder.Services.AddScoped<IWaServerService, WaServerService>();
+builder.Services.AddScoped<IR2Service, R2Service>();
 builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<ILeadService, LeadService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -330,12 +331,14 @@ try
         ) CHARACTER SET utf8mb4",
 
         @"CREATE TABLE IF NOT EXISTS `lead_messages` (
-            `id`        varchar(255) NOT NULL,
-            `lead_id`   varchar(255) NOT NULL,
-            `org_id`    varchar(255) NOT NULL,
-            `body`      longtext     NOT NULL,
-            `direction` varchar(500) NOT NULL DEFAULT 'inbound',
-            `sent_at`   datetime(6)  NOT NULL,
+            `id`         varchar(255) NOT NULL,
+            `lead_id`    varchar(255) NOT NULL,
+            `org_id`     varchar(255) NOT NULL,
+            `body`       longtext     NOT NULL,
+            `direction`  varchar(500) NOT NULL DEFAULT 'inbound',
+            `media_url`  varchar(500) NULL,
+            `media_type` varchar(100) NULL,
+            `sent_at`    datetime(6)  NOT NULL,
             PRIMARY KEY (`id`)
         ) CHARACTER SET utf8mb4",
 
@@ -388,6 +391,8 @@ try
         "ALTER TABLE event_payments MODIFY COLUMN org_id    varchar(255) NOT NULL",
         "ALTER TABLE event_payments MODIFY COLUMN event_id  varchar(255) NOT NULL",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash varchar(500) NULL",
+        "ALTER TABLE lead_messages ADD COLUMN IF NOT EXISTS media_url  varchar(500) NULL",
+        "ALTER TABLE lead_messages ADD COLUMN IF NOT EXISTS media_type varchar(100) NULL",
     };
 
     try

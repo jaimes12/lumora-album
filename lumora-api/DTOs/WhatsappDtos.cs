@@ -39,14 +39,18 @@ public record MessageResponse(
     DateTime SentAt
 );
 
-// Payload POSTed by the WA server when an inbound message arrives
+// Payload POSTed by the WA server for inbound and outbound messages
 public record WaWebhookPayload(
-    string  ClientName, // e.g. "lm_ba22ec7e_6745_..."
-    string  From,       // e.g. "521234567890@c.us" or resolved from @lid
+    string  ClientName,     // e.g. "lm_ba22ec7e_6745_..."
+    string  From,           // PHONE@c.us — recipient for outbound, sender for inbound
     string  Body,
     long?   Timestamp,
-    string? Pushname,   // WA display name of the sender (contact.pushname)
-    string? Number      // clean phone digits from contact.number
+    string? Pushname,
+    string? Number,         // clean digits from @c.us form of From
+    string? Direction,      // "inbound" | "outbound" (outbound = sent from user's phone)
+    string? MediaData,      // base64 image/audio, max 5 MB
+    string? MediaType,      // MIME type, e.g. "image/jpeg" or "audio/ogg; codecs=opus"
+    string? MediaFilename
 );
 
 // WA connection status returned to the frontend

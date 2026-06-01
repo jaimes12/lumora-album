@@ -21,10 +21,12 @@ function toFrontend(l) {
     hora: l.lastMessageAt ? new Date(l.lastMessageAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '',
     noLeidos: l.unreadCount,
     mensajes: (l.messages ?? []).map(m => ({
-      id: m.id,
-      texto: m.body,
-      tipo: m.direction === 'outbound' ? 'out' : 'in',
-      hora: new Date(m.sentAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+      id:        m.id,
+      texto:     m.body,
+      tipo:      m.direction === 'outbound' ? 'out' : 'in',
+      mediaUrl:  m.mediaUrl  ?? null,
+      mediaType: m.mediaType ?? null,
+      hora: new Date(m.sentAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }),
     })),
   }
 }
