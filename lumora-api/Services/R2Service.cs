@@ -6,6 +6,7 @@ namespace lumora_api.Services;
 public interface IR2Service
 {
     Task<string?> UploadAsync(byte[] data, string contentType);
+    Task<(bool ok, string detail)> TestAsync();
 }
 
 public class R2Service(IConfiguration config, ILogger<R2Service> log) : IR2Service
@@ -61,6 +62,36 @@ public class R2Service(IConfiguration config, ILogger<R2Service> log) : IR2Servi
         {
             log.LogWarning(ex, "R2 upload failed");
             return null;
+        }
+    }
+
+    public async Task<(bool ok, string detail)> TestAsync()
+    {
+        if (string.IsNullOrWhiteSpace(AccessKey) || AccessKey.StartsWith("TU_"))
+            return (false, "R2 keys not configured");
+        try
+        {
+            using var s3 = new AmazonS3Client(AccessKey, SecretKey, new AmazonS3Config
+            {
+                ServiceURL     = $"https://{AccountId}.r2.cloudflarestorage.com",
+                ForcePathStyle = true,
+            });
+            // Upload a tiny test file
+            var key = $"_test/{Guid.NewGuid():N}.txt";
+            using var ms = new MemoryStream("ok"u8.ToArray());
+            await s3.PutObjectAsync(new PutObjectRequest
+            {
+                BucketName  = BucketName,
+                Key         = key,
+                InputStream = ms,
+                ContentType = "text/plain",
+            });
+            var url = $"{PublicBase}/{key}";
+            return (true, $"Upload OK → {url}");
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
         }
     }
 }

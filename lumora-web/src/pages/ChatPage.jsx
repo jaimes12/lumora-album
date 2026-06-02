@@ -358,6 +358,31 @@ function Tick({ saved }) {
 // true if a name looks like a raw phone number (no spaces, mostly digits)
 const isPhoneNumber = (s) => s && /^[\d\s\-\+\(\)]{7,}$/.test(s.trim())
 
+// ─── Local media cache (localStorage) ───────────────────────────────────────
+const MEDIA_KEY = 'lumora_media_cache'
+const MAX_ENTRIES = 40 // keep last 40 images to stay under localStorage limits
+
+function loadLocalMedia() {
+  try { return JSON.parse(localStorage.getItem(MEDIA_KEY) ?? '{}') }
+  catch { return {} }
+}
+
+function saveLocalMedia(cache) {
+  try {
+    const entries = Object.entries(cache)
+    // Keep only the most recent MAX_ENTRIES entries
+    const trimmed = Object.fromEntries(entries.slice(-MAX_ENTRIES))
+    localStorage.setItem(MEDIA_KEY, JSON.stringify(trimmed))
+    return trimmed
+  } catch { return cache }
+}
+
+function storeLocalMedia(msgId, dataUrl) {
+  const cache = loadLocalMedia()
+  cache[msgId] = dataUrl
+  saveLocalMedia(cache)
+}
+
 // ─── Image compression (canvas) ─────────────────────────────────────────────
 function compressImage(file, maxPx = 1280, quality = 0.82) {
   return new Promise((resolve) => {
@@ -389,20 +414,27 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
   const [sendError,  setSendError]  = useState('')
   const [showInfo,   setShowInfo]   = useState(true)
   const [mediaFile,  setMediaFile]  = useState(null)  // { name, dataUrl, base64, mimeType }
-  const bottomRef     = useRef(null)
-  const fileInputRef  = useRef(null)
-  const sendingRef    = useRef(false)   // pauses fetchLead poll during upload
-  const localMediaRef = useRef({})      // { [serverMsgId]: dataUrl } — R2 fallback
+  const bottomRef    = useRef(null)
+  const fileInputRef = useRef(null)
+  const sendingRef   = useRef(false)   // pauses fetchLead poll during upload
+  // { [serverMsgId]: dataUrl } — persists in localStorage so images survive modal close
+  const localMediaRef = useRef(loadLocalMedia())
 
   const fetchLead = useCallback(async () => {
-    if (sendingRef.current) return  // don't overwrite UI while upload is in progress
+    if (sendingRef.current) return
     try {
       const updated = await leadsApi.getById(lead.id)
-      // Restore local data URLs for messages where R2 upload returned null
-      const local = localMediaRef.current
-      const mensajes = updated.mensajes.map(m =>
-        (!m.mediaUrl && local[m.id]) ? { ...m, mediaUrl: local[m.id] } : m
-      )
+      const local   = localMediaRef.current
+      // For messages without a server URL, restore from in-memory or localStorage cache
+      const mensajes = updated.mensajes.map(m => {
+        if (m.mediaUrl) return m
+        const cached = local[m.id] ?? loadLocalMedia()[m.id]
+        if (cached) {
+          local[m.id] = cached // warm in-memory cache
+          return { ...m, mediaUrl: cached }
+        }
+        return m
+      })
       setLead({ ...updated, mensajes })
       onLeadUpdate(lead.id, { ultimoMsg: updated.ultimoMsg, noLeidos: 0, hora: updated.hora })
     } catch {}
@@ -481,9 +513,10 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
         lead.id, text || null, 'outbound',
         capturedMedia?.base64 ?? null, capturedMedia?.mimeType ?? null
       )
-      // If R2 didn't return a URL, keep the local data URL as fallback
+      // If R2 didn't return a URL, persist the local data URL in localStorage
       if (saved?.id && capturedMedia?.dataUrl && !saved.mediaUrl) {
         localMediaRef.current[saved.id] = capturedMedia.dataUrl
+        storeLocalMedia(saved.id, capturedMedia.dataUrl)
       }
       const newId = saved?.id ?? `sent_${Date.now()}`
       setLead(l => ({

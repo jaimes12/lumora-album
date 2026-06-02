@@ -445,4 +445,11 @@ app.MapGet("/health", () => Results.Ok(new
     firebase = firebaseConfigured ? "connected" : "not configured"
 }));
 
+// R2 diagnostics — hit this URL to see if R2 uploads are working
+app.MapGet("/api/r2/test", async (IR2Service r2) =>
+{
+    var (ok, detail) = await r2.TestAsync();
+    return Results.Ok(new { ok, detail });
+});
+
 app.Run();
