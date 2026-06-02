@@ -17,8 +17,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.13" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
-    <!-- Cloudflare R2 (S3-compatible) for media uploads -->
-    <PackageReference Include="AWSSDK.S3" Version="3.7.413.4" />
+    <!-- R2 uploads use raw HTTP + SigV4 (AWSSDK uses chunked mode not supported by R2) -->
   </ItemGroup>
 
 </Project>
