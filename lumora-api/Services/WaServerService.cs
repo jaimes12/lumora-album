@@ -27,7 +27,7 @@ public class WaServerService(IHttpClientFactory factory, ILogger<WaServerService
     {
         try
         {
-            var res = await Http.GetAsync("/api/whatsapp/status");
+            var res = await Http.GetAsync("/api/whatsapp/status?prefix=lm_");
             if (!res.IsSuccessStatusCode) return new("disconnected", null, false);
 
             var json = await res.Content.ReadAsStringAsync();
