@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useLocation } from 'react-router-dom'
 import { leadsApi, toFrontendMsg } from '../api/leadsApi'
 import styles from './ChatPage.module.css'
 
@@ -807,6 +808,7 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 export default function ChatPage() {
+  const location = useLocation()
   const [stages,           saveStages]          = useStages()
   const [leads,            setLeads]            = useState([])
   const [loading,          setLoading]          = useState(true)
@@ -825,9 +827,26 @@ export default function ChatPage() {
 
   useEffect(() => {
     loadLeads()
-    const id = setInterval(loadLeads, 10000) // poll every 10s for incoming messages
+    const id = setInterval(loadLeads, 10000)
     return () => clearInterval(id)
   }, [loadLeads])
+
+  // Auto-open a lead when navigated from another page with state.openLeadId
+  useEffect(() => {
+    const { openLeadId } = location.state ?? {}
+    if (!openLeadId) return
+    // Try from already-loaded leads first; fall back to fetching
+    const tryOpen = async () => {
+      const fromState = leads.find(l => l.id === openLeadId)
+      if (fromState) { setActiveLead(fromState); return }
+      try {
+        const fetched = await leadsApi.getById(openLeadId)
+        setLeads(prev => prev.some(l => l.id === fetched.id) ? prev : [fetched, ...prev])
+        setActiveLead(fetched)
+      } catch {}
+    }
+    tryOpen()
+  }, [location.state]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const byStage = (stageId) => leads.filter(l => l.stage === stageId)
 

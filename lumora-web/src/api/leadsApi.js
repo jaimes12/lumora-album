@@ -43,6 +43,29 @@ export function toFrontendMsg(m) {
   }
 }
 
+// Finds an existing lead by phone number or creates a new one.
+// Returns a frontend-shaped lead ready to display in ChatModal.
+export async function findOrCreateLeadByPhone(phone, name) {
+  const digits = (phone || '').replace(/\D/g, '')
+  const last10 = digits.length >= 10 ? digits.slice(-10) : digits
+  if (last10.length < 7) throw new Error('Número de teléfono inválido')
+
+  const all = await leadsApi.getAll()
+  const existing = all.find(l => {
+    const d = (l.telefono || '').replace(/\D/g, '')
+    return d.endsWith(last10)
+  })
+  if (existing) return existing
+
+  return await leadsApi.create({
+    name:      name || digits,
+    phone:     digits,
+    eventType: null,
+    eventDate: null,
+    budget:    null,
+  })
+}
+
 export const leadsApi = {
   getAll:      (stage) => api.get(`/api/leads${stage ? `?stage=${stage}` : ''}`).then(r => r.map(toFrontend)),
   getById:     (id)    => api.get(`/api/leads/${id}`).then(toFrontend),

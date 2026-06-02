@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { clientesApi } from '../api/clientesApi'
+import { findOrCreateLeadByPhone } from '../api/leadsApi'
 import styles from './ClientesPage.module.css'
 
 function NuevoClienteModal({ onClose, onCreated }) {
@@ -68,12 +70,24 @@ const ETAPA_META = {
 }
 
 export default function ClientesPage() {
+  const navigate = useNavigate()
   const [clientes,     setClientes]     = useState([])
   const [loading,      setLoading]      = useState(true)
   const [search,       setSearch]       = useState('')
   const [selected,     setSelected]     = useState(null)
   const [filterEtapa,  setFilterEtapa]  = useState('todos')
   const [showCreate,   setShowCreate]   = useState(false)
+  const [openingChat,  setOpeningChat]  = useState(false)
+
+  const abrirChat = async (cliente) => {
+    if (!cliente?.telefono) return
+    setOpeningChat(true)
+    try {
+      const lead = await findOrCreateLeadByPhone(cliente.telefono, cliente.nombre)
+      navigate('/app/chats', { state: { openLeadId: lead.id } })
+    } catch { alert('No se pudo abrir el chat') }
+    finally { setOpeningChat(false) }
+  }
 
   useEffect(() => {
     clientesApi.getAll()
@@ -233,11 +247,15 @@ export default function ClientesPage() {
                 </div>
               )}
               <div className={styles.drawerActions}>
-                <button className={styles.btnPrimary}>
+                <button
+                  className={styles.btnPrimary}
+                  onClick={() => abrirChat(selected)}
+                  disabled={openingChat || !selected?.telefono}
+                >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                   </svg>
-                  Enviar mensaje
+                  {openingChat ? 'Abriendo…' : 'Enviar mensaje'}
                 </button>
                 <button className={styles.btnSecondary}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

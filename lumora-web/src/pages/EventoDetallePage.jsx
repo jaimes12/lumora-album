@@ -1,69 +1,11 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import styles from './EventoDetallePage.module.css'
 import { eventosApi } from '../api/eventosApi'
 import { clientesApi } from '../api/clientesApi'
 import { proveedoresApi } from '../api/proveedoresApi'
 import { ESTADO_META, TIPO_EMOJI, CAT_COLOR, fmt } from '../data/eventosData'
-
-/* ─── Chat Modal (local mock) ──────────────────────────────── */
-function ChatModal({ contacto, onClose }) {
-  const [msgs, setMsgs]   = useState([])
-  const [texto, setTexto] = useState('')
-  const bottomRef         = useRef(null)
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [msgs])
-
-  const enviar = () => {
-    if (!texto.trim()) return
-    setMsgs(m => [...m, { id: Date.now(), texto, tipo: 'out', hora: 'Ahora' }])
-    setTexto('')
-  }
-
-  return (
-    <div className={styles.modalOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className={styles.modal}>
-        <div className={styles.modalHeader}>
-          <div className={styles.modalAvatar} style={contacto.avatarStyle}>{contacto.avatar}</div>
-          <div className={styles.modalContactInfo}>
-            <span className={styles.modalNombre}>{contacto.nombre}</span>
-            <span className={styles.modalSub}>{contacto.sub}</span>
-          </div>
-          <button className={styles.modalClose} onClick={onClose}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-        </div>
-        <div className={styles.modalMsgs}>
-          {msgs.length === 0 && <div className={styles.modalEmpty}>Sin mensajes aún. ¡Inicia la conversación!</div>}
-          {msgs.map(m => (
-            <div key={m.id} className={`${styles.msgWrap} ${m.tipo === 'out' ? styles.msgOut : ''}`}>
-              <div className={`${styles.bubble} ${m.tipo === 'out' ? styles.bubbleOut : styles.bubbleIn}`}>
-                <p>{m.texto}</p>
-                <span className={styles.bubbleHora}>{m.hora}</span>
-              </div>
-            </div>
-          ))}
-          <div ref={bottomRef} />
-        </div>
-        <div className={styles.modalInput}>
-          <textarea className={styles.modalTextarea} placeholder="Escribe un mensaje..."
-            value={texto} onChange={e => setTexto(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar() } }}
-            rows={1} />
-          <button className={styles.modalSend} onClick={enviar} disabled={!texto.trim()}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
+import { findOrCreateLeadByPhone } from '../api/leadsApi'
 
 function ChatBtn({ onClick }) {
   return (
@@ -97,8 +39,8 @@ export default function EventoDetallePage() {
   const [showAddPago,   setShowAddPago]   = useState(false)
   const [nuevoPago,     setNuevoPago]     = useState({ concepto: '', monto: '', metodo: 'transfer' })
   const [savingPago,    setSavingPago]    = useState(false)
-  const [chatContacto,  setChatContacto]  = useState(null)
   const [linkedIds,     setLinkedIds]     = useState([])
+  const [openingChat,   setOpeningChat]   = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -172,26 +114,21 @@ export default function EventoDetallePage() {
     await eventosApi.update(id, { status: nuevoEstado }).catch(() => {})
   }
 
-  const abrirChatCliente = () => setChatContacto({
-    id: cliente?.id,
-    nombre: cliente?.nombre ?? evento.clienteNombre,
-    avatar: (cliente?.nombre ?? 'C').split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase(),
-    sub: cliente?.telefono ?? '',
-    avatarStyle: { background: 'linear-gradient(135deg, var(--accent), var(--accent-2))' },
-  })
+  const abrirChat = async (phone, name) => {
+    if (!phone) return
+    setOpeningChat(true)
+    try {
+      const lead = await findOrCreateLeadByPhone(phone, name)
+      navigate('/app/chats', { state: { openLeadId: lead.id } })
+    } catch { alert('No se pudo abrir el chat') }
+    finally { setOpeningChat(false) }
+  }
 
-  const abrirChatProveedor = (p) => setChatContacto({
-    id: p.id,
-    nombre: p.nombre,
-    avatar: p.categoria[0],
-    sub: `${p.categoria} · ${p.telefono}`,
-    avatarStyle: { background: (CAT_COLOR[p.categoria] || '#7c6af7') + '33', color: CAT_COLOR[p.categoria] || '#7c6af7' },
-  })
+  const abrirChatCliente   = () => abrirChat(cliente?.telefono, cliente?.nombre ?? evento?.clienteNombre)
+  const abrirChatProveedor = (p) => abrirChat(p.telefono, p.nombre)
 
   return (
     <div className={styles.page}>
-      {chatContacto && <ChatModal contacto={chatContacto} onClose={() => setChatContacto(null)} />}
-
       {/* ── Top bar ── */}
       <div className={styles.topBar}>
         <button className={styles.backBtn} onClick={() => navigate('/app/eventos')}>
