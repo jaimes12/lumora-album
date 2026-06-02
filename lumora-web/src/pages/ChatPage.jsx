@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { leadsApi } from '../api/leadsApi'
+import { leadsApi, toFrontendMsg } from '../api/leadsApi'
 import styles from './ChatPage.module.css'
 
 // ─── Phone input with country code toggle ────────────────────────────────────
@@ -412,7 +412,10 @@ const PAGE = 20
 function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
   const [lead,        setLead]        = useState(initLead)
   const [messages,    setMessages]    = useState(initLead.mensajes ?? [])
-  const [totalMsgs,   setTotalMsgs]   = useState(0)
+  // If we got a full page on initial load, assume there are more until poll confirms
+  const [totalMsgs,   setTotalMsgs]   = useState(
+    (initLead.mensajes?.length ?? 0) >= PAGE ? PAGE + 1 : (initLead.mensajes?.length ?? 0)
+  )
   const [loadingMore, setLoadingMore] = useState(false)
   const [newCount,    setNewCount]    = useState(0)
   const [message,     setMessage]     = useState('')
@@ -473,8 +476,9 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
     const el = msgsRef.current
     const prevH = el?.scrollHeight ?? 0
     try {
-      const skip = total - currentLen - PAGE
-      const res  = await leadsApi.getMessages(lead.id, Math.max(0, skip), PAGE)
+      // Backend: OrderByDescending(SentAt).Skip(skip).Take(take)
+      // skip=currentLen → skips the 'currentLen' newest we already have → returns older ones
+      const res = await leadsApi.getMessages(lead.id, currentLen, PAGE)
       const older = applyLocalMedia(
         res.messages.map(toFrontendMsg).filter(m => !knownIds.current.has(m.id))
       )
