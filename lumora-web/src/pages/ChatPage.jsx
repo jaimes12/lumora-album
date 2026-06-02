@@ -406,53 +406,122 @@ function compressImage(file, maxPx = 1280, quality = 0.82) {
   })
 }
 
+const PAGE = 20
+
 // ─── Chat Modal ──────────────────────────────────────────────────────────────
 function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
-  const [lead,       setLead]       = useState(initLead)
-  const [message,    setMessage]    = useState('')
-  const [sending,    setSending]    = useState(false)
-  const [sendError,  setSendError]  = useState('')
-  const [showInfo,   setShowInfo]   = useState(true)
-  const [mediaFile,  setMediaFile]  = useState(null)  // { name, dataUrl, base64, mimeType }
+  const [lead,        setLead]        = useState(initLead)
+  const [messages,    setMessages]    = useState(initLead.mensajes ?? [])
+  const [totalMsgs,   setTotalMsgs]   = useState(0)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [newCount,    setNewCount]    = useState(0)
+  const [message,     setMessage]     = useState('')
+  const [sending,     setSending]     = useState(false)
+  const [sendError,   setSendError]   = useState('')
+  const [showInfo,    setShowInfo]    = useState(true)
+  const [mediaFile,   setMediaFile]   = useState(null)
+
+  const msgsRef      = useRef(null)       // scroll container
   const bottomRef    = useRef(null)
   const fileInputRef = useRef(null)
-  const sendingRef   = useRef(false)   // pauses fetchLead poll during upload
-  // { [serverMsgId]: dataUrl } — persists in localStorage so images survive modal close
+  const sendingRef   = useRef(false)
+  const atBottomRef  = useRef(true)
   const localMediaRef = useRef(loadLocalMedia())
+  const knownIds      = useRef(new Set((initLead.mensajes ?? []).map(m => m.id)))
+  // stable ref so scroll handler can call loadMore without stale closure
+  const loadMoreFnRef = useRef(null)
 
-  const fetchLead = useCallback(async () => {
+  const applyLocalMedia = (msgs) => {
+    const local = localMediaRef.current
+    return msgs.map(m => {
+      if (m.mediaUrl) return m
+      const cached = local[m.id] ?? loadLocalMedia()[m.id]
+      if (cached) { local[m.id] = cached; return { ...m, mediaUrl: cached } }
+      return m
+    })
+  }
+
+  // ── Poll: only adds NEW messages, never replaces ──────────────────────────
+  const pollMessages = useCallback(async () => {
     if (sendingRef.current) return
     try {
-      const updated = await leadsApi.getById(lead.id)
-      const local   = localMediaRef.current
-      // For messages without a server URL, restore from in-memory or localStorage cache
-      const mensajes = updated.mensajes.map(m => {
-        if (m.mediaUrl) return m
-        const cached = local[m.id] ?? loadLocalMedia()[m.id]
-        if (cached) {
-          local[m.id] = cached // warm in-memory cache
-          return { ...m, mediaUrl: cached }
-        }
-        return m
-      })
-      setLead({ ...updated, mensajes })
-      onLeadUpdate(lead.id, { ultimoMsg: updated.ultimoMsg, noLeidos: 0, hora: updated.hora })
+      const res = await leadsApi.getMessages(lead.id, 0, PAGE)
+      setTotalMsgs(res.total)
+      const incoming = applyLocalMedia(
+        res.messages.map(toFrontendMsg).filter(m => !knownIds.current.has(m.id))
+      )
+      if (!incoming.length) return
+      incoming.forEach(m => knownIds.current.add(m.id))
+      setMessages(prev => [...prev, ...incoming])
+      if (atBottomRef.current) {
+        requestAnimationFrame(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }))
+      } else {
+        setNewCount(n => n + incoming.length)
+      }
+      const last = incoming[incoming.length - 1]
+      if (last?.tipo === 'in') {
+        const txt = last.texto || (last.mediaType?.startsWith('image') ? '[Imagen]' : '[Audio]')
+        onLeadUpdate(lead.id, { ultimoMsg: txt, hora: last.hora, noLeidos: 0 })
+      }
     } catch {}
   }, [lead.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [lead.mensajes])
+  // ── Load older messages ───────────────────────────────────────────────────
+  const loadMore = async (currentLen, total) => {
+    if (loadingMore || currentLen >= total) return
+    setLoadingMore(true)
+    const el = msgsRef.current
+    const prevH = el?.scrollHeight ?? 0
+    try {
+      const skip = total - currentLen - PAGE
+      const res  = await leadsApi.getMessages(lead.id, Math.max(0, skip), PAGE)
+      const older = applyLocalMedia(
+        res.messages.map(toFrontendMsg).filter(m => !knownIds.current.has(m.id))
+      )
+      older.forEach(m => knownIds.current.add(m.id))
+      setMessages(prev => [...older, ...prev])
+      requestAnimationFrame(() => { if (el) el.scrollTop = el.scrollHeight - prevH })
+    } catch {}
+    setLoadingMore(false)
+  }
+  loadMoreFnRef.current = loadMore
 
-  // Poll every 3s + re-fetch when window regains focus
+  // ── Scroll handler ────────────────────────────────────────────────────────
+  const handleScroll = useCallback(() => {
+    const el = msgsRef.current
+    if (!el) return
+    const isBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80
+    atBottomRef.current = isBottom
+    if (isBottom) setNewCount(0)
+    // Trigger load-more when near top (uses ref to get fresh values)
+    if (el.scrollTop < 80) {
+      const fn = loadMoreFnRef.current
+      if (fn) {
+        // read current state via DOM trick — avoids stale closure
+        el.__loadMore?.()
+      }
+    }
+  }, [])
+
+  // Store load-more trigger on DOM node (avoids stale closure in scroll handler)
   useEffect(() => {
-    fetchLead() // immediate on open
-    const id = setInterval(fetchLead, 3000)
-    const onFocus = () => fetchLead()
+    const el = msgsRef.current
+    if (el) el.__loadMore = () => loadMoreFnRef.current?.(messages.length, totalMsgs)
+  })
+
+  // ── Initial scroll to bottom ──────────────────────────────────────────────
+  useEffect(() => {
+    requestAnimationFrame(() => bottomRef.current?.scrollIntoView({ behavior: 'instant' }))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Start polling ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    pollMessages()
+    const id = setInterval(pollMessages, 3000)
+    const onFocus = () => pollMessages()
     window.addEventListener('focus', onFocus)
     return () => { clearInterval(id); window.removeEventListener('focus', onFocus) }
-  }, [fetchLead])
+  }, [pollMessages])
 
   const pickFile = async (e) => {
     const file = e.target.files?.[0]
@@ -506,31 +575,36 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
     const summary = text || (capturedMedia
       ? `[${capturedMedia.mimeType.startsWith('image') ? 'Imagen' : 'Audio'}]`
       : '')
-    setLead(l => ({ ...l, mensajes: [...l.mensajes, tempMsg], ultimoMsg: summary }))
+    knownIds.current.add(tempId)
+    setMessages(prev => [...prev, tempMsg])
+    setTotalMsgs(t => t + 1)
     onLeadUpdate(lead.id, { ultimoMsg: summary })
+    // Always scroll to bottom when sending
+    requestAnimationFrame(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }))
+    atBottomRef.current = true
     try {
       const saved = await leadsApi.sendMessage(
         lead.id, text || null, 'outbound',
         capturedMedia?.base64 ?? null, capturedMedia?.mimeType ?? null
       )
-      // If R2 didn't return a URL, persist the local data URL in localStorage
       if (saved?.id && capturedMedia?.dataUrl && !saved.mediaUrl) {
         localMediaRef.current[saved.id] = capturedMedia.dataUrl
         storeLocalMedia(saved.id, capturedMedia.dataUrl)
       }
       const newId = saved?.id ?? `sent_${Date.now()}`
-      setLead(l => ({
-        ...l,
-        mensajes: l.mensajes.map(m =>
-          m.id === tempId
-            ? { ...m, id: newId, mediaUrl: saved?.mediaUrl || m.mediaUrl }
-            : m
-        ),
-      }))
+      knownIds.current.delete(tempId)
+      knownIds.current.add(newId)
+      setMessages(prev => prev.map(m =>
+        m.id === tempId
+          ? { ...m, id: newId, mediaUrl: saved?.mediaUrl || m.mediaUrl }
+          : m
+      ))
     } catch {
       setSendError('No se pudo enviar')
       setTimeout(() => setSendError(''), 3000)
-      setLead(l => ({ ...l, mensajes: l.mensajes.filter(m => m.id !== tempId) }))
+      knownIds.current.delete(tempId)
+      setMessages(prev => prev.filter(m => m.id !== tempId))
+      setTotalMsgs(t => t - 1)
     } finally {
       setSending(false)
       sendingRef.current = false
@@ -600,11 +674,21 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
         <div className={styles.chatModalContent}>
           <div className={styles.chatLeft}>
             {/* Messages */}
-            <div className={styles.chatModalMsgs}>
-              {lead.mensajes.length === 0 && (
+            <div className={styles.chatModalMsgs} ref={msgsRef} onScroll={handleScroll}>
+              {/* Load more button */}
+              {messages.length < totalMsgs && (
+                <button
+                  className={styles.loadMoreBtn}
+                  onClick={() => loadMoreFnRef.current?.(messages.length, totalMsgs)}
+                  disabled={loadingMore}
+                >
+                  {loadingMore ? 'Cargando…' : `Cargar más mensajes (${totalMsgs - messages.length} anteriores)`}
+                </button>
+              )}
+              {messages.length === 0 && (
                 <p className={styles.chatEmpty}>Sin mensajes aún. ¡Escribe el primero!</p>
               )}
-              {lead.mensajes.map(m => {
+              {messages.map(m => {
                 const isSaved  = !m.id.startsWith('tmp_')
                 const isImage  = m.mediaType?.startsWith('image')
                 const isAudio  = m.mediaType?.startsWith('audio')
@@ -635,6 +719,17 @@ function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
               })}
               <div ref={bottomRef} />
             </div>
+
+            {/* New messages badge */}
+            {newCount > 0 && (
+              <button className={styles.newMsgBadge} onClick={() => {
+                setNewCount(0)
+                atBottomRef.current = true
+                bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+              }}>
+                ↓ {newCount} mensaje{newCount !== 1 ? 's' : ''} nuevo{newCount !== 1 ? 's' : ''}
+              </button>
+            )}
 
             {/* Send error */}
             {sendError && <p className={styles.chatSendError}>{sendError}</p>}

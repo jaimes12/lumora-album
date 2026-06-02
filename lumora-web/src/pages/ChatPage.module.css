@@ -919,6 +919,27 @@
 .chatInput:focus { border-color: var(--accent); }
 .chatInput::placeholder { color: var(--text-muted); }
 
+.loadMoreBtn {
+  display: block; margin: 10px auto;
+  background: var(--bg-1); border: 1px solid var(--border);
+  color: var(--text-muted); font-size: 12px; border-radius: 999px;
+  padding: 5px 14px; cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.loadMoreBtn:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+.loadMoreBtn:disabled { opacity: 0.5; cursor: default; }
+
+.newMsgBadge {
+  position: absolute; bottom: 130px; left: 50%; transform: translateX(-50%);
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 999px;
+  padding: 6px 16px; font-size: 13px; font-weight: 600;
+  cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 10;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(8px); } }
+
 .chatSendError {
   font-size: 12px; color: #ef4444;
   padding: 4px 14px 0;
@@ -1093,6 +1114,7 @@
 
 .chatLeft {
   display: flex; flex-direction: column; flex: 1; overflow: hidden;
+  position: relative;
 }
 
 /* ── Info toggle button ── */

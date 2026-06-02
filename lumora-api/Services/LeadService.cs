@@ -13,6 +13,7 @@ public interface ILeadService
     Task<LeadResponse?> UpdateAsync(string orgId, string id, UpdateLeadRequest req);
     Task<bool> DeleteAsync(string orgId, string id);
     Task<LeadMessageResponse?> SendMessageAsync(string orgId, string leadId, SendLeadMessageRequest req);
+    Task<LeadMessagesPage> GetMessagesPageAsync(string orgId, string leadId, int skip, int take);
     Task HandleInboundAsync(string orgId, string phone, string body, string? pushname = null,
         string? mediaData = null, string? mediaType = null);
     Task HandleOutboundAsync(string orgId, string phone, string body,
@@ -45,17 +46,45 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer, IR2Servi
     public async Task<LeadResponse?> GetByIdAsync(string orgId, string id)
     {
         var lead = await db.Leads
-            .Include(l => l.Messages)
             .FirstOrDefaultAsync(l => l.Id == id && l.OrgId == orgId);
-        return lead is null ? null : ToResponse(lead);
+        if (lead is null) return null;
+        // Only load last 20 messages — frontend paginates older ones on demand
+        var msgs = await db.LeadMessages
+            .Where(m => m.LeadId == id)
+            .OrderByDescending(m => m.SentAt)
+            .Take(20)
+            .OrderBy(m => m.SentAt)
+            .ToListAsync();
+        return new LeadResponse(
+            lead.Id, lead.ClientId, lead.Name, lead.Phone, lead.EventType, lead.EventDate,
+            lead.Budget, lead.Stage, lead.LastMessage, lead.UnreadCount,
+            lead.CreatedAt, lead.LastMessageAt,
+            msgs.Select(ToMessageResponse).ToList());
     }
 
     public async Task<IEnumerable<LeadResponse>> GetByOrgAsync(string orgId, string? stage = null)
     {
-        var query = db.Leads.Include(l => l.Messages).Where(l => l.OrgId == orgId);
+        var query = db.Leads.Where(l => l.OrgId == orgId);
         if (stage is not null) query = query.Where(l => l.Stage == stage);
         var list = await query.OrderByDescending(l => l.LastMessageAt).ToListAsync();
-        return list.Select(ToResponse);
+        // Messages are loaded on demand when a chat is opened — not needed for the pipeline view
+        return list.Select(l => new LeadResponse(
+            l.Id, l.ClientId, l.Name, l.Phone, l.EventType, l.EventDate,
+            l.Budget, l.Stage, l.LastMessage, l.UnreadCount,
+            l.CreatedAt, l.LastMessageAt, []));
+    }
+
+    public async Task<LeadMessagesPage> GetMessagesPageAsync(string orgId, string leadId, int skip, int take)
+    {
+        var query = db.LeadMessages.Where(m => m.LeadId == leadId && m.OrgId == orgId);
+        var total = await query.CountAsync();
+        var msgs  = await query
+            .OrderByDescending(m => m.SentAt)
+            .Skip(skip)
+            .Take(take)
+            .OrderBy(m => m.SentAt)
+            .ToListAsync();
+        return new LeadMessagesPage(total, msgs.Select(ToMessageResponse).ToList());
     }
 
     public async Task<LeadResponse?> UpdateAsync(string orgId, string id, UpdateLeadRequest req)

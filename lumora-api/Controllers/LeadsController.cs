@@ -50,6 +50,10 @@ public class LeadsController(ILeadService leads, LumoraDbContext db) : Controlle
         return Ok(new { deleted = count });
     }
 
+    [HttpGet("{id}/messages")]
+    public async Task<IActionResult> GetMessages(string id, [FromQuery] int skip = 0, [FromQuery] int take = 20) =>
+        Ok(await leads.GetMessagesPageAsync(OrgId, id, Math.Max(0, skip), Math.Clamp(take, 1, 50)));
+
     [HttpPost("{id}/messages")]
     public async Task<IActionResult> SendMessage(string id, [FromBody] SendLeadMessageRequest req)
     {

@@ -31,9 +31,24 @@ function toFrontend(l) {
   }
 }
 
+// Converts a raw API message object to the frontend shape
+export function toFrontendMsg(m) {
+  return {
+    id:        m.id,
+    texto:     m.body,
+    tipo:      m.direction === 'outbound' ? 'out' : 'in',
+    mediaUrl:  m.mediaUrl  ?? null,
+    mediaType: m.mediaType ?? null,
+    hora: new Date(m.sentAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }),
+  }
+}
+
 export const leadsApi = {
   getAll:      (stage) => api.get(`/api/leads${stage ? `?stage=${stage}` : ''}`).then(r => r.map(toFrontend)),
   getById:     (id)    => api.get(`/api/leads/${id}`).then(toFrontend),
+  // Paginated messages: skip=0, take=20 → newest 20. Increase skip to load older.
+  getMessages: (id, skip = 0, take = 20) =>
+    api.get(`/api/leads/${id}/messages?skip=${skip}&take=${take}`),
   create:      (data)  => api.post('/api/leads', data).then(toFrontend),
   update:      (id, data) => api.patch(`/api/leads/${id}`, data).then(toFrontend),
   delete:      (id)    => api.delete(`/api/leads/${id}`),

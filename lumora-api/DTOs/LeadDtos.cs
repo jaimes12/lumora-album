@@ -37,6 +37,8 @@ public record LeadMessageResponse(
     DateTime SentAt
 );
 
+public record LeadMessagesPage(int Total, List<LeadMessageResponse> Messages);
+
 public record LeadResponse(
     string Id,
     string? ClientId,
