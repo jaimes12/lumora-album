@@ -24,7 +24,11 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 const logger = pino({ level: 'silent' });
-const LUMORA_API = process.env.LUMORA_API_URL ?? 'https://lumora-api-production.up.railway.app';
+// Compatible with existing Railway variable LUMORA_WEBHOOK_URL
+// or constructs from LUMORA_API_URL
+const LUMORA_WEBHOOK_URL =
+  process.env.LUMORA_WEBHOOK_URL ??
+  `${process.env.LUMORA_API_URL ?? 'https://lumora-api-production.up.railway.app'}/api/whatsapp/webhook`;
 
 // ── Client registry ──────────────────────────────────────────────────────────
 // Map<clientName, { sock, status, qrCode, phone, sentIds }>
@@ -188,7 +192,7 @@ async function connectClient(name) {
 
 // Fire-and-forget webhook — retries once on failure
 async function postWebhook(payload) {
-  const url = `${LUMORA_API}/api/whatsapp/webhook`;
+  const url = LUMORA_WEBHOOK_URL;
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       const res = await fetch(url, {
@@ -323,6 +327,6 @@ async function restoreSessions() {
 const PORT = process.env.PORT ?? 3001;
 app.listen(PORT, async () => {
   console.log(`[WA] Lumora WA Server on port ${PORT}`);
-  console.log(`[WA] Forwarding webhooks to: ${LUMORA_API}`);
+  console.log(`[WA] Forwarding webhooks to: ${LUMORA_WEBHOOK_URL}`);
   await restoreSessions();
 });
