@@ -31,7 +31,7 @@ const LUMORA_WEBHOOK_URL =
   `${process.env.LUMORA_API_URL ?? 'https://lumora-api-production.up.railway.app'}/api/whatsapp/webhook`;
 
 // ── Client registry ──────────────────────────────────────────────────────────
-// Map<clientName, { sock, status, qrCode, phone, sentIds }>
+// Map<clientName, { sock, status, qrCode, phone, sentIds, webhookUrl }>
 const clients = new Map();
 
 function sessionDir(name) {
@@ -39,10 +39,11 @@ function sessionDir(name) {
 }
 
 // ── Connect ──────────────────────────────────────────────────────────────────
-async function connectClient(name) {
+async function connectClient(name, webhookUrl) {
   if (clients.get(name)?.sock) return; // already connecting/connected
 
-  const entry = clients.get(name) ?? { sock: null, status: 'disconnected', qrCode: null, phone: null, sentIds: new Set() };
+  const entry = clients.get(name) ?? { sock: null, status: 'disconnected', qrCode: null, phone: null, sentIds: new Set(), webhookUrl: webhookUrl ?? LUMORA_WEBHOOK_URL };
+  if (webhookUrl) entry.webhookUrl = webhookUrl;
   clients.set(name, entry);
   entry.status = 'connecting';
 
@@ -134,8 +135,8 @@ async function connectClient(name) {
       // Skip if no content at all
       if (!body && !mediaData) continue;
 
-      // Post webhook to Lumora API
-      postWebhook({
+      // Post webhook to the client's registered webhook URL
+      postWebhook(entry.webhookUrl, {
         clientName: name,
         from:       jid,
         body:       body || '',
@@ -191,8 +192,7 @@ async function connectClient(name) {
 }
 
 // Fire-and-forget webhook — retries once on failure
-async function postWebhook(payload) {
-  const url = LUMORA_WEBHOOK_URL;
+async function postWebhook(url, payload) {
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       const res = await fetch(url, {
@@ -224,10 +224,10 @@ app.get('/api/whatsapp/status', (_req, res) => {
 
 // Connect a new client
 app.post('/api/whatsapp/connect', async (req, res) => {
-  const { name } = req.body ?? {};
+  const { name, webhookUrl } = req.body ?? {};
   if (!name) return res.status(400).json({ error: 'name required' });
   try {
-    await connectClient(name);
+    await connectClient(name, webhookUrl ?? null);
     res.json({ ok: true });
   } catch (err) {
     console.error('[WA] connect error:', err.message);
