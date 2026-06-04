@@ -36,4 +36,9 @@ export const eventosApi = {
   update: (id, data) => api.patch(`/api/events/${id}`, data).then(toFrontend),
   delete: (id) => api.delete(`/api/events/${id}`),
   addPayment: (id, data) => api.post(`/api/events/${id}/payments`, data),
+  // Photos
+  getPhotos:   (id)           => api.get(`/api/events/${id}/photos`),
+  addPhoto:    (id, imageData, caption) =>
+    api.post(`/api/events/${id}/photos`, { imageData, caption: caption || null }),
+  deletePhoto: (id, photoId)  => api.delete(`/api/events/${id}/photos/${photoId}`),
 }

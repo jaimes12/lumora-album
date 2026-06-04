@@ -13,6 +13,9 @@ public interface IEventService
     Task<EventResponse?> UpdateAsync(string orgId, string id, UpdateEventRequest req);
     Task<bool> DeleteAsync(string orgId, string id);
     Task<PaymentInfo> AddPaymentAsync(string orgId, string eventId, CreatePaymentRequest req);
+    Task<IEnumerable<EventPhotoResponse>> GetPhotosAsync(string orgId, string eventId);
+    Task<EventPhotoResponse?> AddPhotoAsync(string orgId, string eventId, AddEventPhotoRequest req, IR2Service r2);
+    Task<bool> DeletePhotoAsync(string orgId, string eventId, string photoId);
 }
 
 public class EventService(LumoraDbContext db) : IEventService
@@ -136,6 +139,46 @@ public class EventService(LumoraDbContext db) : IEventService
         await db.EventPayments.AddAsync(payment);
         await db.SaveChangesAsync();
         return new PaymentInfo(payment.Id, payment.Concept, payment.Amount, payment.Method, payment.PaidAt);
+    }
+
+    public async Task<IEnumerable<EventPhotoResponse>> GetPhotosAsync(string orgId, string eventId) =>
+        await db.EventPhotos
+            .Where(p => p.EventId == eventId && p.OrgId == orgId)
+            .OrderByDescending(p => p.CreatedAt)
+            .Select(p => new EventPhotoResponse(p.Id, p.EventId, p.Url, p.Caption, p.CreatedAt))
+            .ToListAsync();
+
+    public async Task<EventPhotoResponse?> AddPhotoAsync(string orgId, string eventId, AddEventPhotoRequest req, IR2Service r2)
+    {
+        var exists = await db.Events.AnyAsync(e => e.Id == eventId && e.OrgId == orgId);
+        if (!exists) return null;
+
+        var bytes = Convert.FromBase64String(req.ImageData);
+        var url   = await r2.UploadAsync(bytes, "image/jpeg");
+        if (url is null) return null;
+
+        var photo = new EventPhoto
+        {
+            Id        = Guid.NewGuid().ToString(),
+            EventId   = eventId,
+            OrgId     = orgId,
+            Url       = url,
+            Caption   = req.Caption,
+            CreatedAt = DateTime.UtcNow,
+        };
+        await db.EventPhotos.AddAsync(photo);
+        await db.SaveChangesAsync();
+        return new EventPhotoResponse(photo.Id, photo.EventId, photo.Url, photo.Caption, photo.CreatedAt);
+    }
+
+    public async Task<bool> DeletePhotoAsync(string orgId, string eventId, string photoId)
+    {
+        var photo = await db.EventPhotos
+            .FirstOrDefaultAsync(p => p.Id == photoId && p.EventId == eventId && p.OrgId == orgId);
+        if (photo is null) return false;
+        db.EventPhotos.Remove(photo);
+        await db.SaveChangesAsync();
+        return true;
     }
 
     private static EventResponse ToResponse(Event e, string? clientName, List<EventPayment> payments) => new(

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import styles from './EventoDetallePage.module.css'
 import { eventosApi } from '../api/eventosApi'
@@ -6,6 +6,7 @@ import { clientesApi } from '../api/clientesApi'
 import { proveedoresApi } from '../api/proveedoresApi'
 import { ESTADO_META, TIPO_EMOJI, CAT_COLOR, fmt } from '../data/eventosData'
 import { findOrCreateLeadByPhone } from '../api/leadsApi'
+import { ChatModal, DEFAULT_STAGES } from './ChatPage'
 
 function ChatBtn({ onClick }) {
   return (
@@ -41,6 +42,11 @@ export default function EventoDetallePage() {
   const [savingPago,    setSavingPago]    = useState(false)
   const [linkedIds,     setLinkedIds]     = useState([])
   const [openingChat,   setOpeningChat]   = useState(false)
+  const [chatLead,      setChatLead]      = useState(null)
+  // Photos
+  const [fotos,         setFotos]         = useState([])
+  const [uploadingFoto, setUploadingFoto] = useState(false)
+  const fotoInputRef = useRef(null)
 
   useEffect(() => {
     Promise.all([
@@ -114,12 +120,17 @@ export default function EventoDetallePage() {
     await eventosApi.update(id, { status: nuevoEstado }).catch(() => {})
   }
 
+  // Load photos when event loads
+  useEffect(() => {
+    if (id) eventosApi.getPhotos(id).then(setFotos).catch(() => {})
+  }, [id])
+
   const abrirChat = async (phone, name) => {
     if (!phone) return
     setOpeningChat(true)
     try {
       const lead = await findOrCreateLeadByPhone(phone, name)
-      navigate('/app/chats', { state: { openLeadId: lead.id } })
+      setChatLead(lead)
     } catch { alert('No se pudo abrir el chat') }
     finally { setOpeningChat(false) }
   }
@@ -127,8 +138,51 @@ export default function EventoDetallePage() {
   const abrirChatCliente   = () => abrirChat(cliente?.telefono, cliente?.nombre ?? evento?.clienteNombre)
   const abrirChatProveedor = (p) => abrirChat(p.telefono, p.nombre)
 
+  const subirFoto = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    setUploadingFoto(true)
+    try {
+      // Compress via canvas before sending
+      const dataUrl = await new Promise(resolve => {
+        const img = new Image(); const url = URL.createObjectURL(file)
+        img.onload = () => {
+          const max = 1600; let { width, height } = img
+          if (Math.max(width, height) > max) {
+            const r = max / Math.max(width, height); width = Math.round(width*r); height = Math.round(height*r)
+          }
+          const c = document.createElement('canvas'); c.width = width; c.height = height
+          c.getContext('2d').drawImage(img, 0, 0, width, height)
+          URL.revokeObjectURL(url); resolve(c.toDataURL('image/jpeg', 0.85))
+        }
+        img.src = url
+      })
+      const base64 = dataUrl.split(',')[1]
+      const foto = await eventosApi.addPhoto(id, base64)
+      setFotos(prev => [foto, ...prev])
+    } catch { alert('No se pudo subir la foto') }
+    finally { setUploadingFoto(false) }
+  }
+
+  const eliminarFoto = async (photoId) => {
+    if (!window.confirm('¿Eliminar esta foto?')) return
+    await eventosApi.deletePhoto(id, photoId).catch(() => {})
+    setFotos(prev => prev.filter(f => f.id !== photoId))
+  }
+
   return (
     <div className={styles.page}>
+      {/* ── Real Chat Modal ── */}
+      {chatLead && (
+        <ChatModal
+          lead={chatLead}
+          stages={DEFAULT_STAGES}
+          onClose={() => setChatLead(null)}
+          onLeadUpdate={() => {}}
+        />
+      )}
+
       {/* ── Top bar ── */}
       <div className={styles.topBar}>
         <button className={styles.backBtn} onClick={() => navigate('/app/eventos')}>
@@ -256,6 +310,45 @@ export default function EventoDetallePage() {
               <p className={styles.notasText}>{evento.notas}</p>
             </section>
           )}
+
+          {/* ── Fotos de referencia ── */}
+          <section className={styles.card}>
+            <div className={styles.cardHead}>
+              <span className={styles.cardTitle}>🖼️ Fotos de referencia</span>
+              <button
+                className={styles.btnLink}
+                onClick={() => fotoInputRef.current?.click()}
+                disabled={uploadingFoto}
+              >
+                {uploadingFoto ? 'Subiendo…' : '+ Subir foto'}
+              </button>
+              <input
+                ref={fotoInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={subirFoto}
+              />
+            </div>
+            {fotos.length === 0
+              ? <p className={styles.sinPagos}>Sin fotos de referencia aún</p>
+              : <div className={styles.fotosGrid}>
+                  {fotos.map(f => (
+                    <div key={f.id} className={styles.fotoCard}>
+                      <a href={f.url} target="_blank" rel="noreferrer">
+                        <img src={f.url} alt={f.caption || 'Referencia'} className={styles.fotoImg} loading="lazy" />
+                      </a>
+                      {f.caption && <p className={styles.fotoCaption}>{f.caption}</p>}
+                      <button
+                        className={styles.fotoDeleteBtn}
+                        onClick={() => eliminarFoto(f.id)}
+                        title="Eliminar"
+                      >✕</button>
+                    </div>
+                  ))}
+                </div>
+            }
+          </section>
         </div>
 
         {/* RIGHT */}

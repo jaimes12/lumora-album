@@ -8,7 +8,7 @@ namespace lumora_api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class EventsController(IEventService events) : ControllerBase
+public class EventsController(IEventService events, IR2Service r2) : ControllerBase
 {
     private string OrgId => User.FindFirst("org_id")?.Value ?? User.FindFirst("user_id")?.Value ?? User.FindFirst("sub")?.Value ?? string.Empty;
 
@@ -49,4 +49,20 @@ public class EventsController(IEventService events) : ControllerBase
         var payment = await events.AddPaymentAsync(OrgId, id, req);
         return Ok(payment);
     }
+
+    // ── Photos ─────────────────────────────────────────────────────────────────
+    [HttpGet("{id}/photos")]
+    public async Task<IActionResult> GetPhotos(string id) =>
+        Ok(await events.GetPhotosAsync(OrgId, id));
+
+    [HttpPost("{id}/photos")]
+    public async Task<IActionResult> AddPhoto(string id, [FromBody] AddEventPhotoRequest req)
+    {
+        var photo = await events.AddPhotoAsync(OrgId, id, req, r2);
+        return photo is null ? BadRequest(new { error = "No se pudo subir la imagen" }) : Ok(photo);
+    }
+
+    [HttpDelete("{id}/photos/{photoId}")]
+    public async Task<IActionResult> DeletePhoto(string id, string photoId) =>
+        await events.DeletePhotoAsync(OrgId, id, photoId) ? NoContent() : NotFound();
 }

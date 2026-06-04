@@ -50,7 +50,7 @@ function PhoneInput({ value, onChange, inputClassName }) {
 }
 
 // ─── Default stages ──────────────────────────────────────────────────────────
-const DEFAULT_STAGES = [
+export const DEFAULT_STAGES = [
   { id: 'nuevo',      label: 'Nuevo',              color: '#64748b' },
   { id: 'contactado', label: 'Contactado',          color: '#38bdf8' },
   { id: 'cotizacion', label: 'Cotización enviada',  color: '#fb923c' },
@@ -410,7 +410,7 @@ function compressImage(file, maxPx = 1280, quality = 0.82) {
 const PAGE = 20
 
 // ─── Chat Modal ──────────────────────────────────────────────────────────────
-function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
+export function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
   const [lead,        setLead]        = useState(initLead)
   const [messages,    setMessages]    = useState(initLead.mensajes ?? [])
   // If we got a full page on initial load, assume there are more until poll confirms

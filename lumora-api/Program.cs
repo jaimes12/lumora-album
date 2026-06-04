@@ -342,6 +342,16 @@ try
             PRIMARY KEY (`id`)
         ) CHARACTER SET utf8mb4",
 
+        @"CREATE TABLE IF NOT EXISTS `event_photos` (
+            `id`         varchar(255) NOT NULL,
+            `event_id`   varchar(255) NOT NULL,
+            `org_id`     varchar(255) NOT NULL,
+            `url`        varchar(500) NOT NULL,
+            `caption`    varchar(500) NULL,
+            `created_at` datetime(6)  NOT NULL,
+            PRIMARY KEY (`id`)
+        ) CHARACTER SET utf8mb4",
+
         @"CREATE TABLE IF NOT EXISTS `event_payments` (
             `id`         varchar(255)   NOT NULL,
             `org_id`     varchar(255)   NOT NULL,
@@ -390,6 +400,9 @@ try
         "ALTER TABLE event_payments MODIFY COLUMN id        varchar(255) NOT NULL",
         "ALTER TABLE event_payments MODIFY COLUMN org_id    varchar(255) NOT NULL",
         "ALTER TABLE event_payments MODIFY COLUMN event_id  varchar(255) NOT NULL",
+        "ALTER TABLE event_photos   MODIFY COLUMN id        varchar(255) NOT NULL",
+        "ALTER TABLE event_photos   MODIFY COLUMN org_id    varchar(255) NOT NULL",
+        "ALTER TABLE event_photos   MODIFY COLUMN event_id  varchar(255) NOT NULL",
         "ALTER TABLE users         ADD COLUMN password_hash varchar(500) NULL",
         "ALTER TABLE lead_messages ADD COLUMN media_url    varchar(500) NULL",
         "ALTER TABLE lead_messages ADD COLUMN media_type   varchar(100) NULL",

@@ -40,3 +40,13 @@ public record EventResponse(
     DateTime EventDate, DateTime CreatedAt,
     List<PaymentInfo> Payments
 );
+
+public record AddEventPhotoRequest(
+    [Required] string ImageData,   // base64
+    string? Caption
+);
+
+public record EventPhotoResponse(
+    string Id, string EventId, string Url,
+    string? Caption, DateTime CreatedAt
+);
