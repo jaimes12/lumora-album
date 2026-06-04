@@ -11,8 +11,7 @@ RUN npm install --omit=dev
 
 COPY index.js ./
 
-# Sessions are stored in a volume for persistence
-VOLUME ["/app/sessions"]
+# For session persistence, mount a Railway Volume at /app/sessions via the dashboard
 
 EXPOSE 3001
 CMD ["node", "index.js"]
