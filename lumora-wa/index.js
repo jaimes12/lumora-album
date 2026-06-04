@@ -11,6 +11,7 @@ const {
   makeCacheableSignalKeyStore,
   downloadMediaMessage,
   getContentType,
+  Browsers,
 } = require('@whiskeysockets/baileys');
 const QRCode = require('qrcode');
 const pino   = require('pino');
@@ -58,6 +59,7 @@ async function connectClient(name, webhookUrl) {
       keys: makeCacheableSignalKeyStore(state.keys, logger),
     },
     logger,
+    browser: Browsers.macOS('Desktop'),
     printQRInTerminal: false,
     syncFullHistory: false,
     shouldSyncHistoryMessage: () => false,
@@ -175,17 +177,21 @@ async function connectClient(name, webhookUrl) {
     if (connection === 'close') {
       const code      = lastDisconnect?.error?.output?.statusCode;
       const loggedOut = code === DisconnectReason.loggedOut;
+      const banned    = code === 405 || code === 403;
       console.log(`[WA:${name}] Disconnected (code ${code})`);
 
       entry.sock   = null;
       entry.status = 'disconnected';
       entry.qrCode = null;
 
-      if (!loggedOut) {
+      if (loggedOut || banned) {
+        // Don't reconnect — requires manual re-scan or is IP-blocked
+        if (banned) console.log(`[WA:${name}] Connection rejected by WhatsApp (${code}) — will not auto-reconnect`);
+        clients.delete(name);
+        try { fs.rmSync(sessionDir(name), { recursive: true, force: true }); } catch {}
+      } else {
         console.log(`[WA:${name}] Reconnecting in 5s…`);
         setTimeout(() => connectClient(name), 5000);
-      } else {
-        clients.delete(name);
       }
     }
   });
