@@ -15,7 +15,6 @@ public interface IWaServerService
 
 public class WaServerService(IHttpClientFactory factory, ILogger<WaServerService> log) : IWaServerService
 {
-    // Prefix to avoid collisions with other projects using the same WA server
     private static string ClientName(string orgId) =>
         "lm_" + orgId.Replace('-', '_');
 
