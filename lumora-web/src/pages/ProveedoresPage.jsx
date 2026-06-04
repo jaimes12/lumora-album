@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { proveedoresApi } from '../api/proveedoresApi'
 import { findOrCreateLeadByPhone } from '../api/leadsApi'
-import { ChatModal } from './ChatPage'
+import { ChatModal, DEFAULT_STAGES } from './ChatPage'
 import styles from './ProveedoresPage.module.css'
 
 const CATEGORIAS_BASE = ['Todas','Decoración','Música','Catering','Fotografía','Iluminación','Transporte','Pastelería','Venue','Entretenimiento']
@@ -126,7 +126,7 @@ export default function ProveedoresPage() {
           onCreated={p => setProveedores(prev => [p, ...prev])}
         />
       )}
-      {chatLead && <ChatModal lead={chatLead} onClose={() => setChatLead(null)} />}
+      {chatLead && <ChatModal lead={chatLead} stages={DEFAULT_STAGES} onClose={() => setChatLead(null)} />}
 
       <div className={styles.header}>
         <div>
