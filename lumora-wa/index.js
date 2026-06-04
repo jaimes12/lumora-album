@@ -45,7 +45,7 @@ async function connectClient(name, webhookUrl) {
   const entry = clients.get(name) ?? { sock: null, status: 'disconnected', qrCode: null, phone: null, sentIds: new Set(), webhookUrl: webhookUrl ?? LUMORA_WEBHOOK_URL };
   if (webhookUrl) entry.webhookUrl = webhookUrl;
   clients.set(name, entry);
-  entry.status = 'connecting';
+  entry.status = 'loading';
 
   const dir = sessionDir(name);
   fs.mkdirSync(dir, { recursive: true });
