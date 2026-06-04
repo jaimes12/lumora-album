@@ -1,338 +1,328 @@
 /**
- * Lumora WA Server
- * Multi-client WhatsApp bridge with full media support.
- * Sends webhooks to the Lumora API for every inbound/outbound message.
+ * Lumora WA Server — whatsapp-web.js based
+ * Multi-client bridge. Sends webhooks to Lumora API on every inbound message.
  */
 
-const {
-  default: makeWASocket,
-  useMultiFileAuthState,
-  DisconnectReason,
-  makeCacheableSignalKeyStore,
-  downloadMediaMessage,
-  getContentType,
-  Browsers,
-} = require('@whiskeysockets/baileys');
-const QRCode = require('qrcode');
-const pino   = require('pino');
-const express = require('express');
-const cors    = require('cors');
-const fs      = require('fs');
-const path    = require('path');
+const express  = require('express');
+const cors     = require('cors');
+const qrcode   = require('qrcode');
+const fs       = require('fs');
+const path     = require('path');
+const { Client, LocalAuth } = require('whatsapp-web.js');
 
-const app = express();
+const app  = express();
+const PORT = process.env.PORT || 3001;
+
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json());
 
-const logger = pino({ level: 'silent' });
-// Compatible with existing Railway variable LUMORA_WEBHOOK_URL
-// or constructs from LUMORA_API_URL
-const LUMORA_WEBHOOK_URL =
-  process.env.LUMORA_WEBHOOK_URL ??
-  `${process.env.LUMORA_API_URL ?? 'https://lumora-api-production.up.railway.app'}/api/whatsapp/webhook`;
+const LUMORA_WEBHOOK_URL = process.env.LUMORA_WEBHOOK_URL ?? null;
+const SESSION_BASE       = process.env.SESSION_PATH || __dirname;
 
-// ── Client registry ──────────────────────────────────────────────────────────
-// Map<clientName, { sock, status, qrCode, phone, sentIds, webhookUrl }>
+// Map<name, { client, status, qrCode, phone, instanceId }>
 const clients = new Map();
+let globalInstanceCounter = 0;
 
-function sessionDir(name) {
-  return path.join('sessions', name.replace(/[^a-z0-9_-]/gi, '_'));
+// ── Logging ───────────────────────────────────────────────────────────────────
+const eventLog = [];
+function log(name, msg) {
+  const entry = { ts: Date.now(), name, msg };
+  eventLog.unshift(entry);
+  if (eventLog.length > 300) eventLog.pop();
+  console.log(`[WA:${name}] ${msg}`);
 }
 
-// ── Connect ──────────────────────────────────────────────────────────────────
-async function connectClient(name, webhookUrl) {
-  if (clients.get(name)?.sock) return; // already connecting/connected
-
-  const entry = clients.get(name) ?? { sock: null, status: 'disconnected', qrCode: null, phone: null, sentIds: new Set(), webhookUrl: webhookUrl ?? LUMORA_WEBHOOK_URL };
-  if (webhookUrl) entry.webhookUrl = webhookUrl;
-  clients.set(name, entry);
-  entry.status = 'loading';
-
-  const dir = sessionDir(name);
-  fs.mkdirSync(dir, { recursive: true });
-
-  const { state, saveCreds } = await useMultiFileAuthState(dir);
-
-  const sock = makeWASocket({
-    auth: {
-      creds: state.creds,
-      keys: makeCacheableSignalKeyStore(state.keys, logger),
-    },
-    logger,
-    browser: Browsers.macOS('Desktop'),
-    printQRInTerminal: false,
-    syncFullHistory: false,
-    shouldSyncHistoryMessage: () => false,
-    generateHighQualityLinkPreview: false,
-    getMessage: async () => undefined,
-  });
-
-  entry.sock = sock;
-  sock.ev.on('creds.update', saveCreds);
-
-  // ── Incoming / outgoing messages ──────────────────────────────────────────
-  sock.ev.on('messages.upsert', async ({ messages, type }) => {
-    if (type !== 'notify') return;
-
-    for (const msg of messages) {
-      const jid = msg.key.remoteJid ?? '';
-      if (!jid || jid.endsWith('@g.us')) continue; // skip groups
-
-      const fromMe = !!msg.key.fromMe;
-
-      // Skip messages this server just sent to avoid loops
-      if (fromMe && entry.sentIds.has(msg.key.id)) {
-        entry.sentIds.delete(msg.key.id);
-        continue;
-      }
-
-      const direction = fromMe ? 'outbound' : 'inbound';
-      const phone     = jid.replace(/@\S+/, '');
-      const msgBody   = msg.message;
-      if (!msgBody) continue;
-
-      const ctype = getContentType(msgBody);
-
-      // Text body (caption for media messages)
-      const body =
-        msgBody.conversation ??
-        msgBody.extendedTextMessage?.text ??
-        msgBody.imageMessage?.caption ??
-        msgBody.videoMessage?.caption ??
-        msgBody.documentMessage?.caption ??
-        '';
-
-      // Media download
-      let mediaData     = null;
-      let mediaType     = null;
-      let mediaFilename = null;
-
-      const mediaTypes = ['imageMessage', 'audioMessage', 'videoMessage', 'documentMessage', 'stickerMessage'];
-      if (mediaTypes.includes(ctype)) {
-        try {
-          const buf = await downloadMediaMessage(msg, 'buffer', {});
-          mediaData = buf.toString('base64');
-
-          if (ctype === 'imageMessage') {
-            mediaType     = msgBody.imageMessage?.mimetype ?? 'image/jpeg';
-            mediaFilename = `image_${msg.key.id}.jpg`;
-          } else if (ctype === 'audioMessage') {
-            mediaType     = msgBody.audioMessage?.mimetype ?? 'audio/ogg; codecs=opus';
-            mediaFilename = `audio_${msg.key.id}.ogg`;
-          } else if (ctype === 'videoMessage') {
-            mediaType     = msgBody.videoMessage?.mimetype ?? 'video/mp4';
-            mediaFilename = `video_${msg.key.id}.mp4`;
-          } else if (ctype === 'documentMessage') {
-            mediaType     = msgBody.documentMessage?.mimetype ?? 'application/octet-stream';
-            mediaFilename = msgBody.documentMessage?.fileName ?? `doc_${msg.key.id}`;
-          } else if (ctype === 'stickerMessage') {
-            mediaType     = msgBody.stickerMessage?.mimetype ?? 'image/webp';
-            mediaFilename = `sticker_${msg.key.id}.webp`;
-          }
-        } catch (err) {
-          console.error(`[WA:${name}] media download failed:`, err.message);
-        }
-      }
-
-      // Skip if no content at all
-      if (!body && !mediaData) continue;
-
-      // Post webhook to the client's registered webhook URL
-      postWebhook(entry.webhookUrl, {
-        clientName: name,
-        from:       jid,
-        body:       body || '',
-        timestamp:  Number(msg.messageTimestamp ?? 0),
-        pushname:   msg.pushName ?? null,
-        number:     phone,
-        direction,
-        mediaData,
-        mediaType,
-        mediaFilename,
-      });
-    }
-  });
-
-  // ── Connection state ──────────────────────────────────────────────────────
-  sock.ev.on('connection.update', async ({ connection, qr, lastDisconnect }) => {
-    if (qr) {
-      try {
-        entry.qrCode = await QRCode.toDataURL(qr);
-      } catch {
-        entry.qrCode = null;
-      }
-      entry.status = 'qr';
-      console.log(`[WA:${name}] QR ready`);
-    }
-
-    if (connection === 'open') {
-      entry.status = 'ready';
-      entry.qrCode = null;
-      const rawId  = sock.user?.id ?? '';
-      const digits = rawId.split(':')[0].replace(/\D/g, '');
-      entry.phone  = digits ? `+${digits}` : 'connected';
-      console.log(`[WA:${name}] Connected (${entry.phone})`);
-    }
-
-    if (connection === 'close') {
-      const code      = lastDisconnect?.error?.output?.statusCode;
-      const loggedOut = code === DisconnectReason.loggedOut;
-      const banned    = code === 405 || code === 403;
-      console.log(`[WA:${name}] Disconnected (code ${code})`);
-
-      entry.sock   = null;
-      entry.status = 'disconnected';
-      entry.qrCode = null;
-
-      if (loggedOut || banned) {
-        // Don't reconnect — requires manual re-scan or is IP-blocked
-        if (banned) console.log(`[WA:${name}] Connection rejected by WhatsApp (${code}) — will not auto-reconnect`);
-        clients.delete(name);
-        try { fs.rmSync(sessionDir(name), { recursive: true, force: true }); } catch {}
-      } else {
-        console.log(`[WA:${name}] Reconnecting in 5s…`);
-        setTimeout(() => connectClient(name), 5000);
-      }
-    }
-  });
+// ── Session path ──────────────────────────────────────────────────────────────
+function sessionPath(name) {
+  return path.join(SESSION_BASE, `session-${name.replace(/[^a-zA-Z0-9_-]/g, '_')}`);
 }
 
-// Fire-and-forget webhook — retries once on failure
-async function postWebhook(url, payload) {
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    try {
-      const res = await fetch(url, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(payload),
-      });
-      if (res.ok) return;
-      console.error(`[WA] webhook ${res.status} (attempt ${attempt})`);
-    } catch (err) {
-      console.error(`[WA] webhook error (attempt ${attempt}):`, err.message);
+function deleteSession(name) {
+  try { fs.rmSync(sessionPath(name), { recursive: true, force: true }); } catch {}
+}
+
+function destroyInBackground(client) {
+  if (!client) return;
+  client.removeAllListeners();
+  const t = setTimeout(() => {
+    try { client.pupPage?.browser?.().process()?.kill('SIGKILL'); } catch {}
+  }, 5000);
+  client.destroy().catch(() => {}).finally(() => clearTimeout(t));
+}
+
+// ── Webhook ───────────────────────────────────────────────────────────────────
+function postWebhook(data) {
+  if (!LUMORA_WEBHOOK_URL) return;
+  try {
+    const payload = JSON.stringify(data);
+    const url = new URL(LUMORA_WEBHOOK_URL);
+    const lib = url.protocol === 'https:' ? require('https') : require('http');
+    const r = lib.request({
+      hostname: url.hostname,
+      port: url.port || (url.protocol === 'https:' ? 443 : 80),
+      path: url.pathname + (url.search || ''),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) },
+    });
+    r.on('error', () => {});
+    r.write(payload);
+    r.end();
+  } catch {}
+}
+
+// ── Phone resolution ──────────────────────────────────────────────────────────
+async function resolvePhone(msg) {
+  let from = msg.from;
+  let pushname = msg.notifyName || '';
+  try {
+    const contact = await msg.getContact();
+    pushname = contact.pushname || contact.name || msg.notifyName || '';
+    if (msg.from.endsWith('@lid')) {
+      const serialized = contact.id?._serialized || '';
+      if (serialized.endsWith('@c.us')) from = serialized;
+      else return null;
     }
-    if (attempt < 2) await new Promise(r => setTimeout(r, 1500));
+  } catch {
+    if (msg.from.endsWith('@lid')) return null;
   }
+  return { from, phoneDigits: from.replace(/@\S+/, ''), pushname };
 }
 
-// ── REST API ─────────────────────────────────────────────────────────────────
+// ── Media download ────────────────────────────────────────────────────────────
+const MEDIA_LIMIT   = 5 * 1024 * 1024;
+const MEDIA_ALLOWED = ['image/', 'audio/'];
 
-// Status — returns all connected clients
+async function getMedia(msg) {
+  if (!msg.hasMedia) return {};
+  try {
+    const media = await msg.downloadMedia();
+    if (!media) return {};
+    if (!MEDIA_ALLOWED.some(t => (media.mimetype || '').startsWith(t))) return {};
+    const buf = Buffer.from(media.data, 'base64');
+    if (buf.length > MEDIA_LIMIT) return {};
+    return { mediaData: media.data, mediaType: media.mimetype, mediaFilename: media.filename || '' };
+  } catch { return {}; }
+}
+
+// ── Connect client ────────────────────────────────────────────────────────────
+function connectClient(name) {
+  if (clients.has(name)) return;
+
+  globalInstanceCounter++;
+  const myInstanceId = globalInstanceCounter;
+  const entry = { client: null, status: 'loading', qrCode: null, phone: null, instanceId: myInstanceId };
+  clients.set(name, entry);
+
+  const waClient = new Client({
+    authStrategy: new LocalAuth({ dataPath: sessionPath(name) }),
+    puppeteer: {
+      headless: true,
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+      args: [
+        '--no-sandbox', '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage', '--disable-accelerated-2d-canvas',
+        '--no-first-run', '--no-zygote', '--disable-gpu',
+        '--disable-extensions', '--disable-sync',
+        '--disable-background-networking', '--disable-default-apps',
+        '--mute-audio', '--no-default-browser-check',
+      ],
+    },
+  });
+
+  entry.client = waClient;
+
+  const isActive = () => {
+    const cur = clients.get(name);
+    return cur && cur.instanceId === myInstanceId;
+  };
+
+  waClient.on('qr', async (qr) => {
+    if (!isActive()) return;
+    entry.status = 'qr';
+    entry.qrCode = await qrcode.toDataURL(qr).catch(() => null);
+    log(name, 'QR ready');
+  });
+
+  waClient.on('loading_screen', () => {
+    if (!isActive()) return;
+    entry.status = 'loading';
+    entry.qrCode = null;
+  });
+
+  waClient.on('authenticated', () => {
+    if (!isActive()) return;
+    log(name, 'Authenticated');
+    entry.status = 'loading';
+    entry.qrCode = null;
+  });
+
+  waClient.on('ready', () => {
+    if (!isActive()) return;
+    entry.status = 'ready';
+    entry.qrCode = null;
+    entry.phone = waClient.info?.wid?.user ? `+${waClient.info.wid.user}` : 'connected';
+    log(name, `Connected (${entry.phone})`);
+  });
+
+  waClient.on('disconnected', (reason) => {
+    if (!isActive()) return;
+    log(name, `Disconnected (${reason})`);
+    entry.status = 'disconnected';
+    entry.qrCode = null;
+
+    const doLogout = reason === 'LOGOUT';
+    setTimeout(() => {
+      if (!isActive()) return;
+      const old = entry.client;
+      globalInstanceCounter++;
+      entry.instanceId = globalInstanceCounter;
+      clients.delete(name);
+      destroyInBackground(old);
+      if (doLogout) deleteSession(name);
+      connectClient(name);
+    }, 8000);
+  });
+
+  waClient.on('auth_failure', () => {
+    if (!isActive()) return;
+    log(name, 'Auth failure — clearing session');
+    entry.status = 'disconnected';
+    entry.qrCode = null;
+    setTimeout(() => {
+      if (!isActive()) return;
+      const old = entry.client;
+      globalInstanceCounter++;
+      entry.instanceId = globalInstanceCounter;
+      clients.delete(name);
+      destroyInBackground(old);
+      deleteSession(name);
+      connectClient(name);
+    }, 8000);
+  });
+
+  // ── Inbound messages ───────────────────────────────────────────────────────
+  waClient.on('message', async (msg) => {
+    if (!isActive()) return;
+    if (msg.fromMe) return;
+    if (msg.from.endsWith('@g.us')) return;
+    if (msg.from === 'status@broadcast' || msg.isStatus) return;
+
+    const resolved = await resolvePhone(msg);
+    if (!resolved) return;
+    const { from, phoneDigits, pushname } = resolved;
+    const media = await getMedia(msg);
+
+    log(name, `↓ ${phoneDigits} "${(msg.body || '[media]').slice(0, 40)}"`);
+    postWebhook({ clientName: name, from, number: phoneDigits, pushname, body: msg.body || '', timestamp: msg.timestamp, direction: 'inbound', ...media });
+  });
+
+  // ── Outbound messages (sent from phone) ────────────────────────────────────
+  waClient.on('message_create', async (msg) => {
+    if (!isActive()) return;
+    if (!msg.fromMe) return;
+    if (msg.to.endsWith('@g.us')) return;
+    if (msg.to === 'status@broadcast' || msg.to === msg.from) return;
+
+    const phoneDigits = msg.to.replace(/@\S+/, '');
+    let pushname = '';
+    try { const c = await msg.getContact(); pushname = c.pushname || c.name || ''; } catch {}
+    const media = await getMedia(msg);
+
+    log(name, `↑ ${phoneDigits} "${(msg.body || '[media]').slice(0, 40)}"`);
+    postWebhook({ clientName: name, from: msg.to, number: phoneDigits, pushname, body: msg.body || '', timestamp: msg.timestamp, direction: 'outbound', ...media });
+  });
+
+  waClient.initialize();
+  log(name, 'Initializing...');
+}
+
+// ── REST API ──────────────────────────────────────────────────────────────────
+
 app.get('/api/whatsapp/status', (_req, res) => {
   const list = Array.from(clients.entries()).map(([name, e]) => ({
     name,
-    state:   e.status,
-    qrCode:  e.qrCode ?? null,
-    phone:   e.phone  ?? null,
+    state:  e.status,
+    qrCode: e.qrCode ?? null,
+    phone:  e.phone  ?? null,
   }));
   res.json({ clients: list });
 });
 
-// Connect a new client
-app.post('/api/whatsapp/connect', async (req, res) => {
-  const { name, webhookUrl } = req.body ?? {};
-  if (!name) return res.status(400).json({ error: 'name required' });
-  try {
-    await connectClient(name, webhookUrl ?? null);
-    res.json({ ok: true });
-  } catch (err) {
-    console.error('[WA] connect error:', err.message);
-    res.status(500).json({ error: err.message });
-  }
+app.get('/api/whatsapp/logs', (_req, res) => {
+  res.json({ logs: eventLog.slice(0, 100) });
 });
 
-// Disconnect and clear session
-app.post('/api/whatsapp/disconnect', async (req, res) => {
+app.post('/api/whatsapp/connect', (req, res) => {
   const { name } = req.body ?? {};
-  const entry    = clients.get(name);
-  if (!entry) return res.json({ ok: true });
-
-  try { await entry.sock?.logout(); } catch {}
-
-  entry.sock   = null;
-  entry.status = 'disconnected';
-  entry.qrCode = null;
-  clients.delete(name);
-
-  try { fs.rmSync(sessionDir(name), { recursive: true, force: true }); } catch {}
-
+  if (!name?.trim()) return res.status(400).json({ error: 'name required' });
+  if (!clients.has(name)) connectClient(name);
   res.json({ ok: true });
 });
 
-// Send message (text or media)
-app.post('/api/whatsapp/send', async (req, res) => {
-  const { phone, message, clientName, country = 'mx', mediaUrl, mediaType } = req.body ?? {};
+app.post('/api/whatsapp/disconnect', (req, res) => {
+  const { name } = req.body ?? {};
+  const entry = clients.get(name);
+  if (!entry) return res.json({ ok: true });
 
-  const entry = clients.get(clientName);
-  if (!entry || entry.status !== 'ready' || !entry.sock) {
-    return res.status(400).json({ error: 'Client not connected' });
+  globalInstanceCounter++;
+  entry.instanceId = globalInstanceCounter;
+  const old = entry.client;
+  clients.delete(name);
+  deleteSession(name);
+  destroyInBackground(old);
+  res.json({ ok: true });
+});
+
+app.post('/api/whatsapp/send', async (req, res) => {
+  const { phone, message, clientName, country, mediaUrl, mediaType } = req.body ?? {};
+
+  let entry;
+  if (clientName) {
+    entry = clients.get(clientName);
+    if (!entry) return res.status(404).json({ error: `Client "${clientName}" not found` });
+  } else {
+    for (const e of clients.values()) {
+      if (e.status === 'ready') { entry = e; break; }
+    }
   }
 
+  if (!entry || entry.status !== 'ready') {
+    return res.status(503).json({ error: 'No client ready' });
+  }
+
+  const digits   = String(phone ?? '').replace(/\D/g, '');
+  const normalized = digits.length >= 11 ? digits : (country === 'us' ? `1${digits}` : `521${digits}`);
+  const chatId   = `${normalized}@c.us`;
+
+  res.json({ ok: true });
+
   try {
-    const jid = buildJid(String(phone ?? '').replace(/\D/g, ''), country);
-
-    let msgId;
     if (mediaUrl) {
-      const mime = (mediaType ?? 'image/jpeg').split(';')[0].trim();
-      if (mime.startsWith('image')) {
-        const sent = await entry.sock.sendMessage(jid, { image: { url: mediaUrl }, caption: message ?? '' });
-        msgId = sent?.key?.id;
-      } else if (mime.startsWith('audio')) {
-        const sent = await entry.sock.sendMessage(jid, { audio: { url: mediaUrl }, mimetype: mime, ptt: false });
-        msgId = sent?.key?.id;
-      } else {
-        const sent = await entry.sock.sendMessage(jid, { document: { url: mediaUrl }, mimetype: mime, caption: message ?? '' });
-        msgId = sent?.key?.id;
-      }
+      const { MessageMedia } = require('whatsapp-web.js');
+      const media = await MessageMedia.fromUrl(mediaUrl, { unsafeMime: true });
+      await entry.client.sendMessage(chatId, media, { caption: message || '' });
     } else {
-      const sent = await entry.sock.sendMessage(jid, { text: message ?? '' });
-      msgId = sent?.key?.id;
+      await entry.client.sendMessage(chatId, message ?? '');
     }
-
-    // Track this ID so the messages.upsert event skips it (avoids loop)
-    if (msgId) entry.sentIds.add(msgId);
-
-    res.json({ ok: true });
   } catch (err) {
-    console.error(`[WA:${clientName}] send error:`, err.message);
-    res.status(500).json({ error: err.message });
+    log(clientName || 'auto', `Send error: ${err.message}`);
   }
 });
 
-// Health check
 app.get('/health', (_req, res) => res.json({ ok: true, clients: clients.size }));
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-function buildJid(digits, country) {
-  if (digits.length >= 11) return `${digits}@s.whatsapp.net`;
-  const prefix = country === 'us' ? '1' : '52';
-  return `${prefix}${digits}@s.whatsapp.net`;
-}
-
-// ── Restore existing sessions on startup ──────────────────────────────────────
-async function restoreSessions() {
-  const sessionsRoot = path.join('.', 'sessions');
-  if (!fs.existsSync(sessionsRoot)) return;
-
-  const dirs = fs.readdirSync(sessionsRoot).filter(d => {
-    return fs.statSync(path.join(sessionsRoot, d)).isDirectory();
-  });
-
-  for (const dir of dirs) {
-    // dir is the sanitized clientName (underscores, not hyphens)
-    // Restore using the exact dir name as clientName
-    const name = dir;
-    console.log(`[WA] Restoring session: ${name}`);
-    await connectClient(name).catch(err =>
-      console.error(`[WA] restore failed for ${name}:`, err.message)
-    );
-  }
-}
-
-// ── Start ─────────────────────────────────────────────────────────────────────
-const PORT = process.env.PORT ?? 3001;
-app.listen(PORT, async () => {
+// ── Restore sessions on startup ───────────────────────────────────────────────
+app.listen(PORT, () => {
   console.log(`[WA] Lumora WA Server on port ${PORT}`);
-  console.log(`[WA] Forwarding webhooks to: ${LUMORA_WEBHOOK_URL}`);
-  await restoreSessions();
+  console.log(`[WA] Webhook: ${LUMORA_WEBHOOK_URL ?? '(not set)'}`);
+
+  try {
+    const entries = fs.readdirSync(SESSION_BASE, { withFileTypes: true });
+    for (const d of entries) {
+      if (d.isDirectory() && d.name.startsWith('session-')) {
+        const name = d.name.slice('session-'.length);
+        if (name) { connectClient(name); log(name, 'Restored from disk'); }
+      }
+    }
+  } catch {}
 });
