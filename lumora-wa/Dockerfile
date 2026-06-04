@@ -1,17 +1,15 @@
 FROM node:20-slim
 
-# Required for Baileys / sharp
+# git required by Baileys transitive deps; python3/make/g++ for native addons
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 make g++ \
+    git python3 make g++ \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY package.json ./
+COPY package.json package-lock.json* ./
 RUN npm install --omit=dev
 
 COPY index.js ./
-
-# For session persistence, mount a Railway Volume at /app/sessions via the dashboard
 
 EXPOSE 3001
 CMD ["node", "index.js"]
