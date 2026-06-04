@@ -25,6 +25,24 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer, IR2Servi
 {
     public async Task<LeadResponse> CreateAsync(string orgId, CreateLeadRequest req)
     {
+        // Dedup: if a lead with the same last-10 phone digits already exists, return it
+        var digits = System.Text.RegularExpressions.Regex.Replace(req.Phone, @"\D", "");
+        var last10 = digits.Length >= 10 ? digits[^10..] : digits;
+        if (last10.Length >= 7)
+        {
+            var existing = await db.Leads
+                .FirstOrDefaultAsync(l => l.OrgId == orgId && l.Phone.EndsWith(last10));
+            if (existing is not null)
+            {
+                // Return existing lead — idempotent create
+                var existingMsgs = await db.LeadMessages
+                    .Where(m => m.LeadId == existing.Id)
+                    .OrderByDescending(m => m.SentAt).Take(20).OrderBy(m => m.SentAt).ToListAsync();
+                existing.Messages = existingMsgs;
+                return ToResponse(existing);
+            }
+        }
+
         var lead = new Lead
         {
             Id = Guid.NewGuid().ToString(),

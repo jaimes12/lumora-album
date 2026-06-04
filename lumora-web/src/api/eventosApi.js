@@ -30,7 +30,10 @@ function toFrontend(ev) {
 }
 
 export const eventosApi = {
-  getAll: (status) => api.get(`/api/events${status ? `?status=${status}` : ''}`).then(r => r.map(toFrontend)),
+  getAll: (status, clientId) => {
+    const params = [status && `status=${status}`, clientId && `clientId=${clientId}`].filter(Boolean).join('&')
+    return api.get(`/api/events${params ? `?${params}` : ''}`).then(r => r.map(toFrontend))
+  },
   getById: (id) => api.get(`/api/events/${id}`).then(toFrontend),
   create: (data) => api.post('/api/events', data).then(toFrontend),
   update: (id, data) => api.patch(`/api/events/${id}`, data).then(toFrontend),

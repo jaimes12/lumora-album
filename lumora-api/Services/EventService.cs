@@ -9,7 +9,7 @@ public interface IEventService
 {
     Task<EventResponse> CreateAsync(string orgId, CreateEventRequest req);
     Task<EventResponse?> GetByIdAsync(string orgId, string id);
-    Task<IEnumerable<EventResponse>> GetByOrgAsync(string orgId, string? status = null);
+    Task<IEnumerable<EventResponse>> GetByOrgAsync(string orgId, string? status = null, string? clientId = null);
     Task<EventResponse?> UpdateAsync(string orgId, string id, UpdateEventRequest req);
     Task<bool> DeleteAsync(string orgId, string id);
     Task<PaymentInfo> AddPaymentAsync(string orgId, string eventId, CreatePaymentRequest req);
@@ -78,10 +78,11 @@ public class EventService(LumoraDbContext db) : IEventService
         return ToResponse(ev, clientName, payments);
     }
 
-    public async Task<IEnumerable<EventResponse>> GetByOrgAsync(string orgId, string? status = null)
+    public async Task<IEnumerable<EventResponse>> GetByOrgAsync(string orgId, string? status = null, string? clientId = null)
     {
         var query = db.Events.Where(e => e.OrgId == orgId);
-        if (status is not null) query = query.Where(e => e.Status == status);
+        if (status   is not null) query = query.Where(e => e.Status   == status);
+        if (clientId is not null) query = query.Where(e => e.ClientId == clientId);
         var list = await query.OrderByDescending(e => e.EventDate).ToListAsync();
 
         // Batch-fetch client names to avoid N+1 and GUID cast issues

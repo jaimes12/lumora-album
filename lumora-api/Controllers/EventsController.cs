@@ -13,8 +13,8 @@ public class EventsController(IEventService events, IR2Service r2) : ControllerB
     private string OrgId => User.FindFirst("org_id")?.Value ?? User.FindFirst("user_id")?.Value ?? User.FindFirst("sub")?.Value ?? string.Empty;
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] string? status) =>
-        Ok(await events.GetByOrgAsync(OrgId, status));
+    public async Task<IActionResult> GetAll([FromQuery] string? status, [FromQuery] string? clientId) =>
+        Ok(await events.GetByOrgAsync(OrgId, status, clientId));
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(string id)

@@ -23,6 +23,14 @@ public class ClientsController(IClientService clients) : ControllerBase
         return c is null ? NotFound() : Ok(c);
     }
 
+    // Lookup by phone number — returns the first client whose phone ends with the same last-10 digits
+    [HttpGet("lookup")]
+    public async Task<IActionResult> LookupByPhone([FromQuery] string phone)
+    {
+        var c = await clients.GetByPhoneAsync(OrgId, phone);
+        return c is null ? NotFound() : Ok(c);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateClientRequest req)
     {

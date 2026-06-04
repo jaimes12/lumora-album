@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { leadsApi, toFrontendMsg } from '../api/leadsApi'
+import { clientesApi } from '../api/clientesApi'
+import { eventosApi } from '../api/eventosApi'
 import styles from './ChatPage.module.css'
 
 // ─── Phone input with country code toggle ────────────────────────────────────
@@ -265,13 +267,34 @@ function NuevoLeadModal({ onClose, onCreated, leads }) {
 const TIPOS_EVENTO_LIST = ['Boda', 'XV Años', 'Corporativo', 'Graduación', 'Bautizo', 'Cumpleaños', 'Otro']
 
 function ContactInfoPanel({ lead, onUpdate }) {
-  const [nombre,      setNombre]      = useState(lead.nombre)
-  const [telefono,    setTelefono]    = useState(lead.telefono)
-  const [tipoEvento,  setTipoEvento]  = useState(lead.eventTypeRaw || '')
-  const [fechaEvento, setFechaEvento] = useState(lead.eventDateRaw || '')
-  const [presupuesto, setPresupuesto] = useState(lead.budgetRaw != null ? String(lead.budgetRaw) : '')
-  const [saving,      setSaving]      = useState(false)
-  const [saved,       setSaved]       = useState(false)
+  const navigate = useNavigate()
+  const [nombre,        setNombre]        = useState(lead.nombre)
+  const [telefono,      setTelefono]      = useState(lead.telefono)
+  const [tipoEvento,    setTipoEvento]    = useState(lead.eventTypeRaw || '')
+  const [fechaEvento,   setFechaEvento]   = useState(lead.eventDateRaw || '')
+  const [presupuesto,   setPresupuesto]   = useState(lead.budgetRaw != null ? String(lead.budgetRaw) : '')
+  const [saving,        setSaving]        = useState(false)
+  const [saved,         setSaved]         = useState(false)
+  const [linkedCliente, setLinkedCliente] = useState(null)
+  const [eventosCliente, setEventosCliente] = useState([])
+
+  // Lookup client by phone when panel opens / phone changes
+  useEffect(() => {
+    const phone = (lead.telefono || '').replace(/\D/g, '')
+    if (phone.length < 7) return
+    let cancelled = false
+    clientesApi.lookupByPhone(phone)
+      .then(async cliente => {
+        if (cancelled) return
+        setLinkedCliente(cliente)
+        if (cliente) {
+          const evs = await eventosApi.getAll(null, cliente.id).catch(() => [])
+          if (!cancelled) setEventosCliente(evs.slice(0, 4))
+        }
+      })
+      .catch(() => { if (!cancelled) setLinkedCliente(null) })
+    return () => { cancelled = true }
+  }, [lead.telefono])
 
   const save = async () => {
     setSaving(true)
@@ -337,6 +360,49 @@ function ContactInfoPanel({ lead, onUpdate }) {
       <button className={`${styles.infoPanelSave} ${saved ? styles.infoPanelSaved : ''}`} onClick={save} disabled={saving}>
         {saved ? '✓ Guardado' : saving ? 'Guardando…' : 'Guardar cambios'}
       </button>
+
+      {/* ── Cliente vinculado ── */}
+      {linkedCliente && (
+        <>
+          <div className={styles.infoSep} />
+          <div className={styles.linkedClientHeader}>
+            <p className={styles.infoPanelTitle}>👤 Cliente en sistema</p>
+            <button
+              className={styles.linkedClientLink}
+              onClick={() => navigate('/app/clientes')}
+              title="Ver cliente"
+            >
+              Ver perfil →
+            </button>
+          </div>
+          <div className={styles.linkedClientCard}>
+            <div className={styles.linkedClientAvatar}>
+              {linkedCliente.avatar}
+            </div>
+            <div>
+              <p className={styles.linkedClientName}>{linkedCliente.nombre}</p>
+              {linkedCliente.email && <p className={styles.linkedClientSub}>{linkedCliente.email}</p>}
+              <p className={styles.linkedClientSub}>{linkedCliente.etapa}</p>
+            </div>
+          </div>
+
+          {eventosCliente.length > 0 && (
+            <>
+              <p className={styles.linkedEventsTitle}>Eventos</p>
+              {eventosCliente.map(ev => (
+                <button
+                  key={ev.id}
+                  className={styles.linkedEventRow}
+                  onClick={() => navigate(`/app/eventos/${ev.id}`)}
+                >
+                  <span className={styles.linkedEventName}>{ev.nombre}</span>
+                  <span className={styles.linkedEventDate}>{ev.fecha}</span>
+                </button>
+              ))}
+            </>
+          )}
+        </>
+      )}
     </div>
   )
 }

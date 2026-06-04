@@ -19,9 +19,10 @@ function toFrontend(c) {
 }
 
 export const clientesApi = {
-  getAll: (stage) => api.get(`/api/clients${stage ? `?stage=${stage}` : ''}`).then(r => r.map(toFrontend)),
-  getById: (id) => api.get(`/api/clients/${id}`).then(toFrontend),
-  create: (data) => api.post('/api/clients', data).then(toFrontend),
-  update: (id, data) => api.patch(`/api/clients/${id}`, data).then(toFrontend),
-  delete: (id) => api.delete(`/api/clients/${id}`),
+  getAll:        (stage) => api.get(`/api/clients${stage ? `?stage=${stage}` : ''}`).then(r => r.map(toFrontend)),
+  getById:       (id)    => api.get(`/api/clients/${id}`).then(toFrontend),
+  lookupByPhone: (phone) => api.get(`/api/clients/lookup?phone=${encodeURIComponent(phone)}`).then(toFrontend),
+  create:        (data)  => api.post('/api/clients', data).then(toFrontend),
+  update:        (id, data) => api.patch(`/api/clients/${id}`, data).then(toFrontend),
+  delete:        (id)    => api.delete(`/api/clients/${id}`),
 }

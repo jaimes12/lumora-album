@@ -10,6 +10,7 @@ public interface IClientService
 {
     Task<ClientResponse> CreateAsync(string orgId, CreateClientRequest req);
     Task<ClientResponse?> GetByIdAsync(string orgId, string id);
+    Task<ClientResponse?> GetByPhoneAsync(string orgId, string phone);
     Task<IEnumerable<ClientResponse>> GetByOrgAsync(string orgId, string? stage = null);
     Task<ClientResponse?> UpdateAsync(string orgId, string id, UpdateClientRequest req);
     Task<bool> DeleteAsync(string orgId, string id);
@@ -67,6 +68,16 @@ public class ClientService(LumoraDbContext db) : IClientService
 
         await db.SaveChangesAsync();
         return ToResponse(c);
+    }
+
+    public async Task<ClientResponse?> GetByPhoneAsync(string orgId, string phone)
+    {
+        var digits = System.Text.RegularExpressions.Regex.Replace(phone, @"\D", "");
+        var last10 = digits.Length >= 10 ? digits[^10..] : digits;
+        if (last10.Length < 7) return null;
+        var c = await db.Clients
+            .FirstOrDefaultAsync(x => x.OrgId == orgId && x.Phone != null && x.Phone.EndsWith(last10));
+        return c is null ? null : ToResponse(c);
     }
 
     public async Task<bool> DeleteAsync(string orgId, string id)
