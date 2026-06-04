@@ -64,6 +64,11 @@ export default function EventoDetallePage() {
       .finally(() => setLoading(false))
   }, [id])
 
+  // Hooks must all be before any conditional returns
+  useEffect(() => {
+    if (id) eventosApi.getPhotos(id).then(setFotos).catch(() => {})
+  }, [id])
+
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300, color: 'var(--text-muted)', fontSize: 14 }}>
       Cargando evento…
@@ -119,11 +124,6 @@ export default function EventoDetallePage() {
     setEvento(e => ({ ...e, estado: nuevoEstado }))
     await eventosApi.update(id, { status: nuevoEstado }).catch(() => {})
   }
-
-  // Load photos when event loads
-  useEffect(() => {
-    if (id) eventosApi.getPhotos(id).then(setFotos).catch(() => {})
-  }, [id])
 
   const abrirChat = async (phone, name) => {
     if (!phone) return
