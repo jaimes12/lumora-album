@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { proveedoresApi } from '../api/proveedoresApi'
+import { findOrCreateLeadByPhone } from '../api/leadsApi'
+import { ChatModal } from './ChatPage'
 import styles from './ProveedoresPage.module.css'
 
 const CATEGORIAS_BASE = ['Todas','Decoración','Música','Catering','Fotografía','Iluminación','Transporte','Pastelería','Venue','Entretenimiento']
@@ -71,63 +73,6 @@ const CAT_COLOR = {
   Entretenimiento:'#c084fc',
 }
 
-/* ── Chat Modal ── */
-function ChatModal({ proveedor, onClose }) {
-  const [msgs, setMsgs]   = useState([])
-  const [texto, setTexto] = useState('')
-  const bottomRef         = useRef(null)
-  const color             = CAT_COLOR[proveedor.categoria] || '#7c6af7'
-  const initials          = proveedor.nombre.split(' ').slice(0,2).map(n=>n[0]).join('').slice(0,2)
-
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:'smooth' }) }, [msgs])
-
-  const enviar = () => {
-    if (!texto.trim()) return
-    setMsgs(m => [...m, { id: Date.now(), texto, tipo:'out', hora:'Ahora' }])
-    setTexto('')
-  }
-
-  return (
-    <div className={styles.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className={styles.modal}>
-        <div className={styles.modalHeader}>
-          <div className={styles.modalAvatar} style={{ background: color + '28', color }}>{initials}</div>
-          <div className={styles.modalInfo}>
-            <span className={styles.modalNombre}>{proveedor.nombre}</span>
-            <span className={styles.modalSub} style={{ color }}>{proveedor.categoria} · {proveedor.telefono}</span>
-          </div>
-          <button className={styles.modalClose} onClick={onClose}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-        </div>
-        <div className={styles.msgs}>
-          {msgs.length === 0 && <p className={styles.msgsEmpty}>Sin mensajes aún. ¡Inicia la conversación!</p>}
-          {msgs.map(m => (
-            <div key={m.id} className={`${styles.msgWrap} ${m.tipo==='out' ? styles.msgOut : ''}`}>
-              <div className={`${styles.bubble} ${m.tipo==='out' ? styles.bubbleOut : styles.bubbleIn}`}>
-                <p>{m.texto}</p>
-                <span className={styles.bubbleHora}>{m.hora}</span>
-              </div>
-            </div>
-          ))}
-          <div ref={bottomRef} />
-        </div>
-        <div className={styles.inputRow}>
-          <textarea className={styles.textarea} placeholder="Escribe un mensaje..." value={texto} rows={1}
-            onChange={e => setTexto(e.target.value)}
-            onKeyDown={e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); enviar() }}} />
-          <button className={styles.sendBtn} onClick={enviar} disabled={!texto.trim()}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function Stars({ rating }) {
   return (
@@ -144,11 +89,22 @@ function Stars({ rating }) {
 }
 
 export default function ProveedoresPage() {
-  const [proveedores,    setProveedores]    = useState([])
-  const [loading,        setLoading]        = useState(true)
-  const [catActiva,      setCatActiva]      = useState('Todas')
-  const [chatProveedor,  setChatProveedor]  = useState(null)
-  const [showCreate,     setShowCreate]     = useState(false)
+  const [proveedores,  setProveedores]  = useState([])
+  const [loading,      setLoading]      = useState(true)
+  const [catActiva,    setCatActiva]    = useState('Todas')
+  const [chatLead,     setChatLead]     = useState(null)
+  const [openingChat,  setOpeningChat]  = useState(null) // id del proveedor abriendo
+  const [showCreate,   setShowCreate]   = useState(false)
+
+  const abrirChat = async (p) => {
+    if (!p.telefono) return alert('Este proveedor no tiene teléfono registrado')
+    setOpeningChat(p.id)
+    try {
+      const lead = await findOrCreateLeadByPhone(p.telefono, p.nombre)
+      setChatLead(lead)
+    } catch { alert('No se pudo abrir el chat') }
+    finally { setOpeningChat(null) }
+  }
 
   useEffect(() => {
     proveedoresApi.getAll()
@@ -170,7 +126,7 @@ export default function ProveedoresPage() {
           onCreated={p => setProveedores(prev => [p, ...prev])}
         />
       )}
-      {chatProveedor && <ChatModal proveedor={chatProveedor} onClose={() => setChatProveedor(null)} />}
+      {chatLead && <ChatModal lead={chatLead} onClose={() => setChatLead(null)} />}
 
       <div className={styles.header}>
         <div>
@@ -211,7 +167,7 @@ export default function ProveedoresPage() {
                     <h3 className={styles.cardName}>{p.nombre}</h3>
                     <span className={styles.catTag} style={{ color, background: color+'18' }}>{p.categoria}</span>
                   </div>
-                  <button className={styles.chatBtn} onClick={() => setChatProveedor(p)} title="Enviar mensaje">
+                  <button className={styles.chatBtn} onClick={() => abrirChat(p)} title="Enviar mensaje" disabled={openingChat === p.id}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                     </svg>
