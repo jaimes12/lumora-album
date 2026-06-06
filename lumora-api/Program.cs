@@ -44,7 +44,7 @@ builder.Services.AddDbContext<LumoraDbContext>(opts =>
 // WhatsApp server HTTP client
 var waServerUrl = builder.Configuration["WaServerUrl"]
     ?? Environment.GetEnvironmentVariable("WA_SERVER_URL")
-    ?? "https://whatsapp-production-117e.up.railway.app";
+    ?? "https://lumora-wa-production.up.railway.app";
 builder.Services.AddHttpClient("wa", c =>
 {
     c.BaseAddress = new Uri(waServerUrl);

@@ -38,7 +38,9 @@ public record UpdateSaleRequest(
 public record SaleResponse(
     string Id,
     string? EventId,
+    string? EventName,
     string ClientId,
+    string? ClientName,
     string Type,
     string Status,
     List<SaleItemResponse> Items,

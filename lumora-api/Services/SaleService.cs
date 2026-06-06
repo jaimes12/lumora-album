@@ -57,13 +57,15 @@ public class SaleService(LumoraDbContext db) : ISaleService
     {
         var sale = await db.Sales
             .Include(s => s.Items)
+            .Include(s => s.Client)
+            .Include(s => s.Event)
             .FirstOrDefaultAsync(s => s.Id == id && s.OrgId == orgId);
         return sale is null ? null : ToResponse(sale);
     }
 
     public async Task<IEnumerable<SaleResponse>> GetByOrgAsync(string orgId, string? status = null)
     {
-        var query = db.Sales.Include(s => s.Items).Where(s => s.OrgId == orgId);
+        var query = db.Sales.Include(s => s.Items).Include(s => s.Client).Include(s => s.Event).Where(s => s.OrgId == orgId);
         if (status is not null) query = query.Where(s => s.Status == status);
         var list = await query.OrderByDescending(s => s.CreatedAt).ToListAsync();
         return list.Select(ToResponse);
@@ -73,6 +75,8 @@ public class SaleService(LumoraDbContext db) : ISaleService
     {
         var sale = await db.Sales
             .Include(s => s.Items)
+            .Include(s => s.Client)
+            .Include(s => s.Event)
             .FirstOrDefaultAsync(s => s.Id == id && s.OrgId == orgId);
         if (sale is null) return null;
 
@@ -128,7 +132,8 @@ public class SaleService(LumoraDbContext db) : ISaleService
     }
 
     private static SaleResponse ToResponse(Sale s) => new(
-        s.Id, s.EventId, s.ClientId,
+        s.Id, s.EventId, s.Event?.Name,
+        s.ClientId, s.Client?.Name,
         s.Type, s.Status,
         s.Items.OrderBy(i => i.SortOrder).Select(i => new SaleItemResponse(
             i.Id, i.Description, i.Quantity, i.UnitPrice, i.Total, i.SortOrder

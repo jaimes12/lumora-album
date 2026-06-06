@@ -8,6 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Exclude macOS AppleDouble metadata files -->
+    <Compile Remove="**/**/._*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Firebase only for JWT auth — NOT for database -->
     <PackageReference Include="FirebaseAdmin" Version="3.5.0" />
     <!-- MySQL / EF Core -->

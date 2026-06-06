@@ -51,6 +51,7 @@ public class Sale
 
     public ICollection<SaleItem> Items { get; set; } = [];
     public Client? Client { get; set; }
+    public Event? Event { get; set; }
 }
 
 [Table("sale_items")]

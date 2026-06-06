@@ -68,6 +68,14 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
             .HasForeignKey(s => s.ClientId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Sale -> Event (nullable)
+        mb.Entity<Sale>()
+            .HasOne(s => s.Event)
+            .WithMany()
+            .HasForeignKey(s => s.EventId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // User -> Organization
         mb.Entity<User>()
             .HasOne(u => u.Organization)
