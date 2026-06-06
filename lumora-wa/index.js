@@ -104,10 +104,31 @@ async function getMedia(msg) {
   } catch { return {}; }
 }
 
+// ── Chrome lock cleanup (prevents "profile in use" crash on restart) ──────────
+function clearChromeLocks(sessionDir) {
+  const locks = ['SingletonLock', 'SingletonSocket', 'SingletonCookie'];
+  // Clean root and any sub-folder (e.g. .wwebjs_auth/session-client/)
+  const dirs = [sessionDir];
+  try {
+    const authDir = path.join(sessionDir, '.wwebjs_auth');
+    if (fs.existsSync(authDir)) {
+      for (const sub of fs.readdirSync(authDir)) {
+        dirs.push(path.join(authDir, sub));
+      }
+    }
+  } catch {}
+  for (const dir of dirs) {
+    for (const f of locks) {
+      try { fs.rmSync(path.join(dir, f), { force: true }); } catch {}
+    }
+  }
+}
+
 // ── Connect client ────────────────────────────────────────────────────────────
 function connectClient(name) {
   if (clients.has(name)) return;
 
+  clearChromeLocks(sessionPath(name));
   globalInstanceCounter++;
   const myInstanceId = globalInstanceCounter;
   const entry = { client: null, status: 'loading', qrCode: null, phone: null, instanceId: myInstanceId };
