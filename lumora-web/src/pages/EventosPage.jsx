@@ -267,6 +267,7 @@ export default function EventosPage() {
   const [eventos,     setEventos]     = useState([])
   const [loading,     setLoading]     = useState(true)
   const [filter,      setFilter]      = useState('todos')
+  const [search,      setSearch]      = useState('')
   const [showCreate,  setShowCreate]  = useState(false)
   const navigate = useNavigate()
 
@@ -277,7 +278,15 @@ export default function EventosPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const filtered = filter === 'todos' ? eventos : eventos.filter(e => e.estado === filter)
+  const q = search.trim().toLowerCase()
+  const byStatus  = filter === 'todos' ? eventos : eventos.filter(e => e.estado === filter)
+  const filtered  = q
+    ? byStatus.filter(e =>
+        e.nombre.toLowerCase().includes(q) ||
+        e.clienteNombre.toLowerCase().includes(q) ||
+        (e.clientePhone || '').replace(/\D/g, '').includes(q.replace(/\D/g, ''))
+      )
+    : byStatus
 
   const counts = {
     todos:     eventos.length,
@@ -309,14 +318,35 @@ export default function EventosPage() {
         </button>
       </div>
 
-      <div className={styles.filters}>
-        {['todos', 'confirmed', 'pending', 'lead', 'cancelled'].map(f => (
-          <button key={f} onClick={() => setFilter(f)}
-            className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`}>
-            {f === 'todos' ? 'Todos' : ESTADO_META[f]?.label}
-            <span className={styles.filterCount}>{counts[f]}</span>
-          </button>
-        ))}
+      <div className={styles.toolbarRow}>
+        <div className={styles.filters}>
+          {['todos', 'confirmed', 'pending', 'lead', 'cancelled'].map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`}>
+              {f === 'todos' ? 'Todos' : ESTADO_META[f]?.label}
+              <span className={styles.filterCount}>{counts[f]}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className={styles.searchBox}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            type="text"
+            placeholder="Buscar evento, cliente o teléfono…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          {search && (
+            <button className={styles.searchClear} onClick={() => setSearch('')}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -327,8 +357,13 @@ export default function EventosPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className={styles.empty}>
-          <p>Sin eventos{filter !== 'todos' ? ` con estado "${ESTADO_META[filter]?.label}"` : ''}</p>
-          <button className={styles.btnPrimary} onClick={() => setShowCreate(true)}>+ Crear primer evento</button>
+          <p>
+            {q
+              ? `Sin resultados para "${search}"`
+              : `Sin eventos${filter !== 'todos' ? ` con estado "${ESTADO_META[filter]?.label}"` : ''}`
+            }
+          </p>
+          {!q && <button className={styles.btnPrimary} onClick={() => setShowCreate(true)}>+ Crear primer evento</button>}
         </div>
       ) : (
         <div className={styles.grid}>

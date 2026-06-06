@@ -25,6 +25,7 @@ function toFrontend(ev) {
     notas: ev.notes ?? '',
     clienteId: ev.clientId,
     clienteNombre: ev.clientName ?? '',
+    clientePhone: ev.clientPhone ?? '',
     proveedorIds: [],
   }
 }

@@ -34,7 +34,7 @@ public record PaymentInfo(
 
 public record EventResponse(
     string Id, string Name, string Type, string Status,
-    string ClientId, string? ClientName,
+    string ClientId, string? ClientName, string? ClientPhone,
     string? VenueId, string? Notes,
     decimal Budget, int GuestCount,
     DateTime EventDate, DateTime CreatedAt,

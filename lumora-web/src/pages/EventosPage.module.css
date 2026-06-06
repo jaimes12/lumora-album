@@ -48,11 +48,64 @@
 }
 
 /* Filters */
+.toolbarRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
 .filters {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
 }
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 7px 12px;
+  min-width: 240px;
+  transition: border-color 0.15s;
+}
+.searchBox:focus-within {
+  border-color: var(--accent);
+}
+.searchBox svg {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.searchBox input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: var(--text);
+  font-family: inherit;
+}
+.searchBox input::placeholder {
+  color: var(--text-muted);
+}
+.searchClear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: color 0.12s;
+  flex-shrink: 0;
+}
+.searchClear:hover { color: var(--text); }
 
 .filterBtn {
   display: flex;

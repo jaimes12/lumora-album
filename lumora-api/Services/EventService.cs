@@ -21,16 +21,17 @@ public interface IEventService
 public class EventService(LumoraDbContext db) : IEventService
 {
     // Fetch client name separately to avoid Pomelo GUID-to-binary cast issues with Include
-    private async Task<string?> GetClientName(string clientId)
+    private async Task<(string? Name, string? Phone)> GetClientInfo(string clientId)
     {
         try
         {
-            return await db.Clients
+            var c = await db.Clients
                 .Where(c => c.Id == clientId)
-                .Select(c => c.Name)
+                .Select(c => new { c.Name, c.Phone })
                 .FirstOrDefaultAsync();
+            return c is null ? (null, null) : (c.Name, c.Phone);
         }
-        catch { return null; }
+        catch { return (null, null); }
     }
 
     private async Task<List<EventPayment>> GetPayments(string eventId)
@@ -64,8 +65,8 @@ public class EventService(LumoraDbContext db) : IEventService
         };
         await db.Events.AddAsync(ev);
         await db.SaveChangesAsync();
-        var clientName = await GetClientName(req.ClientId);
-        return ToResponse(ev, clientName, []);
+        var (clientName, clientPhone) = await GetClientInfo(req.ClientId);
+        return ToResponse(ev, clientName, clientPhone, []);
     }
 
     public async Task<EventResponse?> GetByIdAsync(string orgId, string id)
@@ -73,9 +74,9 @@ public class EventService(LumoraDbContext db) : IEventService
         var ev = await db.Events
             .FirstOrDefaultAsync(e => e.Id == id && e.OrgId == orgId);
         if (ev is null) return null;
-        var clientName = await GetClientName(ev.ClientId);
-        var payments   = await GetPayments(id);
-        return ToResponse(ev, clientName, payments);
+        var (clientName, clientPhone) = await GetClientInfo(ev.ClientId);
+        var payments = await GetPayments(id);
+        return ToResponse(ev, clientName, clientPhone, payments);
     }
 
     public async Task<IEnumerable<EventResponse>> GetByOrgAsync(string orgId, string? status = null, string? clientId = null)
@@ -85,15 +86,17 @@ public class EventService(LumoraDbContext db) : IEventService
         if (clientId is not null) query = query.Where(e => e.ClientId == clientId);
         var list = await query.OrderByDescending(e => e.EventDate).ToListAsync();
 
-        // Batch-fetch client names to avoid N+1 and GUID cast issues
+        // Batch-fetch client info to avoid N+1 and GUID cast issues
         var clientIds = list.Select(e => e.ClientId).Distinct().ToList();
-        var clientNames = await db.Clients
+        var clientInfo = await db.Clients
             .Where(c => clientIds.Contains(c.Id))
-            .Select(c => new { c.Id, c.Name })
-            .ToDictionaryAsync(c => c.Id, c => c.Name);
+            .Select(c => new { c.Id, c.Name, c.Phone })
+            .ToDictionaryAsync(c => c.Id, c => (c.Name, c.Phone));
 
-        return list.Select(e => ToResponse(e,
-            clientNames.TryGetValue(e.ClientId, out var n) ? n : null, []));
+        return list.Select(e => {
+            var info = clientInfo.TryGetValue(e.ClientId, out var ci) ? ci : (null, null);
+            return ToResponse(e, info.Name, info.Phone, []);
+        });
     }
 
     public async Task<EventResponse?> UpdateAsync(string orgId, string id, UpdateEventRequest req)
@@ -182,9 +185,9 @@ public class EventService(LumoraDbContext db) : IEventService
         return true;
     }
 
-    private static EventResponse ToResponse(Event e, string? clientName, List<EventPayment> payments) => new(
+    private static EventResponse ToResponse(Event e, string? clientName, string? clientPhone, List<EventPayment> payments) => new(
         e.Id, e.Name, e.Type, e.Status,
-        e.ClientId, clientName,
+        e.ClientId, clientName, clientPhone,
         e.Venue, e.Notes,
         e.Budget, e.GuestCount,
         e.EventDate, e.CreatedAt,
