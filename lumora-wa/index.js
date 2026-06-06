@@ -105,23 +105,30 @@ async function getMedia(msg) {
 }
 
 // ── Chrome lock cleanup (prevents "profile in use" crash on restart) ──────────
+// LocalAuth with dataPath and no clientId stores Chrome profile at <sessionDir>/session/
+// (not .wwebjs_auth — that only appears when dataPath is omitted in LocalAuth)
 function clearChromeLocks(sessionDir) {
   const locks = ['SingletonLock', 'SingletonSocket', 'SingletonCookie'];
-  // Clean root and any sub-folder (e.g. .wwebjs_auth/session-client/)
-  const dirs = [sessionDir];
-  try {
-    const authDir = path.join(sessionDir, '.wwebjs_auth');
-    if (fs.existsSync(authDir)) {
-      for (const sub of fs.readdirSync(authDir)) {
-        dirs.push(path.join(authDir, sub));
-      }
-    }
-  } catch {}
-  for (const dir of dirs) {
+  function cleanDir(dir) {
     for (const f of locks) {
       try { fs.rmSync(path.join(dir, f), { force: true }); } catch {}
     }
   }
+  // Clean the sessionDir itself and ALL direct subdirectories recursively
+  cleanDir(sessionDir);
+  try {
+    for (const entry of fs.readdirSync(sessionDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const sub = path.join(sessionDir, entry.name);
+      cleanDir(sub);
+      // one level deeper (e.g. .wwebjs_auth/session-client/)
+      try {
+        for (const entry2 of fs.readdirSync(sub, { withFileTypes: true })) {
+          if (entry2.isDirectory()) cleanDir(path.join(sub, entry2.name));
+        }
+      } catch {}
+    }
+  } catch {}
 }
 
 // ── Connect client ────────────────────────────────────────────────────────────
