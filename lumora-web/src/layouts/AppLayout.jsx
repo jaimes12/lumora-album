@@ -262,10 +262,11 @@ function PlanModal({ onClose }) {
 export default function AppLayout() {
   const navigate = useNavigate()
   const { theme, lang, toggleTheme, toggleLang, i18n } = useSettings()
-  const [waConnected, setWaConnected] = useState(false)
-  const [showWaModal, setShowWaModal] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [planOpen,    setPlanOpen]    = useState(false)
+  const [waConnected,        setWaConnected]        = useState(false)
+  const [showWaModal,        setShowWaModal]        = useState(false)
+  const [sidebarOpen,        setSidebarOpen]        = useState(false)
+  const [planOpen,           setPlanOpen]           = useState(false)
+  const [confirmDisconnect,  setConfirmDisconnect]  = useState(false)
 
   // Restore WA connected state on mount
   useEffect(() => {
@@ -296,6 +297,7 @@ export default function AppLayout() {
   const handleDisconnect = async () => {
     await whatsappApi.disconnect().catch(() => {})
     setWaConnected(false)
+    setConfirmDisconnect(false)
   }
 
   return (
@@ -359,15 +361,27 @@ export default function AppLayout() {
             </div>
             {waConnected ? (
               <div className={styles.waConnected}>
-                <div className={styles.waConnectedLeft}>
-                  <span className={styles.waGreenDot} />
-                  <div className={styles.waConnectedInfo}>
-                    <span className={styles.waConnectedText}>Conectado</span>
+                {confirmDisconnect ? (
+                  <div className={styles.waConfirm}>
+                    <span className={styles.waConfirmText}>¿Cerrar sesión de WhatsApp?</span>
+                    <div className={styles.waConfirmBtns}>
+                      <button className={styles.waConfirmYes} onClick={handleDisconnect}>Sí</button>
+                      <button className={styles.waConfirmNo}  onClick={() => setConfirmDisconnect(false)}>No</button>
+                    </div>
                   </div>
-                </div>
-                <button className={styles.waDisconnectBtn} onClick={handleDisconnect}>
-                  Desconectar
-                </button>
+                ) : (
+                  <>
+                    <div className={styles.waConnectedLeft}>
+                      <span className={styles.waGreenDot} />
+                      <div className={styles.waConnectedInfo}>
+                        <span className={styles.waConnectedText}>Conectado</span>
+                      </div>
+                    </div>
+                    <button className={styles.waDisconnectBtn} onClick={() => setConfirmDisconnect(true)}>
+                      Desconectar
+                    </button>
+                  </>
+                )}
               </div>
             ) : (
               <button className={styles.waConnectBtn} onClick={() => setShowWaModal(true)}>
