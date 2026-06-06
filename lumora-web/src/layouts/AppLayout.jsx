@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useSettings } from '../context/SettingsContext'
+import { useAuth } from '../context/AuthContext'
 import { whatsappApi } from '../api/whatsappApi'
 import styles from './AppLayout.module.css'
 import logoFull from '../assets/lumora-logo.png'
@@ -262,11 +263,13 @@ function PlanModal({ onClose }) {
 export default function AppLayout() {
   const navigate = useNavigate()
   const { theme, lang, toggleTheme, toggleLang, i18n } = useSettings()
+  const { user, logout } = useAuth()
   const [waConnected,        setWaConnected]        = useState(false)
   const [showWaModal,        setShowWaModal]        = useState(false)
   const [sidebarOpen,        setSidebarOpen]        = useState(false)
   const [planOpen,           setPlanOpen]           = useState(false)
   const [confirmDisconnect,  setConfirmDisconnect]  = useState(false)
+  const [confirmLogout,      setConfirmLogout]      = useState(false)
 
   // Restore WA connected state on mount
   useEffect(() => {
@@ -429,18 +432,46 @@ export default function AppLayout() {
 
           {/* User */}
           <div className={styles.userArea}>
-            <div className={styles.avatar}>AJ</div>
-            <div className={styles.userInfo}>
-              <span className={styles.userName}>Angel Jaimes</span>
-              <span className={styles.userRole}>{i18n.admin}</span>
-            </div>
-            <button className={styles.logoutBtn} onClick={() => navigate('/')} title={i18n.logout}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-            </button>
+            {confirmLogout ? (
+              <div className={styles.logoutConfirm}>
+                <span className={styles.logoutConfirmText}>¿Cerrar sesión?</span>
+                <div className={styles.logoutConfirmBtns}>
+                  <button
+                    className={styles.logoutConfirmYes}
+                    onClick={() => { logout(); navigate('/') }}
+                  >
+                    Sí, salir
+                  </button>
+                  <button
+                    className={styles.logoutConfirmNo}
+                    onClick={() => setConfirmLogout(false)}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className={styles.avatar}>
+                  {user?.name ? user.name.slice(0, 2).toUpperCase() : 'LU'}
+                </div>
+                <div className={styles.userInfo}>
+                  <span className={styles.userName}>{user?.name ?? 'Usuario'}</span>
+                  <span className={styles.userRole}>{i18n.admin}</span>
+                </div>
+                <button
+                  className={styles.logoutBtn}
+                  onClick={() => setConfirmLogout(true)}
+                  title={i18n.logout}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                  </svg>
+                </button>
+              </>
+            )}
           </div>
 
         </div>

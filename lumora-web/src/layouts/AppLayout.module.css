@@ -961,6 +961,52 @@
   background: rgba(124,106,247,0.08);
 }
 
+.logoutConfirm {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.logoutConfirmText {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.logoutConfirmBtns {
+  display: flex;
+  gap: 6px;
+}
+
+.logoutConfirmYes {
+  flex: 1;
+  padding: 7px 0;
+  border-radius: 8px;
+  border: none;
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.logoutConfirmYes:hover { background: rgba(248, 113, 113, 0.28); }
+
+.logoutConfirmNo {
+  flex: 1;
+  padding: 7px 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.logoutConfirmNo:hover { background: var(--bg); color: var(--text); }
+
 /* Main content */
 .main {
   margin-left: 240px;
