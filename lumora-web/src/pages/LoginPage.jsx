@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useSettings } from '../context/SettingsContext'
 import styles from './LoginPage.module.css'
-import logoFull from '../assets/elixe-logo.png'
+import logoFull  from '../assets/elixe-logo.png'
+import logoWhite from '../assets/elixe-logo-white.png'
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const { login, register } = useAuth()
+  const { theme } = useSettings()
   const [mode, setMode]     = useState('login') // 'login' | 'register'
   const [loading, setLoading] = useState(false)
   const [error, setError]   = useState('')
@@ -35,7 +38,7 @@ export default function LoginPage() {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <img src={logoFull} alt="Elixe" className={styles.logo} />
+        <img src={theme === 'dark' ? logoWhite : logoFull} alt="Elixe" className={styles.logo} />
 
         <div className={styles.tabs}>
           <button className={`${styles.tab} ${mode === 'login' ? styles.tabActive : ''}`} onClick={() => { setMode('login'); setError('') }}>
