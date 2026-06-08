@@ -46,8 +46,25 @@ public class EventService(LumoraDbContext db) : IEventService
         catch { return []; }
     }
 
+    private static readonly Dictionary<string, int> EventLimits = new()
+    {
+        ["free"]    = 0,
+        ["solo"]    = 20,
+        ["negocio"] = int.MaxValue,
+        ["agencia"] = int.MaxValue,
+    };
+
     public async Task<EventResponse> CreateAsync(string orgId, CreateEventRequest req)
     {
+        // Plan limit check
+        var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == orgId);
+        if (org is not null && EventLimits.TryGetValue(org.Plan, out int limit) && limit != int.MaxValue)
+        {
+            var count = await db.Events.CountAsync(e => e.OrgId == orgId);
+            if (count >= limit)
+                throw new InvalidOperationException($"PLAN_LIMIT:eventos:{limit}");
+        }
+
         var ev = new Event
         {
             Id = Guid.NewGuid().ToString(),

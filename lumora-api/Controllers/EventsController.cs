@@ -26,8 +26,15 @@ public class EventsController(IEventService events, IR2Service r2) : ControllerB
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateEventRequest req)
     {
-        var ev = await events.CreateAsync(OrgId, req);
-        return CreatedAtAction(nameof(GetById), new { id = ev.Id }, ev);
+        try
+        {
+            var ev = await events.CreateAsync(OrgId, req);
+            return CreatedAtAction(nameof(GetById), new { id = ev.Id }, ev);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.StartsWith("PLAN_LIMIT"))
+        {
+            return StatusCode(402, new { error = "plan_limit", message = ex.Message });
+        }
     }
 
     [HttpPatch("{id}")]

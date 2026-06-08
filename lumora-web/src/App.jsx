@@ -5,8 +5,10 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 // Landing components
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
+import Audience from './components/Audience'
 import Features from './components/Features'
 import HowItWorks from './components/HowItWorks'
+import Pricing from './components/Pricing'
 import CTA from './components/CTA'
 import Footer from './components/Footer'
 
@@ -34,8 +36,10 @@ function LandingPage() {
       <Navbar />
       <main>
         <Hero />
+        <Audience />
         <Features />
         <HowItWorks />
+        <Pricing />
         <CTA />
       </main>
       <Footer />

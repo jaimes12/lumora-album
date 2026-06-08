@@ -4,116 +4,217 @@ import RegisterModal from './RegisterModal'
 
 const STATS = [
   { value: '2,400+', label: 'Eventos gestionados' },
-  { value: '98%', label: 'Satisfacción de clientes' },
-  { value: '3x', label: 'Más rápido que Excel' },
+  { value: '98%',   label: 'Satisfacción' },
+  { value: '3×',    label: 'Más rápido que Excel' },
 ]
 
-const MOCK_EVENTS = [
-  { name: 'Boda García & Ruiz', date: 'Jun 14', status: 'confirmed', color: '#34d399' },
-  { name: 'Corporativo Telmex', date: 'Jun 18', status: 'pending', color: '#fb923c' },
-  { name: 'XV Años Sofía', date: 'Jun 22', status: 'confirmed', color: '#34d399' },
-  { name: 'Graduación ITESM', date: 'Jul 03', status: 'quote', color: '#7c6af7' },
+const NOTIFS = [
+  { text: 'Boda García — Confirmada',      sub: 'hace 2 min',  color: '#34d399', delay: '0s',   pos: 'top' },
+  { text: 'Nuevo mensaje de Ana López',    sub: 'WhatsApp',    color: '#38bdf8', delay: '1.8s', pos: 'mid' },
+  { text: 'Pago registrado — $5,000',      sub: 'Transferencia', color: '#a78bfa', delay: '3.4s', pos: 'bot' },
 ]
+
+/* Icons */
+const IcoCalendar = () => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+  </svg>
+)
+const IcoPin = () => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+  </svg>
+)
+const IcoGuests = () => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+  </svg>
+)
+const IcoChat = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+)
+const IcoDot = ({ color }) => (
+  <span style={{ width: 7, height: 7, borderRadius: '50%', background: color, display: 'inline-block', flexShrink: 0 }} />
+)
+
+/* Event detail mock */
+function EventDetailMock() {
+  return (
+    <div className={styles.evtMock}>
+      {/* Event header */}
+      <div className={styles.evtHeader}>
+        <div className={styles.evtHeaderLeft}>
+          <div className={styles.evtEmoji}>🌸</div>
+          <div>
+            <div className={styles.evtName}>XV Años Naomi</div>
+            <div className={styles.evtMeta}>
+              <span className={styles.evtMetaItem}><IcoCalendar /> 13 Dic 2026</span>
+              <span className={styles.evtMetaItem}><IcoPin /> Salón Real</span>
+              <span className={styles.evtMetaItem}><IcoGuests /> 150 invitados</span>
+            </div>
+          </div>
+        </div>
+        <span className={styles.evtTypePill}>XV Años</span>
+      </div>
+
+      <div className={styles.evtBody}>
+        {/* Left column */}
+        <div className={styles.evtCol}>
+          {/* Finances */}
+          <div className={styles.evtCard}>
+            <div className={styles.evtCardLabel}>Resumen financiero</div>
+            <div className={styles.finRow}>
+              <div className={styles.finItem}>
+                <span className={styles.finItemLabel}>Total</span>
+                <span className={styles.finItemVal}>$20,000</span>
+              </div>
+              <div className={styles.finItem}>
+                <span className={styles.finItemLabel}>Abonado</span>
+                <span className={styles.finItemVal} style={{ color: '#34d399' }}>$5,000</span>
+              </div>
+              <div className={styles.finItem}>
+                <span className={styles.finItemLabel}>Por liquidar</span>
+                <span className={styles.finItemVal} style={{ color: '#fb923c' }}>$15,000</span>
+              </div>
+            </div>
+            <div className={styles.progressWrap}>
+              <div className={styles.progressBar}>
+                <div className={styles.progressFill} style={{ width: '25%' }} />
+              </div>
+              <span className={styles.progressLabel}>25% cobrado</span>
+            </div>
+            <div className={styles.paymentRow}>
+              <div>
+                <div className={styles.paymentName}>Anticipo</div>
+                <div className={styles.paymentMeta}>06 Jun · Transferencia</div>
+              </div>
+              <span className={styles.paymentAmt}>+$5,000</span>
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div className={styles.evtCard}>
+            <div className={styles.evtCardLabel}>Notas del evento</div>
+            <p className={styles.notesText}>3 mesas de 50 sillas, todo rosa. Arco de flores en entrada.</p>
+          </div>
+        </div>
+
+        {/* Right column */}
+        <div className={styles.evtCol}>
+          {/* Client */}
+          <div className={styles.evtCard}>
+            <div className={styles.evtCardLabel}>Cliente</div>
+            <div className={styles.clientRow}>
+              <div className={styles.clientAvatar}>N</div>
+              <div className={styles.clientInfo}>
+                <span className={styles.clientName}>Naomi López</span>
+                <span className={styles.clientEmail}>naomi@mail.com</span>
+              </div>
+              <button className={styles.chatBtn}><IcoChat /></button>
+            </div>
+          </div>
+
+          {/* Providers */}
+          <div className={styles.evtCard}>
+            <div className={styles.evtCardLabel}>Proveedores</div>
+            {[
+              { name: 'Flores Cristal', role: 'Decoración', color: '#f472b6' },
+              { name: 'Foto Estudio MX', role: 'Fotografía', color: '#38bdf8' },
+              { name: 'DJ Kevin Sound', role: 'Entretenimiento', color: '#a78bfa' },
+            ].map(p => (
+              <div key={p.name} className={styles.provRow}>
+                <IcoDot color={p.color} />
+                <div className={styles.provInfo}>
+                  <span className={styles.provName}>{p.name}</span>
+                  <span className={styles.provRole}>{p.role}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function Hero() {
   const [showRegister, setShowRegister] = useState(false)
 
   return (
     <>
-    {showRegister && <RegisterModal onClose={() => setShowRegister(false)} />}
-    <section className={styles.hero}>
-      <div className={styles.glow} />
-      <div className={styles.glowRight} />
+      {showRegister && <RegisterModal onClose={() => setShowRegister(false)} />}
 
-      <div className={styles.content}>
-        <div className={styles.badge}>
-          <span className={styles.dot} />
-          Plataforma todo-en-uno para organizadores
+      <section className={styles.hero}>
+        <div className={styles.gridBg} />
+        <div className={styles.glowLeft} />
+        <div className={styles.glowRight} />
+
+        {/* ── Left: copy ── */}
+        <div className={styles.content}>
+          <div className={styles.badge}>
+            <span className={styles.dot} />
+            Plataforma todo-en-uno para organizadores de eventos
+          </div>
+
+          <h1 className={styles.title}>
+            Gestiona tus eventos<br />
+            <span className={styles.grad}>como un profesional.</span>
+          </h1>
+
+          <p className={styles.sub}>
+            CRM de clientes, proveedores, WhatsApp, calendario, tareas y cotizaciones
+            en un solo lugar. Olvídate del Excel.
+          </p>
+
+          <div className={styles.btns}>
+            <button className={styles.btnPrimary} onClick={() => setShowRegister(true)}>
+              Crear cuenta →
+            </button>
+            <button className={styles.btnSecondary}>
+              Ver demo en vivo
+            </button>
+          </div>
+
+          <div className={styles.stats}>
+            {STATS.map(s => (
+              <div key={s.value} className={styles.stat}>
+                <span className={styles.statVal}>{s.value}</span>
+                <span className={styles.statLabel}>{s.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <h1 className={styles.title}>
-          Organiza eventos
-          <br />
-          <span className={styles.titleGrad}>extraordinarios.</span>
-        </h1>
-
-        <p className={styles.sub}>
-          CRM de clientes, proveedores, calendario, ventas y WhatsApp
-          en un solo lugar. Deja de usar Excel y empieza a crecer.
-        </p>
-
-        <div className={styles.btns}>
-          <button className={styles.btnPrimary} onClick={() => setShowRegister(true)}>
-            Crear cuenta gratis
-          </button>
-          <button className={styles.btnSecondary}>
-            Ver demo en vivo →
-          </button>
-        </div>
-
-        <div className={styles.stats}>
-          {STATS.map(s => (
-            <div key={s.value} className={styles.stat}>
-              <span className={styles.statVal}>{s.value}</span>
-              <span className={styles.statLabel}>{s.label}</span>
+        {/* ── Right: 3D mockup ── */}
+        <div className={styles.mockupWrap}>
+          {NOTIFS.map((n, i) => (
+            <div
+              key={i}
+              className={`${styles.notif} ${styles['notif' + n.pos.charAt(0).toUpperCase() + n.pos.slice(1)]}`}
+              style={{ animationDelay: n.delay }}
+            >
+              <IcoDot color={n.color} />
+              <div className={styles.notifContent}>
+                <span className={styles.notifText}>{n.text}</span>
+                <span className={styles.notifSub}>{n.sub}</span>
+              </div>
             </div>
           ))}
-        </div>
-      </div>
 
-      <div className={styles.mockup}>
-        <div className={styles.mockupHeader}>
-          <div className={styles.mockupDots}>
-            <span /><span /><span />
-          </div>
-          <span className={styles.mockupTitle}>Dashboard — Junio 2026</span>
-        </div>
-
-        <div className={styles.mockupBody}>
-          <div className={styles.mockupSection}>
-            <p className={styles.mockupLabel}>Próximos eventos</p>
-            <div className={styles.eventList}>
-              {MOCK_EVENTS.map(e => (
-                <div key={e.name} className={styles.eventRow}>
-                  <div className={styles.eventDot} style={{ background: e.color }} />
-                  <div className={styles.eventInfo}>
-                    <span className={styles.eventName}>{e.name}</span>
-                    <span className={styles.eventDate}>{e.date}</span>
-                  </div>
-                  <span className={styles.eventBadge} style={{ color: e.color }}>
-                    {e.status === 'confirmed' ? 'Confirmado' : e.status === 'pending' ? 'Pendiente' : 'Cotización'}
-                  </span>
-                </div>
-              ))}
+          <div className={styles.device}>
+            <div className={styles.deviceBar}>
+              <div className={styles.dots}>
+                <span /><span /><span />
+              </div>
+              <span className={styles.deviceTitle}>Elixe — Detalle del evento</span>
+              <div className={styles.devicePill}>En vivo</div>
             </div>
-          </div>
-
-          <div className={styles.mockupRow2}>
-            <div className={styles.miniCard}>
-              <span className={styles.miniCardLabel}>Ingresos este mes</span>
-              <span className={styles.miniCardVal}>$284,500</span>
-              <span className={styles.miniCardTrend}>↑ 12% vs mes anterior</span>
-            </div>
-            <div className={styles.miniCard}>
-              <span className={styles.miniCardLabel}>Clientes activos</span>
-              <span className={styles.miniCardVal}>47</span>
-              <span className={styles.miniCardTrend}>+8 nuevos</span>
-            </div>
-          </div>
-
-          <div className={styles.barChart}>
-            <p className={styles.mockupLabel}>Ventas por semana</p>
-            <div className={styles.bars}>
-              {[40, 65, 45, 80, 55, 90, 70].map((h, i) => (
-                <div key={i} className={styles.barWrap}>
-                  <div className={styles.bar} style={{ height: `${h}%` }} />
-                </div>
-              ))}
-            </div>
+            <EventDetailMock />
           </div>
         </div>
-      </div>
-    </section>
+      </section>
     </>
   )
 }

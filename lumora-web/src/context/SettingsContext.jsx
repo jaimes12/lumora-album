@@ -40,7 +40,7 @@ export const t = {
 }
 
 export function SettingsProvider({ children }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light')
   const [lang, setLang]   = useState(() => localStorage.getItem('lang')  || 'es')
 
   useEffect(() => {

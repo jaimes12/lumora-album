@@ -1,12 +1,15 @@
+/* ═══════════════════════════════════════
+   FEATURES
+═══════════════════════════════════════ */
 .section {
-  padding: 120px 48px;
-  max-width: 1320px;
+  padding: 100px 72px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
 .header {
   text-align: center;
-  margin-bottom: 72px;
+  margin-bottom: 100px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -15,14 +18,14 @@
 
 .label {
   font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--accent-2);
 }
 
 .title {
-  font-size: clamp(30px, 3.5vw, 48px);
+  font-size: clamp(28px, 3.5vw, 50px);
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1.1;
@@ -31,66 +34,357 @@
 .sub {
   font-size: 17px;
   color: var(--text-muted);
-  max-width: 480px;
+  max-width: 500px;
   line-height: 1.65;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-
-.card {
-  background: var(--bg-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 28px 24px;
+/* ── Spotlights ── */
+.spotlights {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  transition: border-color 0.2s, transform 0.2s;
-  cursor: default;
+  gap: 120px;
 }
 
-.card:hover {
-  border-color: var(--border-hover);
-  transform: translateY(-3px);
+.spotlight {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 80px;
+  align-items: center;
 }
 
-.iconWrap {
-  width: 42px;
-  height: 42px;
-  border-radius: var(--radius-sm);
+.spotlight.reverse {
+  grid-template-columns: 1.15fr 1fr;
+}
+
+.spotlight.reverse .spotText { order: 2; }
+.spotlight.reverse .spotMock { order: 1; }
+
+/* Text */
+.spotText {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.spotLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--feat, var(--accent-2));
+}
+
+.spotTitle {
+  font-size: clamp(26px, 2.5vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+.spotDesc {
+  font-size: 16.5px;
+  color: var(--text-muted);
+  line-height: 1.72;
+}
+
+.bullets {
+  list-style: none;
+  padding: 0; margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bullet {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.bulletDot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Mock card */
+.spotMock { position: relative; }
+
+.spotMockCard {
+  background: var(--bg-1);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 32px 100px rgba(0,0,0,0.5);
+  transform: perspective(1000px) rotateY(-6deg);
+  transition: transform 0.5s cubic-bezier(0.23,1,0.32,1);
+}
+
+.spotlight.reverse .spotMockCard { transform: perspective(1000px) rotateY(6deg); }
+
+.spotMockCard:hover { transform: perspective(1000px) rotateY(0deg) !important; }
+
+.spotGlow {
+  position: absolute;
+  inset: -60px;
+  background: radial-gradient(ellipse at center, var(--feat, var(--accent)), transparent 55%);
+  opacity: 0.07;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ── Calendar mock ── */
+.calMock { padding: 20px; }
+
+.calTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.calMonth { font-size: 14px; font-weight: 700; }
+
+.calNav { display: flex; gap: 4px; }
+
+.calBtn {
+  background: var(--bg-2);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 7px;
+  padding: 3px 10px;
+  font-size: 15px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.calBtn:hover { background: rgba(255,255,255,0.07); }
+
+.calGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.calDayName {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text-muted);
+  padding: 4px 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.calCell {
+  min-height: 48px;
+  border-radius: 7px;
+  padding: 4px 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: background 0.15s;
+}
+
+.calCell:hover { background: rgba(255,255,255,0.04); }
+
+.calToday { background: rgba(43,111,212,0.12) !important; }
+
+.calNum {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: right;
+  padding-right: 4px;
+}
+
+.calToday .calNum { color: var(--accent-2); font-weight: 800; }
+
+.calEvt {
+  font-size: 8.5px;
+  font-weight: 600;
+  padding: 2px 4px;
+  border-radius: 4px;
+  border: 1px solid;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+/* ── Chat mock ── */
+.chatMock { display: flex; flex-direction: column; }
+
+.chatHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  background: var(--bg-2);
+}
+
+.chatAvatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #34d399, #22c55e);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.cardTitle {
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  color: white;
+  flex-shrink: 0;
 }
 
-.cardDesc {
-  font-size: 14px;
+.chatName { font-size: 14px; font-weight: 600; }
+
+.chatSub {
+  font-size: 11px;
+  color: #34d399;
+  margin-top: 1px;
+}
+
+.chatWaBadge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(34,197,94,0.15);
+  color: #34d399;
+  border: 1px solid rgba(34,197,94,0.25);
+  border-radius: 6px;
+  padding: 3px 8px;
+}
+
+.chatMsgs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.bubble {
+  max-width: 78%;
+  padding: 9px 13px;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bubbleIn {
+  align-self: flex-start;
+  background: var(--bg-2);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-bottom-left-radius: 4px;
+}
+
+.bubbleOut {
+  align-self: flex-end;
+  background: rgba(43,111,212,0.18);
+  border: 1px solid rgba(43,111,212,0.28);
+  border-bottom-right-radius: 4px;
+}
+
+.bubbleText { font-size: 12px; line-height: 1.5; }
+.bubbleOut .bubbleText { color: #93c5fd; }
+
+.bubbleTime {
+  font-size: 9.5px;
   color: var(--text-muted);
-  line-height: 1.6;
+  align-self: flex-end;
 }
 
-@media (max-width: 960px) {
-  .section { padding: 80px 24px; }
-  .grid { grid-template-columns: repeat(2, 1fr); }
+/* ── Tasks mock ── */
+.tasksMock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+}
+
+.tasksHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.tasksTitle { font-size: 14px; font-weight: 700; }
+
+.tasksBadge {
+  font-size: 11px;
+  color: #fb923c;
+  background: rgba(251,146,60,0.12);
+  border: 1px solid rgba(251,146,60,0.22);
+  border-radius: 100px;
+  padding: 3px 10px;
+  font-weight: 600;
+}
+
+.tasksRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-2);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 11px;
+  padding: 10px 13px;
+  transition: opacity 0.2s;
+}
+
+.tasksRowDone { opacity: 0.42; }
+.tasksRowDone .tasksText { text-decoration: line-through; }
+
+.tasksCheck {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  flex-shrink: 0;
+  color: white;
+}
+
+.tasksChecked { background: #34d399; border-color: #34d399; }
+
+.tasksText {
+  flex: 1;
+  font-size: 12.5px;
+  line-height: 1.3;
+}
+
+.tasksTag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 100px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .section { padding: 80px 32px; }
+  .spotlight, .spotlight.reverse {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+  .spotlight.reverse .spotText { order: 0; }
+  .spotlight.reverse .spotMock { order: 0; }
+  .spotMockCard,
+  .spotlight.reverse .spotMockCard { transform: none !important; }
 }
 
 @media (max-width: 768px) {
   .section { padding: 60px 16px; }
-  .header { margin-bottom: 48px; }
-  .title { font-size: clamp(24px, 6vw, 36px); }
-  .sub { font-size: 15px; }
-}
-
-@media (max-width: 520px) {
-  .grid { grid-template-columns: 1fr; }
+  .header { margin-bottom: 64px; }
+  .spotlights { gap: 72px; }
+  .spotTitle { font-size: clamp(22px, 5vw, 32px); }
+  .spotDesc { font-size: 15px; }
 }

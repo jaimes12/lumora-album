@@ -3,6 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { leadsApi, toFrontendMsg } from '../api/leadsApi'
 import { clientesApi } from '../api/clientesApi'
 import { eventosApi } from '../api/eventosApi'
+import { useAuth } from '../context/AuthContext'
+import PlanGate from '../components/PlanGate'
+import { canUse } from '../config/planConfig'
 import styles from './ChatPage.module.css'
 
 // ─── Phone input with country code toggle ────────────────────────────────────
@@ -927,6 +930,20 @@ export function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 export default function ChatPage() {
+  const { user } = useAuth()
+  if (!canUse(user?.plan, 'whatsapp')) {
+    return (
+      <PlanGate
+        feature="WhatsApp CRM"
+        requiredPlan="negocio"
+        description="El CRM de WhatsApp centraliza todos los mensajes de tus clientes en un solo lugar. Disponible a partir del Plan Negocio."
+      />
+    )
+  }
+  return <ChatPageInner />
+}
+
+function ChatPageInner() {
   const location = useLocation()
   const [stages,           saveStages]          = useStages()
   const [leads,            setLeads]            = useState([])

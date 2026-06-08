@@ -18,8 +18,25 @@ public interface IClientService
 
 public class ClientService(LumoraDbContext db) : IClientService
 {
+    private static readonly Dictionary<string, int> ClientLimits = new()
+    {
+        ["free"]    = 0,
+        ["solo"]    = 200,
+        ["negocio"] = int.MaxValue,
+        ["agencia"] = int.MaxValue,
+    };
+
     public async Task<ClientResponse> CreateAsync(string orgId, CreateClientRequest req)
     {
+        // Plan limit check
+        var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == orgId);
+        if (org is not null && ClientLimits.TryGetValue(org.Plan, out int limit) && limit != int.MaxValue)
+        {
+            var count = await db.Clients.CountAsync(c => c.OrgId == orgId);
+            if (count >= limit)
+                throw new InvalidOperationException($"PLAN_LIMIT:clientes:{limit}");
+        }
+
         var client = new Client
         {
             Id = Guid.NewGuid().ToString(),

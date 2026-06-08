@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clientesApi } from '../api/clientesApi'
 import { findOrCreateLeadByPhone } from '../api/leadsApi'
+import { useAuth } from '../context/AuthContext'
+import { PlanGateModal } from '../components/PlanGate'
+import { underLimit } from '../config/planConfig'
 import styles from './ClientesPage.module.css'
 
 function NuevoClienteModal({ onClose, onCreated }) {
@@ -71,13 +74,23 @@ const ETAPA_META = {
 
 export default function ClientesPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [clientes,     setClientes]     = useState([])
   const [loading,      setLoading]      = useState(true)
   const [search,       setSearch]       = useState('')
   const [selected,     setSelected]     = useState(null)
   const [filterEtapa,  setFilterEtapa]  = useState('todos')
   const [showCreate,   setShowCreate]   = useState(false)
+  const [showGate,     setShowGate]     = useState(false)
   const [openingChat,  setOpeningChat]  = useState(false)
+
+  const handleNewCliente = () => {
+    if (!underLimit(user?.plan, 'clientes', clientes.length)) {
+      setShowGate(true)
+      return
+    }
+    setShowCreate(true)
+  }
 
   const abrirChat = async (cliente) => {
     if (!cliente?.telefono) return
@@ -118,12 +131,20 @@ export default function ClientesPage() {
           onCreated={c => setClientes(prev => [c, ...prev])}
         />
       )}
+      {showGate && (
+        <PlanGateModal
+          feature="clientes"
+          requiredPlan="negocio"
+          description="El plan Solo permite hasta 200 clientes. Actualiza al Plan Negocio para tener clientes ilimitados."
+          onClose={() => setShowGate(false)}
+        />
+      )}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Clientes</h1>
           <p className={styles.sub}>{clientes.length} clientes en tu CRM</p>
         </div>
-        <button className={styles.btnPrimary} onClick={() => setShowCreate(true)}>
+        <button className={styles.btnPrimary} onClick={handleNewCliente}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>

@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { eventosApi } from '../api/eventosApi'
 import { clientesApi } from '../api/clientesApi'
 import { ESTADO_META, TIPO_EMOJI } from '../data/eventosData'
+import { useAuth } from '../context/AuthContext'
+import { PlanGateModal } from '../components/PlanGate'
+import { underLimit } from '../config/planConfig'
 import styles from './EventosPage.module.css'
 
 const TIPOS = ['Boda', 'XV Años', 'Corporativo', 'Graduación', 'Bautizo', 'Cumpleaños', 'Reunión', 'Otro']
@@ -264,12 +267,22 @@ function NuevoEventoModal({ onClose, onCreated }) {
 }
 
 export default function EventosPage() {
+  const { user } = useAuth()
   const [eventos,     setEventos]     = useState([])
   const [loading,     setLoading]     = useState(true)
   const [filter,      setFilter]      = useState('todos')
   const [search,      setSearch]      = useState('')
   const [showCreate,  setShowCreate]  = useState(false)
+  const [showGate,    setShowGate]    = useState(false)
   const navigate = useNavigate()
+
+  const handleNewEvento = () => {
+    if (!underLimit(user?.plan, 'eventos', eventos.length)) {
+      setShowGate(true)
+      return
+    }
+    setShowCreate(true)
+  }
 
   useEffect(() => {
     eventosApi.getAll()
@@ -304,13 +317,21 @@ export default function EventosPage() {
           onCreated={ev => setEventos(prev => [ev, ...prev])}
         />
       )}
+      {showGate && (
+        <PlanGateModal
+          feature="eventos"
+          requiredPlan="negocio"
+          description={`El plan Solo permite hasta 20 eventos activos. Actualiza al Plan Negocio para tener eventos ilimitados.`}
+          onClose={() => setShowGate(false)}
+        />
+      )}
 
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Eventos</h1>
           <p className={styles.sub}>{eventos.length} eventos · {counts.confirmed} confirmados</p>
         </div>
-        <button className={styles.btnPrimary} onClick={() => setShowCreate(true)}>
+        <button className={styles.btnPrimary} onClick={handleNewEvento}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>

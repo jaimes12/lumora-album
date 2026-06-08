@@ -44,20 +44,14 @@
 }
 
 .logoFull {
-  height: 36px;
+  height: 72px;
   width: auto;
   object-fit: contain;
-  filter: brightness(0) invert(1);
-  transition: filter 0.2s;
-}
-
-[data-theme="light"] .logoFull {
-  filter: none;
 }
 
 @media (max-width: 768px) {
   .logoMini { display: none; }
-  .logoFull  { display: block; height: 30px; }
+  .logoFull  { display: block; height: 54px; }
 }
 
 /* Nav */
@@ -134,12 +128,10 @@
 
 .appBarLogo {
   display: none;
-  height: 28px;
+  height: 38px;
   width: auto;
   object-fit: contain;
-  filter: brightness(0) invert(1);
 }
-[data-theme="light"] .appBarLogo { filter: none; }
 
 .appBarRight {
   display: flex;

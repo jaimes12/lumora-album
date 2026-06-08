@@ -34,8 +34,15 @@ public class ClientsController(IClientService clients) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateClientRequest req)
     {
-        var c = await clients.CreateAsync(OrgId, req);
-        return CreatedAtAction(nameof(GetById), new { id = c.Id }, c);
+        try
+        {
+            var c = await clients.CreateAsync(OrgId, req);
+            return CreatedAtAction(nameof(GetById), new { id = c.Id }, c);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.StartsWith("PLAN_LIMIT"))
+        {
+            return StatusCode(402, new { error = "plan_limit", message = ex.Message });
+        }
     }
 
     [HttpPatch("{id}")]
