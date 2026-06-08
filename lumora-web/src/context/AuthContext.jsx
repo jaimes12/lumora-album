@@ -43,6 +43,38 @@ export function AuthProvider({ children }) {
     })
   }
 
+  const updateProfile = async (name) => {
+    await api.patch('/api/auth/profile', { name })
+    setUser(prev => {
+      const next = { ...prev, name }
+      localStorage.setItem('lumora_user', JSON.stringify(next))
+      return next
+    })
+  }
+
+  const updateEmail = async (newEmail, password) => {
+    await api.patch('/api/auth/email', { newEmail, password })
+    setUser(prev => {
+      const next = { ...prev, email: newEmail }
+      localStorage.setItem('lumora_user', JSON.stringify(next))
+      return next
+    })
+  }
+
+  const updatePassword = async (oldPassword, newPassword) => {
+    await api.patch('/api/auth/password', { oldPassword, newPassword })
+  }
+
+  const updatePhoto = async (photoData) => {
+    const res = await api.patch('/api/auth/photo', { photoData })
+    setUser(prev => {
+      const next = { ...prev, photo: res.url }
+      localStorage.setItem('lumora_user', JSON.stringify(next))
+      return next
+    })
+    return res.url
+  }
+
   const logout = () => {
     localStorage.removeItem('lumora_token')
     localStorage.removeItem('lumora_user')
@@ -50,7 +82,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, updatePlan, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, updatePlan, updateProfile, updateEmail, updatePassword, updatePhoto, logout }}>
       {children}
     </AuthContext.Provider>
   )

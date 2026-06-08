@@ -16,9 +16,14 @@ public interface IAuthService
     Task<AuthResponse?> LoginAsync(LoginRequest req);
     Task<bool> EmailExistsAsync(string email);
     Task UpdatePlanAsync(string orgId, string plan);
+    Task<UserProfileResponse> GetProfileAsync(string userId);
+    Task UpdateProfileAsync(string userId, UpdateProfileRequest req);
+    Task UpdateEmailAsync(string userId, UpdateEmailRequest req);
+    Task UpdatePasswordAsync(string userId, UpdatePasswordRequest req);
+    Task<string> UpdatePhotoAsync(string userId, string photoBase64, IR2Service r2);
 }
 
-public class AuthService(LumoraDbContext db, IConfiguration config) : IAuthService
+public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r2) : IAuthService
 {
     public async Task<AuthResponse> RegisterAsync(RegisterRequest req)
     {
@@ -84,6 +89,52 @@ public class AuthService(LumoraDbContext db, IConfiguration config) : IAuthServi
     {
         var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == orgId);
         if (org is not null) { org.Plan = plan; await db.SaveChangesAsync(); }
+    }
+
+    public async Task<UserProfileResponse> GetProfileAsync(string userId)
+    {
+        var user = await db.Users.Include(u => u.Organization).FirstOrDefaultAsync(u => u.Id == userId)
+            ?? throw new InvalidOperationException("Usuario no encontrado");
+        return new UserProfileResponse(user.Id, user.Name, user.Email, user.ProfilePhoto, user.Organization?.Plan ?? "free");
+    }
+
+    public async Task UpdateProfileAsync(string userId, UpdateProfileRequest req)
+    {
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user is null) return;
+        user.Name = req.Name.Trim();
+        await db.SaveChangesAsync();
+    }
+
+    public async Task UpdateEmailAsync(string userId, UpdateEmailRequest req)
+    {
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user is null || user.PasswordHash is null) throw new InvalidOperationException("Usuario no encontrado");
+        if (!VerifyPassword(req.Password, user.PasswordHash)) throw new UnauthorizedAccessException("Contraseña incorrecta");
+        var exists = await db.Users.AnyAsync(u => u.Email == req.NewEmail && u.Id != userId);
+        if (exists) throw new InvalidOperationException("El correo ya está en uso");
+        user.Email = req.NewEmail;
+        await db.SaveChangesAsync();
+    }
+
+    public async Task UpdatePasswordAsync(string userId, UpdatePasswordRequest req)
+    {
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user is null || user.PasswordHash is null) throw new InvalidOperationException("Usuario no encontrado");
+        if (!VerifyPassword(req.OldPassword, user.PasswordHash)) throw new UnauthorizedAccessException("Contraseña actual incorrecta");
+        user.PasswordHash = HashPassword(req.NewPassword);
+        await db.SaveChangesAsync();
+    }
+
+    public async Task<string> UpdatePhotoAsync(string userId, string photoBase64, IR2Service r2)
+    {
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId)
+            ?? throw new InvalidOperationException("Usuario no encontrado");
+        var bytes = Convert.FromBase64String(photoBase64.Contains(',') ? photoBase64.Split(',')[1] : photoBase64);
+        var url = await r2.UploadAsync(bytes, "image/jpeg");
+        user.ProfilePhoto = url;
+        await db.SaveChangesAsync();
+        return url ?? string.Empty;
     }
 
     private static string HashPassword(string password)

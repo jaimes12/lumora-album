@@ -25,3 +25,9 @@ public record AuthResponse(
 
 public record CheckEmailRequest([Required, EmailAddress] string Email);
 public record UpdatePlanRequest([Required] string Plan);
+
+public record UpdateProfileRequest([Required, MinLength(2), MaxLength(100)] string Name);
+public record UpdateEmailRequest([Required, EmailAddress] string NewEmail, [Required] string Password);
+public record UpdatePasswordRequest([Required] string OldPassword, [Required, MinLength(8)] string NewPassword);
+public record UpdatePhotoRequest([Required] string PhotoData); // base64
+public record UserProfileResponse(string UserId, string Name, string Email, string? PhotoUrl, string Plan);

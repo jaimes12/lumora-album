@@ -416,6 +416,7 @@ try
         "ALTER TABLE users         ADD COLUMN password_hash varchar(500) NULL",
         "ALTER TABLE lead_messages ADD COLUMN media_url    varchar(500) NULL",
         "ALTER TABLE lead_messages ADD COLUMN media_type   varchar(100) NULL",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo varchar(500) NULL",
     };
 
     try

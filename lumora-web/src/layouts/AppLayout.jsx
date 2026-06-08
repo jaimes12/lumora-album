@@ -4,136 +4,10 @@ import { useSettings } from '../context/SettingsContext'
 import { useAuth } from '../context/AuthContext'
 import { whatsappApi } from '../api/whatsappApi'
 import { tasksApi } from '../api/tasksApi'
+import ProfileModal from '../components/ProfileModal'
 import styles from './AppLayout.module.css'
 import logoFull from '../assets/lumora-logo.png'
 import logoMini from '../assets/lumora-mini-logo.png'
-
-/* ── Tareas Float Widget ── */
-function TareasFloat() {
-  const [tasks,   setTasks]  = useState([])
-  const [input,   setInput]  = useState('')
-  const [open,    setOpen]   = useState(false)
-  const inputRef = useRef(null)
-
-  const load = useCallback(async () => {
-    try { setTasks(await tasksApi.getAll()) } catch {}
-  }, [])
-
-  useEffect(() => { load() }, [load])
-
-  useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 80)
-  }, [open])
-
-  const handleAdd = async (e) => {
-    e.preventDefault()
-    const text = input.trim()
-    if (!text) return
-    setInput('')
-    const optimistic = { id: `tmp_${Date.now()}`, text, completed: false, createdAt: new Date().toISOString() }
-    setTasks(prev => [optimistic, ...prev])
-    try {
-      const created = await tasksApi.create(text)
-      setTasks(prev => prev.map(t => t.id === optimistic.id ? created : t))
-    } catch {
-      setTasks(prev => prev.filter(t => t.id !== optimistic.id))
-    }
-  }
-
-  const handleToggle = async (id) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t))
-    try { await tasksApi.toggle(id) } catch { load() }
-  }
-
-  const handleDelete = async (id) => {
-    setTasks(prev => prev.filter(t => t.id !== id))
-    try { await tasksApi.delete(id) } catch { load() }
-  }
-
-  const pending = tasks.filter(t => !t.completed).length
-
-  return (
-    <div className={styles.tareasFloat}>
-      {/* Panel — aparece encima del botón */}
-      {open && (
-        <div className={styles.tareasPanel}>
-          <div className={styles.tareasPanelHeader}>
-            <div className={styles.tareasPanelTitle}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-              </svg>
-              <span>Tareas pendientes</span>
-              {pending > 0 && <span className={styles.tareasPanelBadge}>{pending}</span>}
-            </div>
-            <button className={styles.tareasPanelClose} onClick={() => setOpen(false)}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
-          </div>
-
-          {/* Task list */}
-          <ul className={styles.tareasList}>
-            {tasks.length === 0 && (
-              <li className={styles.tareasEmpty}>Sin tareas aún. ¡Agrega una!</li>
-            )}
-            {tasks.map(task => (
-              <li key={task.id} className={`${styles.tareasItem} ${task.completed ? styles.tareasItemDone : ''}`}>
-                <button
-                  className={`${styles.tareasCheck} ${task.completed ? styles.tareasCheckDone : ''}`}
-                  onClick={() => handleToggle(task.id)}
-                >
-                  {task.completed && (
-                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                  )}
-                </button>
-                <span className={styles.tareasText}>{task.text}</span>
-                <button className={styles.tareasDelete} onClick={() => handleDelete(task.id)}>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                </button>
-              </li>
-            ))}
-          </ul>
-
-          {/* Add form */}
-          <form className={styles.tareasForm} onSubmit={handleAdd}>
-            <input
-              ref={inputRef}
-              className={styles.tareasInput}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              placeholder="Agregar tarea…"
-              maxLength={200}
-            />
-            <button type="submit" className={styles.tareasAddBtn} disabled={!input.trim()}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* Burbuja flotante */}
-      <button className={`${styles.tareasBubble} ${open ? styles.tareasBubbleOpen : ''}`} onClick={() => setOpen(o => !o)} title="Tareas pendientes">
-        {open ? (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        ) : (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-          </svg>
-        )}
-        {!open && pending > 0 && <span className={styles.tareasBubbleBadge}>{pending}</span>}
-      </button>
-    </div>
-  )
-}
 
 const NAV_KEYS = [
   {
@@ -189,10 +63,8 @@ const WhatsAppIcon = () => (
 
 /* ── WhatsApp Connect Modal ── */
 function WhatsAppModal({ onClose, onConnect }) {
-  // state: loading | qr | ready | disconnected | error
   const [waState, setWaState] = useState('loading')
   const [qrCode,  setQrCode]  = useState(null)
-  const [error,   setError]   = useState('')
   const pollRef = useRef(null)
 
   const stopPolling = () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null } }
@@ -207,14 +79,13 @@ function WhatsAppModal({ onClose, onConnect }) {
         onConnect()
       }
     } catch {
-      // keep polling; server may be momentarily unreachable
+      // keep polling
     }
   }
 
   useEffect(() => {
-    // Kick off connection on the WA server then start polling
     whatsappApi.connect().catch(() => {})
-    poll() // immediate first check
+    poll()
     pollRef.current = setInterval(poll, 2500)
     return stopPolling
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -297,8 +168,6 @@ function PlanModal({ onClose }) {
   return (
     <div className={styles.planOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
       <div className={styles.planModal}>
-
-        {/* Header */}
         <div className={styles.planHeader}>
           <div className={styles.planHeaderLeft}>
             <div className={styles.planIconWrap}>
@@ -314,8 +183,6 @@ function PlanModal({ onClose }) {
         </div>
 
         <div className={styles.planBody}>
-
-          {/* Plan badge + price */}
           <div className={styles.planTop}>
             <div className={styles.planNameWrap}>
               <span className={styles.planBadge}>{PLAN.nombre}</span>
@@ -330,7 +197,6 @@ function PlanModal({ onClose }) {
             </div>
           </div>
 
-          {/* Usage bars */}
           <div className={styles.planUsage}>
             <div className={styles.planUsageRow}>
               <div className={styles.planUsageLabels}>
@@ -352,7 +218,6 @@ function PlanModal({ onClose }) {
             </div>
           </div>
 
-          {/* Features */}
           <div className={styles.planBodySection}>
             <p className={styles.planSectionTitle}>Incluido en tu plan</p>
             <ul className={styles.planFeatures}>
@@ -365,7 +230,6 @@ function PlanModal({ onClose }) {
             </ul>
           </div>
 
-          {/* Payment history */}
           <div className={styles.planBodySection}>
             <p className={styles.planSectionTitle}>Historial de pagos</p>
             <div className={styles.planHistorial}>
@@ -384,11 +248,9 @@ function PlanModal({ onClose }) {
             </div>
           </div>
 
-          {/* CTA */}
           <button className={styles.planUpgradeBtn}>
             Actualizar plan →
           </button>
-
         </div>
       </div>
     </div>
@@ -401,12 +263,25 @@ export default function AppLayout() {
   const { theme, lang, toggleTheme, toggleLang, i18n } = useSettings()
   const { user, logout } = useAuth()
   const isLocked = !user?.plan || user.plan === 'free'
+
+  // WhatsApp
   const [waConnected,        setWaConnected]        = useState(false)
   const [showWaModal,        setShowWaModal]        = useState(false)
+  const [confirmDisconnect,  setConfirmDisconnect]  = useState(false)
+
+  // Sidebar / layout
   const [sidebarOpen,        setSidebarOpen]        = useState(false)
   const [planOpen,           setPlanOpen]           = useState(false)
-  const [confirmDisconnect,  setConfirmDisconnect]  = useState(false)
   const [confirmLogout,      setConfirmLogout]      = useState(false)
+
+  // AppBar — Tasks
+  const [tareas,             setTareas]             = useState([])
+  const [tareasInput,        setTareasInput]        = useState('')
+  const [tareasOpen,         setTareasOpen]         = useState(false)
+
+  // AppBar — Profile
+  const [profileDropOpen,    setProfileDropOpen]    = useState(false)
+  const [showProfileModal,   setShowProfileModal]   = useState(false)
 
   // Restore WA connected state on mount
   useEffect(() => {
@@ -430,6 +305,60 @@ export default function AppLayout() {
     return () => { document.body.style.overflow = '' }
   }, [sidebarOpen])
 
+  // Load tasks
+  const loadTareas = useCallback(async () => {
+    try { setTareas(await tasksApi.getAll()) } catch {}
+  }, [])
+
+  useEffect(() => { loadTareas() }, [loadTareas])
+
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    if (!profileDropOpen) return
+    const close = (e) => {
+      if (!e.target.closest('[data-profile-wrap]')) setProfileDropOpen(false)
+    }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [profileDropOpen])
+
+  // Close tasks dropdown on outside click
+  useEffect(() => {
+    if (!tareasOpen) return
+    const close = (e) => {
+      if (!e.target.closest('[data-tareas-wrap]')) setTareasOpen(false)
+    }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [tareasOpen])
+
+  const tareasPending = tareas.filter(t => !t.completed).length
+
+  const tareasAdd = async (e) => {
+    e.preventDefault()
+    const text = tareasInput.trim()
+    if (!text) return
+    setTareasInput('')
+    const opt = { id: `tmp_${Date.now()}`, text, completed: false }
+    setTareas(prev => [opt, ...prev])
+    try {
+      const created = await tasksApi.create(text)
+      setTareas(prev => prev.map(t => t.id === opt.id ? created : t))
+    } catch {
+      setTareas(prev => prev.filter(t => t.id !== opt.id))
+    }
+  }
+
+  const tareasToggle = async (id) => {
+    setTareas(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t))
+    try { await tasksApi.toggle(id) } catch { loadTareas() }
+  }
+
+  const tareasDelete = async (id) => {
+    setTareas(prev => prev.filter(t => t.id !== id))
+    try { await tasksApi.delete(id) } catch { loadTareas() }
+  }
+
   const handleConnect = () => {
     setWaConnected(true)
   }
@@ -449,20 +378,7 @@ export default function AppLayout() {
         />
       )}
       {planOpen && <PlanModal onClose={() => setPlanOpen(false)} />}
-      <TareasFloat />
-
-      {/* Mobile top bar */}
-      <div className={styles.topBar}>
-        <button className={styles.hamburger} onClick={() => setSidebarOpen(true)} aria-label="Abrir menú">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="3" y1="6" x2="21" y2="6"/>
-            <line x1="3" y1="12" x2="21" y2="12"/>
-            <line x1="3" y1="18" x2="21" y2="18"/>
-          </svg>
-        </button>
-        <img src={logoFull} alt="Lumora" className={styles.topBarLogo} />
-        <div style={{width: 40}} />
-      </div>
+      {showProfileModal && <ProfileModal onClose={() => setShowProfileModal(false)} />}
 
       {/* Overlay */}
       {sidebarOpen && (
@@ -509,8 +425,6 @@ export default function AppLayout() {
               )
             })}
           </nav>
-
-          {/* ── Tareas ── */}
 
           {/* ── WhatsApp section ── */}
           <div className={styles.waSection}>
@@ -633,6 +547,104 @@ export default function AppLayout() {
       </aside>
 
       <main className={styles.main}>
+        {/* ── AppBar ── */}
+        <div className={styles.appBar}>
+          {/* Mobile: hamburger */}
+          <button className={styles.appBarHamburger} onClick={() => setSidebarOpen(true)} aria-label="Menú">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+
+          {/* Mobile logo */}
+          <img src={logoFull} alt="Lumora" className={styles.appBarLogo} />
+
+          {/* Right actions */}
+          <div className={styles.appBarRight}>
+            {/* Tasks button */}
+            <div className={styles.appBarTasksWrap} data-tareas-wrap="">
+              <button
+                className={`${styles.appBarIconBtn} ${tareasOpen ? styles.appBarIconBtnActive : ''}`}
+                onClick={() => setTareasOpen(o => !o)}
+                title="Tareas pendientes"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                </svg>
+                {tareasPending > 0 && <span className={styles.appBarBadge}>{tareasPending}</span>}
+              </button>
+
+              {/* Tasks dropdown */}
+              {tareasOpen && (
+                <div className={styles.tareasDropdown}>
+                  <div className={styles.tareasDropHeader}>
+                    <span className={styles.tareasDropTitle}>Tareas pendientes</span>
+                    {tareasPending > 0 && <span className={styles.tareasPanelBadge}>{tareasPending}</span>}
+                    <button className={styles.tareasPanelClose} onClick={() => setTareasOpen(false)}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                  <ul className={styles.tareasList}>
+                    {tareas.length === 0 && <li className={styles.tareasEmpty}>Sin tareas. ¡Agrega una!</li>}
+                    {tareas.map(task => (
+                      <li key={task.id} className={`${styles.tareasItem} ${task.completed ? styles.tareasItemDone : ''}`}>
+                        <button className={`${styles.tareasCheck} ${task.completed ? styles.tareasCheckDone : ''}`} onClick={() => tareasToggle(task.id)}>
+                          {task.completed && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                        </button>
+                        <span className={styles.tareasText}>{task.text}</span>
+                        <button className={styles.tareasDelete} onClick={() => tareasDelete(task.id)}>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  <form className={styles.tareasForm} onSubmit={tareasAdd}>
+                    <input className={styles.tareasInput} value={tareasInput} onChange={e => setTareasInput(e.target.value)} placeholder="Nueva tarea…" maxLength={200} autoFocus />
+                    <button type="submit" className={styles.tareasAddBtn} disabled={!tareasInput.trim()}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
+
+            {/* Profile button */}
+            <div className={styles.appBarProfileWrap} data-profile-wrap="">
+              <button className={styles.appBarProfileBtn} onClick={() => setProfileDropOpen(o => !o)}>
+                {user?.photo
+                  ? <img src={user.photo} alt="" className={styles.appBarAvatar} />
+                  : <div className={styles.appBarAvatarText}>{(user?.name || 'U')[0].toUpperCase()}</div>
+                }
+              </button>
+
+              {/* Profile dropdown */}
+              {profileDropOpen && (
+                <div className={styles.profileDrop}>
+                  <div className={styles.profileDropTop}>
+                    {user?.photo
+                      ? <img src={user.photo} alt="" className={styles.profileDropAvatar} />
+                      : <div className={styles.profileDropAvatarText}>{(user?.name || 'U')[0].toUpperCase()}</div>
+                    }
+                    <div>
+                      <p className={styles.profileDropName}>{user?.name}</p>
+                      <p className={styles.profileDropEmail}>{user?.email}</p>
+                    </div>
+                  </div>
+                  <div className={styles.profileDropDivider} />
+                  <button className={styles.profileDropItem} onClick={() => { setProfileDropOpen(false); setShowProfileModal(true) }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Mi perfil
+                  </button>
+                  <button className={styles.profileDropItem} onClick={() => { setProfileDropOpen(false); setConfirmLogout(true) }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Cerrar sesión
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className={styles.mainInner}>
           <Outlet />
         </div>

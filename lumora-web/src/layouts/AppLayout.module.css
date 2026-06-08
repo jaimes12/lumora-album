@@ -105,91 +105,120 @@
 
 .navLabel { white-space: nowrap; }
 
-/* ── Tareas floating widget ── */
-.tareasFloat {
-  position: fixed;
-  bottom: 24px;
-  left: 256px;
-  z-index: 500;
+/* ── AppBar ── */
+.appBar {
+  position: sticky;
+  top: 0;
+  z-index: 90;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 24px;
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
 }
 
-@media (max-width: 768px) {
-  .tareasFloat { left: 16px; bottom: 80px; }
-}
-
-/* Burbuja flotante */
-.tareasBubble {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--accent);
+.appBarHamburger {
+  display: none;
+  background: none;
   border: none;
-  color: #fff;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  align-items: center;
+}
+.appBarHamburger:hover { color: var(--text); background: var(--bg-2); }
+
+.appBarLogo {
+  display: none;
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+[data-theme="light"] .appBarLogo { filter: none; }
+
+.appBarRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.appBarTasksWrap {
+  position: relative;
+}
+
+.appBarIconBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(43,111,212,0.45);
-  transition: all 0.2s;
   position: relative;
-  flex-shrink: 0;
+  transition: all 0.15s;
 }
-.tareasBubble:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(43,111,212,0.55); }
-.tareasBubbleOpen { background: var(--bg-2); color: var(--text-muted); box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+.appBarIconBtn:hover { color: var(--text); border-color: var(--border-hover); }
+.appBarIconBtnActive { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
 
-.tareasBubbleBadge {
+.appBarBadge {
   position: absolute;
-  top: -3px;
-  right: -3px;
+  top: -4px;
+  right: -4px;
   background: #ef4444;
   color: #fff;
   font-size: 9px;
   font-weight: 800;
-  min-width: 17px;
-  height: 17px;
-  border-radius: 10px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 4px;
-  border: 2px solid var(--bg);
+  padding: 0 3px;
+  border: 2px solid var(--bg-1);
 }
 
-/* Panel que aparece sobre la burbuja */
-.tareasPanel {
+/* Tasks dropdown */
+.tareasDropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 290px;
   background: var(--bg-1);
   border: 1px solid var(--border);
   border-radius: 14px;
-  width: 280px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25);
   overflow: hidden;
-  animation: tareasPop 0.18s cubic-bezier(0.34,1.56,0.64,1);
-  order: -1;
+  animation: dropIn 0.16s cubic-bezier(0.34,1.56,0.64,1);
+  z-index: 200;
 }
-@keyframes tareasPop {
-  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
   to   { opacity: 1; transform: none; }
 }
 
-.tareasPanelHeader {
+.tareasDropHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   padding: 12px 14px 10px;
   border-bottom: 1px solid var(--border);
 }
 
-.tareasPanelTitle {
-  display: flex;
-  align-items: center;
-  gap: 7px;
+.tareasDropTitle {
   font-size: 13px;
   font-weight: 700;
   color: var(--text);
+  flex: 1;
 }
 
 .tareasPanelBadge {
@@ -215,6 +244,118 @@
   transition: color 0.15s;
 }
 .tareasPanelClose:hover { color: var(--text); }
+
+/* Profile */
+.appBarProfileWrap { position: relative; }
+
+.appBarProfileBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s;
+}
+.appBarProfileBtn:hover { border-color: var(--accent); }
+
+.appBarAvatar { width: 100%; height: 100%; object-fit: cover; }
+.appBarAvatarText { font-size: 14px; font-weight: 700; color: #fff; }
+
+/* Profile dropdown */
+.profileDrop {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 220px;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+  overflow: hidden;
+  animation: dropIn 0.16s cubic-bezier(0.34,1.56,0.64,1);
+  z-index: 200;
+  padding-bottom: 6px;
+}
+
+.profileDropTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+}
+
+.profileDropAvatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.profileDropAvatarText {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.profileDropName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 130px;
+}
+
+.profileDropEmail {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 130px;
+}
+
+.profileDropDivider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.profileDropItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 14px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.12s;
+  font-family: inherit;
+}
+.profileDropItem:hover { background: var(--bg-2); color: var(--text); }
 
 .tareasList {
   list-style: none;
@@ -1245,15 +1386,18 @@
   flex: 1;
   min-height: 100vh;
   background: var(--bg);
+  display: flex;
+  flex-direction: column;
   transition: background 0.2s;
 }
 
 .mainInner {
-  padding: 32px 36px;
+  padding: 28px 36px;
   max-width: 1400px;
+  flex: 1;
 }
 
-/* ── Mobile top bar ── */
+/* ── Mobile top bar (legacy — hidden, replaced by AppBar) ── */
 .topBar {
   display: none;
 }
@@ -1297,47 +1441,6 @@
     overflow: hidden;
   }
 
-  /* Top bar — static in the column flow (not fixed, no padding-top hack needed) */
-  .topBar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-    height: 60px;
-    padding: 0 16px;
-    background: var(--bg-1);
-    border-bottom: 1px solid var(--border);
-    z-index: 200;
-    position: relative;
-  }
-
-  .hamburger {
-    background: none;
-    border: none;
-    color: var(--text);
-    cursor: pointer;
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    transition: background 0.15s;
-    flex-shrink: 0;
-  }
-  .hamburger:hover { background: var(--bg-2); }
-
-  .topBarLogo {
-    height: 30px;
-    width: auto;
-    object-fit: contain;
-    filter: brightness(0) invert(1);
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-  [data-theme="light"] .topBarLogo { filter: none; }
-
   /* Show overlay */
   .overlay { display: block; }
 
@@ -1357,13 +1460,16 @@
   /* Show close button in sidebar */
   .sidebarClose { display: flex; }
 
+  /* AppBar — show hamburger + logo on mobile */
+  .appBarHamburger { display: flex; }
+  .appBarLogo { display: block; }
+
   /* Main fills remaining space and scrolls */
   .main {
     margin-left: 0;
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    min-height: 0;
   }
 
   .mainInner {

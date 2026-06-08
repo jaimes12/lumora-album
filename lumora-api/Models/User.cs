@@ -29,4 +29,7 @@ public class User
     public string? PasswordHash { get; set; }
 
     public Organization? Organization { get; set; }
+
+    [Column("profile_photo")]
+    public string? ProfilePhoto { get; set; }
 }
