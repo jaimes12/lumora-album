@@ -8,11 +8,11 @@ import styles from './AppLayout.module.css'
 import logoFull from '../assets/lumora-logo.png'
 import logoMini from '../assets/lumora-mini-logo.png'
 
-/* ── Tareas Sidebar Widget ── */
-function TareasSidebar() {
+/* ── Tareas Float Widget ── */
+function TareasFloat() {
   const [tasks,   setTasks]  = useState([])
   const [input,   setInput]  = useState('')
-  const [open,    setOpen]   = useState(true)
+  const [open,    setOpen]   = useState(false)
   const inputRef = useRef(null)
 
   const load = useCallback(async () => {
@@ -20,6 +20,10 @@ function TareasSidebar() {
   }, [])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 80)
+  }, [open])
 
   const handleAdd = async (e) => {
     e.preventDefault()
@@ -49,31 +53,60 @@ function TareasSidebar() {
   const pending = tasks.filter(t => !t.completed).length
 
   return (
-    <div className={styles.tareasSection}>
-      <button className={styles.tareasHeader} onClick={() => setOpen(o => !o)}>
-        <div className={styles.tareasHeaderLeft}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-          </svg>
-          <span className={styles.tareasLabel}>Tareas</span>
-          {pending > 0 && <span className={styles.tareasBadge}>{pending}</span>}
-        </div>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-          style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
-          <polyline points="6 9 12 15 18 9"/>
-        </svg>
-      </button>
-
+    <div className={styles.tareasFloat}>
+      {/* Panel — aparece encima del botón */}
       {open && (
-        <div className={styles.tareasBody}>
-          {/* Add input */}
+        <div className={styles.tareasPanel}>
+          <div className={styles.tareasPanelHeader}>
+            <div className={styles.tareasPanelTitle}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+              </svg>
+              <span>Tareas pendientes</span>
+              {pending > 0 && <span className={styles.tareasPanelBadge}>{pending}</span>}
+            </div>
+            <button className={styles.tareasPanelClose} onClick={() => setOpen(false)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          {/* Task list */}
+          <ul className={styles.tareasList}>
+            {tasks.length === 0 && (
+              <li className={styles.tareasEmpty}>Sin tareas aún. ¡Agrega una!</li>
+            )}
+            {tasks.map(task => (
+              <li key={task.id} className={`${styles.tareasItem} ${task.completed ? styles.tareasItemDone : ''}`}>
+                <button
+                  className={`${styles.tareasCheck} ${task.completed ? styles.tareasCheckDone : ''}`}
+                  onClick={() => handleToggle(task.id)}
+                >
+                  {task.completed && (
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  )}
+                </button>
+                <span className={styles.tareasText}>{task.text}</span>
+                <button className={styles.tareasDelete} onClick={() => handleDelete(task.id)}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </li>
+            ))}
+          </ul>
+
+          {/* Add form */}
           <form className={styles.tareasForm} onSubmit={handleAdd}>
             <input
               ref={inputRef}
               className={styles.tareasInput}
               value={input}
               onChange={e => setInput(e.target.value)}
-              placeholder="Nueva tarea…"
+              placeholder="Agregar tarea…"
               maxLength={200}
             />
             <button type="submit" className={styles.tareasAddBtn} disabled={!input.trim()}>
@@ -82,37 +115,22 @@ function TareasSidebar() {
               </svg>
             </button>
           </form>
-
-          {/* Task list */}
-          {tasks.length === 0 ? (
-            <p className={styles.tareasEmpty}>Sin tareas pendientes</p>
-          ) : (
-            <ul className={styles.tareasList}>
-              {tasks.map(task => (
-                <li key={task.id} className={`${styles.tareasItem} ${task.completed ? styles.tareasItemDone : ''}`}>
-                  <button
-                    className={`${styles.tareasCheck} ${task.completed ? styles.tareasCheckDone : ''}`}
-                    onClick={() => handleToggle(task.id)}
-                    title={task.completed ? 'Marcar pendiente' : 'Marcar completada'}
-                  >
-                    {task.completed && (
-                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12"/>
-                      </svg>
-                    )}
-                  </button>
-                  <span className={styles.tareasText}>{task.text}</span>
-                  <button className={styles.tareasDelete} onClick={() => handleDelete(task.id)} title="Eliminar">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
       )}
+
+      {/* Burbuja flotante */}
+      <button className={`${styles.tareasBubble} ${open ? styles.tareasBubbleOpen : ''}`} onClick={() => setOpen(o => !o)} title="Tareas pendientes">
+        {open ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        ) : (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+        )}
+        {!open && pending > 0 && <span className={styles.tareasBubbleBadge}>{pending}</span>}
+      </button>
     </div>
   )
 }
@@ -431,6 +449,7 @@ export default function AppLayout() {
         />
       )}
       {planOpen && <PlanModal onClose={() => setPlanOpen(false)} />}
+      <TareasFloat />
 
       {/* Mobile top bar */}
       <div className={styles.topBar}>
@@ -492,7 +511,6 @@ export default function AppLayout() {
           </nav>
 
           {/* ── Tareas ── */}
-          <TareasSidebar />
 
           {/* ── WhatsApp section ── */}
           <div className={styles.waSection}>
