@@ -1,168 +1,170 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  align-items: center;
-  padding-bottom: 40px;
+  gap: 32px;
+  max-width: 960px;
 }
 
-.header {
-  text-align: center;
+.pageHeader { display: flex; align-items: flex-start; justify-content: space-between; }
+.title    { font-size: 22px; font-weight: 800; color: var(--text); margin: 0 0 2px; }
+.subtitle { font-size: 13px; color: var(--text-muted); margin: 0; }
+
+/* ── Section ── */
+.section { display: flex; flex-direction: column; gap: 16px; }
+.sectionTitle {
+  font-size: 15px; font-weight: 700; color: var(--text);
+  margin: 0; letter-spacing: -0.01em;
 }
 
-.title {
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+/* ── Current plan card ── */
+.currentCard {
+  display: flex; gap: 32px; flex-wrap: wrap;
+  background: var(--bg-1); border: 1.5px solid var(--plan-color, var(--accent));
+  border-radius: 18px; padding: 28px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
 }
 
-.sub {
-  font-size: 14px;
-  color: var(--text-muted);
-  margin-top: 6px;
+.currentCardLeft {
+  display: flex; flex-direction: column; gap: 10px;
+  min-width: 180px;
 }
 
-.grid {
+.currentPlanBadge {
+  display: inline-block;
+  color: #fff; font-size: 13px; font-weight: 800;
+  padding: 4px 14px; border-radius: 20px;
+  width: fit-content;
+}
+
+.currentPlanDesc { font-size: 13px; color: var(--text-muted); }
+
+.currentPriceRow { display: flex; align-items: baseline; gap: 2px; margin-top: 4px; }
+.currentPrice  { font-size: 32px; font-weight: 900; color: var(--text); letter-spacing: -0.04em; }
+.currentPeriod { font-size: 13px; color: var(--text-muted); }
+
+.currentNextBill {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-muted);
+  background: var(--bg-2); border-radius: 8px; padding: 6px 10px;
+  width: fit-content; margin-top: 4px;
+}
+.currentNextBill strong { color: var(--text); }
+
+.currentCardRight {
+  flex: 1; display: flex; flex-direction: column; gap: 16px; min-width: 220px;
+}
+
+.currentFeatures { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 7px; }
+.currentFeature  { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
+
+.btnChangePlan {
+  align-self: flex-start;
+  padding: 9px 20px; border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: none; color: var(--text);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  transition: all 0.15s;
+}
+.btnChangePlan:hover { border-color: var(--accent); color: var(--accent); }
+
+.noPlan {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
+  background: var(--bg-1); border: 1px dashed var(--border);
+  border-radius: 14px; padding: 28px;
+  font-size: 14px; color: var(--text-muted);
+}
+
+/* ── Plans grid ── */
+.plansGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px;
-  width: 100%;
-  max-width: 900px;
-  align-items: start;
 }
 
-.card {
-  background: var(--bg-1);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  position: relative;
-  transition: all 0.2s;
+.planCard {
+  background: var(--bg-1); border: 1.5px solid var(--border);
+  border-radius: 16px; padding: 22px;
+  display: flex; flex-direction: column; gap: 10px;
+  position: relative; transition: box-shadow 0.15s, border-color 0.15s;
 }
-.card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
-}
-
-.cardPopular {
-  border-color: var(--plan-color, #C9A255);
-  box-shadow: 0 0 0 1px var(--plan-color, #C9A255);
-}
-
-.cardActive {
-  border-color: var(--accent);
-  background: var(--accent-dim);
-}
+.planCard:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+.planCardActive { border-color: var(--accent); background: var(--bg-2); }
+.planCardPopular { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
 
 .popularBadge {
-  position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 4px 14px;
-  border-radius: 20px;
-  white-space: nowrap;
+  position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+  color: #fff; font-size: 11px; font-weight: 700;
+  padding: 3px 12px; border-radius: 20px; white-space: nowrap;
 }
-
 .activeBadge {
-  position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--accent);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 4px 14px;
-  border-radius: 20px;
-  white-space: nowrap;
+  position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+  background: var(--accent); color: #fff;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 12px; border-radius: 20px; white-space: nowrap;
 }
 
-.cardTop { display: flex; flex-direction: column; gap: 6px; }
+.planCardName { font-size: 18px; font-weight: 800; }
+.planCardDesc { font-size: 12px; color: var(--text-muted); margin: 0; }
 
-.planName {
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
+.planCardPrice { display: flex; align-items: baseline; gap: 2px; }
+.planCardPriceNum { font-size: 26px; font-weight: 900; color: var(--text); letter-spacing: -0.04em; }
+.planCardPricePer { font-size: 12px; color: var(--text-muted); }
 
-.planDesc {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin: 0;
-}
-
-.priceRow {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-  margin-top: 4px;
-}
-
-.price {
-  font-size: 32px;
-  font-weight: 800;
-  color: var(--text);
-  letter-spacing: -1px;
-  line-height: 1;
-}
-
-.period {
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-.features {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex: 1;
-}
-
-.feature {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--text);
-}
-
-.checkIcon {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
+.planCardFeatures { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.planCardFeature  { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-muted); }
 
 .btnSelect {
-  width: 100%;
-  color: #fff;
-  border: none;
-  border-radius: 11px;
-  padding: 13px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
+  width: 100%; padding: 10px;
+  border-radius: 10px; border: none;
+  color: #fff; font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  transition: opacity 0.15s;
+  margin-top: 6px;
 }
-.btnSelect:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
-.btnSelect:disabled { cursor: default; }
+.btnSelect:hover:not(:disabled) { opacity: 0.87; }
+.btnSelect:disabled { cursor: not-allowed; }
 .btnSelectActive {
   background: var(--bg-2) !important;
+  border: 1.5px solid var(--accent);
   color: var(--accent) !important;
-  border: 1px solid var(--accent);
 }
 
-.note {
-  font-size: 12px;
-  color: var(--text-muted);
-  text-align: center;
+.note { font-size: 12px; color: var(--text-muted); text-align: center; margin: 0; }
+
+/* ── Historial ── */
+.historialTable {
+  background: var(--bg-1); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+}
+
+.historialHeader {
+  display: grid; grid-template-columns: 1fr 1.5fr 1fr 1fr;
+  padding: 10px 20px;
+  background: var(--bg-2); border-bottom: 1px solid var(--border);
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+
+.historialRow {
+  display: grid; grid-template-columns: 1fr 1.5fr 1fr 1fr;
+  padding: 13px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px; align-items: center;
+  transition: background 0.12s;
+}
+.historialRow:last-child { border-bottom: none; }
+.historialRow:hover { background: var(--bg-2); }
+
+.histFecha   { color: var(--text); font-weight: 500; }
+.histMetodo  { color: var(--text-muted); font-size: 12px; }
+.histMonto   { color: var(--text); font-weight: 700; }
+.histEstado  { display: flex; align-items: center; gap: 6px; color: #22c55e; font-size: 12px; font-weight: 600; }
+.estadoDot   { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
+
+@media (max-width: 600px) {
+  .currentCard { flex-direction: column; gap: 20px; }
+  .historialHeader,
+  .historialRow { grid-template-columns: 1fr 1fr; }
+  .histMetodo { display: none; }
 }
