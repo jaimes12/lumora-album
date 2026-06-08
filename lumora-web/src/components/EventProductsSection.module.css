@@ -1,0 +1,135 @@
+.section { display: flex; flex-direction: column; gap: 10px; }
+
+.sectionHeader {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.sectionTitle { font-size: 14px; font-weight: 700; color: var(--text); }
+
+.btnAdd {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 8px; padding: 6px 12px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: inherit; transition: opacity 0.15s;
+}
+.btnAdd:hover { opacity: 0.85; }
+
+.empty { font-size: 13px; color: var(--text-muted); margin: 0; }
+.linkBtn { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 13px; text-decoration: underline; font-family: inherit; padding: 0; }
+
+.itemsList { display: flex; flex-direction: column; gap: 6px; }
+
+.item {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+  background: var(--bg-2); border-radius: 10px; padding: 10px 12px;
+}
+
+.itemInfo { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.itemName { font-size: 13px; font-weight: 600; color: var(--text); }
+.itemDesc { font-size: 11px; color: var(--text-muted); }
+.itemNotes { font-size: 11px; color: var(--text-muted); font-style: italic; }
+
+.itemRight { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+.itemPricing { display: flex; align-items: center; gap: 5px; }
+.itemQty { font-size: 11px; color: var(--text-muted); }
+.itemPrice { font-size: 11px; color: var(--text-muted); }
+.itemTotal { font-size: 13px; font-weight: 700; color: var(--accent); min-width: 60px; text-align: right; }
+
+.btnDel {
+  width: 24px; height: 24px; border-radius: 6px;
+  border: none; background: none; color: var(--text-muted);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s;
+}
+.btnDel:hover { background: #fee2e2; color: #ef4444; }
+
+.totalRow {
+  display: flex; justify-content: space-between; align-items: center;
+  border-top: 1px solid var(--border); padding-top: 10px; margin-top: 2px;
+  font-size: 13px; color: var(--text-muted); font-weight: 500;
+}
+.totalAmt { font-size: 16px; font-weight: 800; color: var(--accent); }
+
+/* Modal */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 300; padding: 16px;
+}
+.modal {
+  background: var(--bg-1); border: 1px solid var(--border);
+  border-radius: 18px; width: 100%; max-width: 460px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  max-height: 90vh; overflow-y: auto;
+}
+.modalHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 0; position: sticky; top: 0;
+  background: var(--bg-1); z-index: 1;
+}
+.modalHeader h3 { font-size: 16px; font-weight: 700; color: var(--text); margin: 0; }
+.modalClose {
+  width: 30px; height: 30px; border-radius: 8px; border: none;
+  background: var(--bg-2); color: var(--text-muted); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.modeToggle {
+  display: flex; border-bottom: 1px solid var(--border);
+  margin: 0 24px; padding-top: 14px; gap: 0;
+}
+.modeBtn {
+  flex: 1; padding: 8px 0; background: none; border: none;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  font-size: 13px; font-weight: 500; color: var(--text-muted);
+  cursor: pointer; font-family: inherit; transition: all 0.15s;
+}
+.modeBtn:hover { color: var(--text); }
+.modeBtnActive { color: var(--accent); border-bottom-color: var(--accent); font-weight: 700; }
+
+.modalBody { padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 12px; }
+
+.catalogList { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+.catalogItem {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 12px; border-radius: 9px; border: 1.5px solid var(--border);
+  cursor: pointer; transition: all 0.12s; gap: 8px;
+}
+.catalogItem:hover { border-color: var(--accent); background: var(--bg-2); }
+.catalogItemSelected { border-color: var(--accent); background: var(--accent-dim, rgba(7,53,121,0.07)); }
+.catalogItemInfo { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.catalogItemName { font-size: 13px; font-weight: 600; color: var(--text); }
+.catalogItemDesc { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.catalogItemPrice { font-size: 13px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.catalogItemUnit { font-size: 10px; font-weight: 400; color: var(--text-muted); }
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.field input {
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: 9px;
+  padding: 8px 12px; font-size: 13px; color: var(--text); font-family: inherit;
+}
+.field input:focus { outline: none; border-color: var(--accent); }
+.fieldRow { display: flex; gap: 10px; }
+.fieldRow .field { flex: 1; }
+.subtotal { font-size: 18px; font-weight: 800; color: var(--accent); padding: 6px 0; }
+
+.noCatalog { font-size: 13px; color: var(--text-muted); text-align: center; padding: 16px; margin: 0; }
+.noCatalog a { color: var(--accent); }
+
+.error { background: #fee2e2; color: #ef4444; border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+
+.modalActions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+.btnCancel {
+  padding: 8px 16px; border-radius: 9px; border: 1px solid var(--border);
+  background: none; color: var(--text-muted); font-size: 13px; font-weight: 500;
+  cursor: pointer; font-family: inherit;
+}
+.btnSave {
+  padding: 8px 18px; border-radius: 9px; border: none;
+  background: var(--accent); color: #fff; font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+}
+.btnSave:disabled { opacity: 0.5; cursor: not-allowed; }

@@ -63,6 +63,7 @@ builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<ILeadService, LeadService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 
 // Auth
 var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "lumora-dev-secret-key-change-in-production-32chars";
@@ -417,6 +418,33 @@ try
         "ALTER TABLE lead_messages ADD COLUMN media_url    varchar(500) NULL",
         "ALTER TABLE lead_messages ADD COLUMN media_type   varchar(100) NULL",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo varchar(500) NULL",
+
+        @"CREATE TABLE IF NOT EXISTS `org_products` (
+            `id`          varchar(255) NOT NULL,
+            `org_id`      varchar(255) NOT NULL,
+            `name`        varchar(500) NOT NULL,
+            `description` varchar(1000) NULL,
+            `price`       decimal(18,2) NOT NULL DEFAULT 0,
+            `unit`        varchar(100) NOT NULL DEFAULT 'pieza',
+            `category`    varchar(100) NOT NULL DEFAULT 'servicio',
+            `active`      tinyint(1) NOT NULL DEFAULT 1,
+            `created_at`  datetime(6) NOT NULL,
+            PRIMARY KEY (`id`)
+        ) CHARACTER SET utf8mb4",
+
+        @"CREATE TABLE IF NOT EXISTS `event_products` (
+            `id`          varchar(255) NOT NULL,
+            `event_id`    varchar(255) NOT NULL,
+            `org_id`      varchar(255) NOT NULL,
+            `product_id`  varchar(255) NULL,
+            `name`        varchar(500) NOT NULL,
+            `description` varchar(1000) NULL,
+            `qty`         int NOT NULL DEFAULT 1,
+            `unit_price`  decimal(18,2) NOT NULL DEFAULT 0,
+            `notes`       varchar(1000) NULL,
+            `created_at`  datetime(6) NOT NULL,
+            PRIMARY KEY (`id`)
+        ) CHARACTER SET utf8mb4",
     };
 
     try

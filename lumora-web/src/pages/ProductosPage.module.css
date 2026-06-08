@@ -1,0 +1,156 @@
+.page { padding: 0; }
+
+.header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+}
+.title { font-size: 22px; font-weight: 800; color: var(--text); margin: 0 0 2px; }
+.subtitle { font-size: 13px; color: var(--text-muted); margin: 0; }
+
+.btnNew {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 10px; padding: 9px 16px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  white-space: nowrap; transition: opacity 0.15s;
+  font-family: inherit;
+}
+.btnNew:hover { opacity: 0.87; }
+
+.filters {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 20px; flex-wrap: wrap;
+}
+.search {
+  flex: 1; min-width: 180px;
+  background: var(--bg-1); border: 1px solid var(--border);
+  border-radius: 10px; padding: 8px 12px;
+  font-size: 13px; color: var(--text); font-family: inherit;
+}
+.search:focus { outline: none; border-color: var(--accent); }
+
+.segmented { display: flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.seg {
+  padding: 7px 14px; background: none; border: none;
+  font-size: 12px; font-weight: 500; color: var(--text-muted);
+  cursor: pointer; font-family: inherit; transition: all 0.12s;
+  border-right: 1px solid var(--border);
+}
+.seg:last-child { border-right: none; }
+.seg:hover { background: var(--bg-2); color: var(--text); }
+.segActive { background: var(--accent) !important; color: #fff !important; font-weight: 700; }
+
+/* Grid of cards */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.card {
+  background: var(--bg-1); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px;
+  display: flex; flex-direction: column; gap: 6px;
+  transition: box-shadow 0.15s;
+}
+.card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+.cardInactive { opacity: 0.55; }
+
+.cardTop { display: flex; align-items: center; justify-content: space-between; }
+
+.catBadge {
+  font-size: 11px; font-weight: 600; padding: 3px 9px;
+  border-radius: 20px;
+}
+.catBadgeService { background: #e0edff; color: #073579; }
+.catBadgeProduct { background: #fff3cd; color: #856404; }
+[data-theme="dark"] .catBadgeService { background: rgba(7,53,121,0.35); color: #7eb3ff; }
+[data-theme="dark"] .catBadgeProduct { background: rgba(201,162,85,0.2); color: #C9A255; }
+
+.inactiveBadge { font-size: 10px; color: var(--text-muted); background: var(--bg-2); padding: 2px 8px; border-radius: 12px; }
+
+.cardName { font-size: 15px; font-weight: 700; color: var(--text); margin: 0; }
+.cardDesc { font-size: 12px; color: var(--text-muted); margin: 0; line-height: 1.4; }
+
+.cardFooter { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+.cardPrice { font-size: 16px; font-weight: 800; color: var(--accent); }
+.cardUnit { font-size: 11px; font-weight: 400; color: var(--text-muted); }
+
+.cardActions { display: flex; gap: 4px; }
+.btnEdit, .btnDel {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: none; border: 1px solid var(--border);
+  color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.12s;
+}
+.btnEdit:hover { background: var(--bg-2); color: var(--accent); border-color: var(--accent); }
+.btnDel:hover { background: #fee2e2; color: #ef4444; border-color: #ef4444; }
+
+/* Empty */
+.empty, .emptyState {
+  text-align: center; color: var(--text-muted); font-size: 13px;
+  padding: 60px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+.emptyState p { margin: 0; }
+
+/* Modal */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 300; padding: 16px;
+}
+.modal {
+  background: var(--bg-1); border: 1px solid var(--border);
+  border-radius: 18px; width: 100%; max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: fadeUp 0.18s ease;
+}
+@keyframes fadeUp { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: none; } }
+
+.modalHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 0;
+}
+.modalHeader h3 { font-size: 16px; font-weight: 700; color: var(--text); margin: 0; }
+.modalClose {
+  width: 30px; height: 30px; border-radius: 8px; border: none;
+  background: var(--bg-2); color: var(--text-muted); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.modalClose:hover { color: var(--text); }
+
+.modalBody { padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 14px; }
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.field input, .field select, .field textarea {
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: 9px;
+  padding: 9px 12px; font-size: 13px; color: var(--text); font-family: inherit;
+  transition: border-color 0.15s;
+}
+.field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--accent); }
+.field textarea { resize: vertical; }
+
+.fieldRow { display: flex; gap: 12px; }
+.fieldRow .field { flex: 1; }
+
+.checkRow { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); cursor: pointer; }
+
+.error { background: #fee2e2; color: #ef4444; border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+
+.modalActions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+.btnCancel {
+  padding: 9px 18px; border-radius: 9px; border: 1px solid var(--border);
+  background: none; color: var(--text-muted); font-size: 13px; font-weight: 500;
+  cursor: pointer; font-family: inherit;
+}
+.btnCancel:hover { background: var(--bg-2); color: var(--text); }
+.btnSave {
+  padding: 9px 20px; border-radius: 9px; border: none;
+  background: var(--accent); color: #fff; font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+}
+.btnSave:hover { opacity: 0.87; }
+.btnSave:disabled { opacity: 0.5; cursor: not-allowed; }

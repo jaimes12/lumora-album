@@ -7,6 +7,7 @@ import { proveedoresApi } from '../api/proveedoresApi'
 import { ESTADO_META, TIPO_EMOJI, CAT_COLOR, fmt } from '../data/eventosData'
 import { findOrCreateLeadByPhone } from '../api/leadsApi'
 import { ChatModal, DEFAULT_STAGES } from './ChatPage'
+import EventProductsSection from '../components/EventProductsSection'
 
 function ChatBtn({ onClick }) {
   return (
@@ -310,6 +311,11 @@ export default function EventoDetallePage() {
               <p className={styles.notasText}>{evento.notas}</p>
             </section>
           )}
+
+          {/* ── Productos y servicios del evento ── */}
+          <section className={styles.card}>
+            <EventProductsSection eventId={id} />
+          </section>
 
           {/* ── Fotos de referencia ── */}
           <section className={styles.card}>
