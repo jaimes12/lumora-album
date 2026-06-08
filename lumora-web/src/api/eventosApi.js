@@ -2,7 +2,8 @@ import { api } from './apiClient'
 
 // Convierte EventResponse del backend al formato que usan las páginas
 function toFrontend(ev) {
-  const d = new Date(ev.eventDate)
+  const d  = new Date(ev.eventDate)
+  const dc = new Date(ev.createdAt)
   const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
   return {
     id: ev.id,
@@ -12,6 +13,7 @@ function toFrontend(ev) {
     fecha: `${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()}`,
     hora: d.toTimeString().slice(0,5),
     dateISO: d.toISOString().slice(0, 10),
+    createdAtISO: dc.toISOString().slice(0, 10),
     venue: ev.venueId ?? '',
     presupuestoTotal: ev.budget,
     anticipo: ev.payments?.reduce((s,p) => s + p.amount, 0) ?? 0,

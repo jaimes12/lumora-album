@@ -17,7 +17,8 @@ public record UpdateEventRequest(
     string? Name, string? Type, string? Status,
     string? ClientId, string? VenueId,
     DateTime? EventDate, decimal? Budget,
-    int? GuestCount, string? Notes
+    int? GuestCount, string? Notes,
+    DateTime? CreatedAt
 );
 
 public record CreatePaymentRequest(

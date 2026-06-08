@@ -113,6 +113,7 @@ public class EventService(LumoraDbContext db) : IEventService
         if (req.Budget.HasValue)         ev.Budget     = req.Budget.Value;
         if (req.GuestCount.HasValue)     ev.GuestCount = req.GuestCount.Value;
         if (req.EventDate.HasValue)      ev.EventDate  = req.EventDate.Value.ToUniversalTime();
+        if (req.CreatedAt.HasValue)      ev.CreatedAt  = req.CreatedAt.Value.ToUniversalTime();
 
         await db.SaveChangesAsync();
         return await GetByIdAsync(orgId, id);

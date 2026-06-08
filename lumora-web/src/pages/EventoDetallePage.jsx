@@ -37,6 +37,7 @@ function EditEventModal({ evento, onSave, onClose }) {
     tipo:        evento.tipo,
     fecha:       evento.dateISO,
     hora:        evento.hora,
+    createdAt:   evento.createdAtISO,
     venue:       evento.venue,
     invitados:   String(evento.invitados),
     presupuesto: String(evento.presupuestoTotal),
@@ -52,7 +53,8 @@ function EditEventModal({ evento, onSave, onClose }) {
     if (!form.nombre.trim()) { setError('El nombre es obligatorio.'); return }
     setSaving(true)
     try {
-      const eventDate = new Date(`${form.fecha}T${form.hora || '00:00'}`)
+      const eventDate   = new Date(`${form.fecha}T${form.hora || '00:00'}`)
+      const createdDate = form.createdAt ? new Date(`${form.createdAt}T12:00:00`) : undefined
       const updated = await eventosApi.update(evento.id, {
         name:       form.nombre.trim(),
         type:       form.tipo,
@@ -61,6 +63,7 @@ function EditEventModal({ evento, onSave, onClose }) {
         budget:     parseFloat(form.presupuesto) || 0,
         guestCount: parseInt(form.invitados)     || 0,
         notes:      form.notas.trim()            || null,
+        createdAt:  createdDate?.toISOString(),
       })
       onSave(updated)
     } catch { setError('Error al guardar los cambios.') }
@@ -101,6 +104,11 @@ function EditEventModal({ evento, onSave, onClose }) {
               <label>Hora</label>
               <input type="time" value={form.hora} onChange={set('hora')} />
             </div>
+          </div>
+
+          <div className={styles.editField}>
+            <label>Fecha de registro</label>
+            <input type="date" value={form.createdAt} onChange={set('createdAt')} />
           </div>
 
           <div className={styles.editField}>
