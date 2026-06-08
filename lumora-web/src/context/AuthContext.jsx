@@ -22,6 +22,17 @@ export function AuthProvider({ children }) {
     const userData = localStorage.getItem('elixe_user')
     if (token && userData) {
       try { setUser(JSON.parse(userData)) } catch {}
+      // Refresh plan from server to fix stale/invalid cached plan values
+      api.get('/api/auth/me').then(res => {
+        if (res?.plan !== undefined) {
+          setUser(prev => {
+            if (!prev) return prev
+            const next = { ...prev, plan: res.plan ?? 'free' }
+            localStorage.setItem('elixe_user', JSON.stringify(next))
+            return next
+          })
+        }
+      }).catch(() => {})
     }
     setIsLoading(false)
   }, [])

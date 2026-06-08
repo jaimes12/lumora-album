@@ -153,7 +153,8 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const { theme, lang, toggleTheme, toggleLang, i18n } = useSettings()
   const { user, logout } = useAuth()
-  const isLocked = !user?.plan || user.plan === 'free'
+  const VALID_PLANS = ['solo', 'negocio', 'agencia']
+  const isLocked = !user?.plan || !VALID_PLANS.includes(user.plan)
 
   // WhatsApp
   const [waConnected,        setWaConnected]        = useState(false)
