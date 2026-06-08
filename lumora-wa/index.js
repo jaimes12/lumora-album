@@ -231,6 +231,16 @@ function connectClient(name) {
   // ── Inbound messages ───────────────────────────────────────────────────────
   waClient.on('message', async (msg) => {
     if (!isActive()) return;
+
+    // If we receive a message while still in 'loading', the client IS connected —
+    // the 'ready' event sometimes never fires after a session restore.
+    if (entry.status === 'loading') {
+      entry.status = 'ready';
+      entry.qrCode = null;
+      entry.phone = waClient.info?.wid?.user ? `+${waClient.info.wid.user}` : 'connected';
+      log(name, 'Auto-ready: message received while loading, marking connected');
+    }
+
     if (msg.fromMe) return;
     if (msg.from.endsWith('@g.us')) return;
     if (msg.from === 'status@broadcast' || msg.isStatus) return;
@@ -314,7 +324,10 @@ app.post('/api/whatsapp/send', async (req, res) => {
     }
   }
 
-  if (!entry || entry.status !== 'ready') {
+  // Allow sending if ready OR if loading but already authenticated (info.wid populated)
+  const clientReady = entry && (entry.status === 'ready' ||
+    (entry.status === 'loading' && entry.client?.info?.wid));
+  if (!clientReady) {
     return res.status(503).json({ error: 'No client ready' });
   }
 
