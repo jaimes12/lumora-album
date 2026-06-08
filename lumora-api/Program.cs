@@ -62,6 +62,7 @@ builder.Services.AddScoped<IR2Service, R2Service>();
 builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<ILeadService, LeadService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITaskService, TaskService>();
 
 // Auth
 var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "lumora-dev-secret-key-change-in-production-32chars";
@@ -361,6 +362,15 @@ try
             `method`     varchar(500)   NOT NULL DEFAULT 'transfer',
             `paid_at`    datetime(6)    NOT NULL,
             `created_at` datetime(6)    NOT NULL,
+            PRIMARY KEY (`id`)
+        ) CHARACTER SET utf8mb4",
+
+        @"CREATE TABLE IF NOT EXISTS `org_tasks` (
+            `id`         varchar(255) NOT NULL,
+            `org_id`     varchar(255) NOT NULL,
+            `text`       varchar(500) NOT NULL,
+            `completed`  tinyint(1)   NOT NULL DEFAULT 0,
+            `created_at` datetime(6)  NOT NULL,
             PRIMARY KEY (`id`)
         ) CHARACTER SET utf8mb4",
 

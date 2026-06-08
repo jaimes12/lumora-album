@@ -28,6 +28,7 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
     public DbSet<LeadMessage> LeadMessages => Set<LeadMessage>();
     public DbSet<EventPayment> EventPayments => Set<EventPayment>();
     public DbSet<EventPhoto> EventPhotos => Set<EventPhoto>();
+    public DbSet<OrgTask> OrgTasks => Set<OrgTask>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
