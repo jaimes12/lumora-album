@@ -11,6 +11,7 @@ function toFrontend(ev) {
     estado: ev.status,  // lead|confirmed|in_progress|done|cancelled
     fecha: `${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()}`,
     hora: d.toTimeString().slice(0,5),
+    dateISO: d.toISOString().slice(0, 10),
     venue: ev.venueId ?? '',
     presupuestoTotal: ev.budget,
     anticipo: ev.payments?.reduce((s,p) => s + p.amount, 0) ?? 0,

@@ -28,6 +28,114 @@ function StarRating({ val }) {
   )
 }
 
+const TIPOS = ['Boda', 'XV Años', 'Corporativo', 'Graduación', 'Bautizo', 'Cumpleaños', 'Reunión', 'Otro']
+
+/* ─── Edit modal ─────────────────────────────────────────── */
+function EditEventModal({ evento, onSave, onClose }) {
+  const [form, setForm] = useState({
+    nombre:      evento.nombre,
+    tipo:        evento.tipo,
+    fecha:       evento.dateISO,
+    hora:        evento.hora,
+    venue:       evento.venue,
+    invitados:   String(evento.invitados),
+    presupuesto: String(evento.presupuestoTotal),
+    notas:       evento.notas,
+  })
+  const [saving, setSaving] = useState(false)
+  const [error,  setError]  = useState('')
+
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
+
+  const handleSubmit = async (e) => {
+    e.preventDefault(); setError('')
+    if (!form.nombre.trim()) { setError('El nombre es obligatorio.'); return }
+    setSaving(true)
+    try {
+      const eventDate = new Date(`${form.fecha}T${form.hora || '00:00'}`)
+      const updated = await eventosApi.update(evento.id, {
+        name:       form.nombre.trim(),
+        type:       form.tipo,
+        venueId:    form.venue.trim() || null,
+        eventDate:  eventDate.toISOString(),
+        budget:     parseFloat(form.presupuesto) || 0,
+        guestCount: parseInt(form.invitados)     || 0,
+        notes:      form.notas.trim()            || null,
+      })
+      onSave(updated)
+    } catch { setError('Error al guardar los cambios.') }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <div className={styles.editOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className={styles.editModal}>
+        <div className={styles.editModalHeader}>
+          <h3 className={styles.editModalTitle}>Editar evento</h3>
+          <button className={styles.editModalClose} onClick={onClose}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <form className={styles.editModalBody} onSubmit={handleSubmit}>
+          {error && <div className={styles.editError}>{error}</div>}
+
+          <div className={styles.editRow}>
+            <div className={styles.editField} style={{ flex: 2 }}>
+              <label>Nombre del evento *</label>
+              <input value={form.nombre} onChange={set('nombre')} required />
+            </div>
+            <div className={styles.editField}>
+              <label>Tipo</label>
+              <select value={form.tipo} onChange={set('tipo')}>
+                {TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className={styles.editRow}>
+            <div className={styles.editField}>
+              <label>Fecha del evento</label>
+              <input type="date" value={form.fecha} onChange={set('fecha')} />
+            </div>
+            <div className={styles.editField}>
+              <label>Hora</label>
+              <input type="time" value={form.hora} onChange={set('hora')} />
+            </div>
+          </div>
+
+          <div className={styles.editField}>
+            <label>Lugar / Venue</label>
+            <input value={form.venue} onChange={set('venue')} placeholder="Nombre o dirección del lugar" />
+          </div>
+
+          <div className={styles.editRow}>
+            <div className={styles.editField}>
+              <label>Invitados</label>
+              <input type="number" min="0" value={form.invitados} onChange={set('invitados')} placeholder="0" />
+            </div>
+            <div className={styles.editField}>
+              <label>Presupuesto total ($)</label>
+              <input type="number" min="0" step="0.01" value={form.presupuesto} onChange={set('presupuesto')} placeholder="0" />
+            </div>
+          </div>
+
+          <div className={styles.editField}>
+            <label>Notas</label>
+            <textarea value={form.notas} onChange={set('notas')} rows={3} placeholder="Observaciones del evento…" />
+          </div>
+
+          <div className={styles.editActions}>
+            <button type="button" className={styles.editBtnCancel} onClick={onClose}>Cancelar</button>
+            <button type="submit" className={styles.editBtnSave} disabled={saving}>
+              {saving ? 'Guardando…' : 'Guardar cambios'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 /* ─── Main page ───────────────────────────────────────────── */
 export default function EventoDetallePage() {
   const { id } = useParams()
@@ -37,6 +145,7 @@ export default function EventoDetallePage() {
   const [cliente,       setCliente]       = useState(null)
   const [proveedores,   setProveedores]   = useState([])
   const [loading,       setLoading]       = useState(true)
+  const [showEditModal, setShowEditModal] = useState(false)
   const [showAddVendor, setShowAddVendor] = useState(false)
   const [showAddPago,   setShowAddPago]   = useState(false)
   const [nuevoPago,     setNuevoPago]     = useState({ concepto: '', monto: '', metodo: 'transfer' })
@@ -126,6 +235,11 @@ export default function EventoDetallePage() {
     await eventosApi.update(id, { status: nuevoEstado }).catch(() => {})
   }
 
+  const handleEditSave = (updated) => {
+    setEvento(prev => ({ ...prev, ...updated }))
+    setShowEditModal(false)
+  }
+
   const abrirChat = async (phone, name) => {
     if (!phone) return
     setOpeningChat(true)
@@ -184,6 +298,15 @@ export default function EventoDetallePage() {
         />
       )}
 
+      {/* ── Edit modal ── */}
+      {showEditModal && (
+        <EditEventModal
+          evento={evento}
+          onSave={handleEditSave}
+          onClose={() => setShowEditModal(false)}
+        />
+      )}
+
       {/* ── Top bar ── */}
       <div className={styles.topBar}>
         <button className={styles.backBtn} onClick={() => navigate('/app/eventos')}>
@@ -200,8 +323,10 @@ export default function EventoDetallePage() {
               <option key={k} value={k}>{v.label}</option>
             ))}
           </select>
-          <button className={styles.btnEdit}>Editar</button>
-          <button className={styles.btnCotizar}>Crear cotización</button>
+          <button className={styles.btnEdit} onClick={() => setShowEditModal(true)}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Editar
+          </button>
         </div>
       </div>
 

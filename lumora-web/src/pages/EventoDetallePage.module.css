@@ -63,36 +63,24 @@
 }
 
 .btnEdit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   background: var(--bg-2);
   border: 1px solid var(--border);
   color: var(--text);
-  padding: 8px 18px;
+  padding: 8px 16px;
   border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
+  font-family: inherit;
 }
 
 .btnEdit:hover {
-  border-color: var(--border-hover);
-}
-
-.btnCotizar {
-  background: var(--accent);
-  border: none;
-  color: white;
-  padding: 8px 18px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btnCotizar:hover {
-  background: var(--accent-2);
-  transform: translateY(-1px);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* ── Hero ── */
@@ -885,3 +873,89 @@
   transition: opacity 0.15s;
 }
 .fotoCard:hover .fotoDeleteBtn { opacity: 1; }
+
+/* ── Edit event modal ── */
+.editOverlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 300; padding: 16px;
+}
+.editModal {
+  background: var(--bg-1); border: 1px solid var(--border);
+  border-radius: 20px; width: 100%; max-width: 520px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+  max-height: 90vh; overflow-y: auto;
+  animation: editSlideUp 0.18s ease;
+}
+@keyframes editSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: none; }
+}
+.editModalHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 24px 0;
+}
+.editModalTitle {
+  font-size: 17px; font-weight: 800; color: var(--text); margin: 0;
+}
+.editModalClose {
+  width: 32px; height: 32px; border-radius: 9px;
+  border: none; background: var(--bg-2);
+  color: var(--text-muted); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s;
+}
+.editModalClose:hover { background: var(--border); color: var(--text); }
+
+.editModalBody {
+  padding: 18px 24px 24px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+
+.editField {
+  display: flex; flex-direction: column; gap: 5px;
+}
+.editField label {
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.editField input,
+.editField select,
+.editField textarea {
+  background: var(--bg-2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 9px 12px;
+  font-size: 13px; color: var(--text); font-family: inherit;
+  transition: border-color 0.15s;
+}
+.editField input:focus,
+.editField select:focus,
+.editField textarea:focus { outline: none; border-color: var(--accent); }
+.editField textarea { resize: vertical; }
+
+.editRow { display: flex; gap: 12px; }
+.editRow .editField { flex: 1; }
+
+.editError {
+  background: #fee2e2; color: #ef4444;
+  border-radius: 9px; padding: 9px 13px; font-size: 13px;
+}
+
+.editActions {
+  display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px;
+}
+.editBtnCancel {
+  padding: 9px 20px; border-radius: 10px;
+  border: 1px solid var(--border); background: none;
+  color: var(--text-muted); font-size: 13px; font-weight: 500;
+  cursor: pointer; font-family: inherit; transition: all 0.12s;
+}
+.editBtnCancel:hover { background: var(--bg-2); color: var(--text); }
+.editBtnSave {
+  padding: 9px 22px; border-radius: 10px; border: none;
+  background: var(--accent); color: #fff;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: inherit; transition: opacity 0.15s;
+}
+.editBtnSave:hover { opacity: 0.88; }
+.editBtnSave:disabled { opacity: 0.5; cursor: not-allowed; }
