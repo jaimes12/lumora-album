@@ -100,7 +100,7 @@
   transition: background 0.12s;
 }
 .row:last-child { border-bottom: none; }
-.row:hover { background: rgba(124,106,247,0.04); }
+.row:hover { background: rgba(43,111,212,0.04); }
 
 .row td { padding: 13px 16px; font-size: 13px; vertical-align: middle; }
 
@@ -131,8 +131,8 @@
 .rowBtn:hover { color: var(--text); border-color: var(--border-hover); }
 
 .rowBtnPDF {
-  background: rgba(124,106,247,0.1);
-  border: 1px solid rgba(124,106,247,0.2);
+  background: rgba(43,111,212,0.1);
+  border: 1px solid rgba(43,111,212,0.2);
   color: var(--accent-2);
   width: 28px; height: 28px;
   border-radius: 7px;
@@ -140,7 +140,7 @@
   display: flex; align-items: center; justify-content: center;
   transition: all 0.15s;
 }
-.rowBtnPDF:hover { background: rgba(124,106,247,0.2); }
+.rowBtnPDF:hover { background: rgba(43,111,212,0.2); }
 
 /* ── Generator ── */
 .generatorHeader {
@@ -247,7 +247,7 @@
   width: 22px; height: 22px;
   border-radius: 50%;
   background: var(--accent-dim);
-  border: 1px solid rgba(124,106,247,0.3);
+  border: 1px solid rgba(43,111,212,0.3);
   color: var(--accent-2);
   font-size: 11px;
   font-weight: 800;
@@ -462,7 +462,7 @@
 
 .letterheadLine {
   border: none;
-  border-top: 2.5px solid #7c6af7;
+  border-top: 2.5px solid #073579;
   margin: 12px 0 20px;
 }
 
@@ -510,7 +510,7 @@
   font-weight: 800;
   letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: #7c6af7;
+  color: #073579;
   margin-bottom: 12px;
 }
 
@@ -543,7 +543,7 @@
   font-weight: 800;
   letter-spacing: 4px;
   text-transform: uppercase;
-  color: #7c6af7;
+  color: #073579;
   text-align: center;
   margin-bottom: 18px;
   padding-bottom: 8px;
@@ -573,7 +573,7 @@
   padding: 2px 4px;
   transition: background 0.15s;
 }
-.clauseText:focus { background: #f0f0ff; outline: 1px solid #7c6af7; }
+.clauseText:focus { background: #f0f5ff; outline: 1px solid #073579; }
 
 .clauseList {
   padding-left: 20px;

@@ -292,7 +292,7 @@
 
 .btnAddPago {
   background: var(--accent-dim);
-  border: 1px solid rgba(124,106,247,0.2);
+  border: 1px solid rgba(43,111,212,0.2);
   color: var(--accent-2);
   font-size: 12px;
   font-weight: 600;
@@ -303,7 +303,7 @@
 }
 
 .btnAddPago:hover {
-  background: rgba(124,106,247,0.2);
+  background: rgba(43,111,212,0.2);
   border-color: var(--accent);
 }
 
@@ -566,7 +566,7 @@
   height: 28px;
   border-radius: 8px;
   background: var(--accent-dim);
-  border: 1px solid rgba(124,106,247,0.2);
+  border: 1px solid rgba(43,111,212,0.2);
   color: var(--accent-2);
   cursor: pointer;
   transition: all 0.15s;
@@ -574,7 +574,7 @@
 }
 
 .chatBtn:hover {
-  background: rgba(124,106,247,0.22);
+  background: rgba(43,111,212,0.22);
   border-color: var(--accent);
   transform: scale(1.08);
 }

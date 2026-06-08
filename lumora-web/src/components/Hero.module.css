@@ -14,7 +14,7 @@
 .glow {
   position: absolute;
   width: 700px; height: 700px;
-  background: radial-gradient(circle, rgba(124,106,247,0.1) 0%, transparent 65%);
+  background: radial-gradient(circle, rgba(43,111,212,0.1) 0%, transparent 65%);
   top: 20%; left: -10%;
   pointer-events: none;
 }
@@ -22,7 +22,7 @@
 .glowRight {
   position: absolute;
   width: 500px; height: 500px;
-  background: radial-gradient(circle, rgba(167,139,250,0.06) 0%, transparent 65%);
+  background: radial-gradient(circle, rgba(201,162,85,0.06) 0%, transparent 65%);
   top: 40%; right: -5%;
   pointer-events: none;
 }
@@ -35,7 +35,7 @@
   align-items: center;
   gap: 8px;
   background: var(--accent-dim);
-  border: 1px solid rgba(124,106,247,0.25);
+  border: 1px solid rgba(43,111,212,0.25);
   color: var(--accent-2);
   padding: 6px 14px;
   border-radius: 100px;
@@ -63,7 +63,7 @@
 }
 
 .titleGrad {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 50%, #c4b5fd 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 60%, #E8C97A 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

@@ -143,7 +143,7 @@
 }
 
 .filterActive .filterCount {
-  background: rgba(124,106,247,0.2);
+  background: rgba(43,111,212,0.2);
   color: var(--accent-2);
 }
 
@@ -168,15 +168,15 @@
 }
 
 .card:hover {
-  border-color: rgba(124,106,247,0.35);
+  border-color: rgba(43,111,212,0.35);
   transform: translateY(-2px);
   box-shadow: 0 6px 24px rgba(0,0,0,0.25);
 }
 
 .cardActive {
   border-color: var(--accent) !important;
-  background: rgba(124,106,247,0.05) !important;
-  box-shadow: 0 0 0 3px rgba(124,106,247,0.12) !important;
+  background: rgba(43,111,212,0.05) !important;
+  box-shadow: 0 0 0 3px rgba(43,111,212,0.12) !important;
 }
 
 .cardTop {
@@ -486,7 +486,7 @@
   transition: border-color 0.15s;
 }
 
-.clienteCard:hover { border-color: rgba(124,106,247,0.3); }
+.clienteCard:hover { border-color: rgba(43,111,212,0.3); }
 
 .clienteAvatar {
   width: 42px;
@@ -541,7 +541,7 @@
 /* Add vendor */
 .btnAddVendor {
   background: var(--accent-dim);
-  border: 1px solid rgba(124,106,247,0.2);
+  border: 1px solid rgba(43,111,212,0.2);
   color: var(--accent-2);
   font-size: 12px;
   font-weight: 600;
@@ -552,7 +552,7 @@
 }
 
 .btnAddVendor:hover {
-  background: rgba(124,106,247,0.2);
+  background: rgba(43,111,212,0.2);
   border-color: var(--accent);
 }
 
@@ -578,7 +578,7 @@
 }
 
 .vendorPickItem:last-child { border-bottom: none; }
-.vendorPickItem:hover { background: rgba(124,106,247,0.08); }
+.vendorPickItem:hover { background: rgba(43,111,212,0.08); }
 
 .catDot {
   width: 8px;
@@ -1016,7 +1016,7 @@
   transition: background 0.12s;
 }
 .clienteRow:hover { background: var(--bg-2); }
-.clienteRowSelected { background: rgba(124,106,247,0.1) !important; }
+.clienteRowSelected { background: rgba(43,111,212,0.1) !important; }
 
 .clienteRowAvatar {
   width: 34px;
@@ -1078,7 +1078,7 @@
 }
 .btnNuevoCliente:hover {
   border-color: var(--accent);
-  background: rgba(124,106,247,0.06);
+  background: rgba(43,111,212,0.06);
 }
 
 /* ── Cliente seleccionado chip ── */
@@ -1086,8 +1086,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(124,106,247,0.08);
-  border: 1px solid rgba(124,106,247,0.25);
+  background: rgba(43,111,212,0.08);
+  border: 1px solid rgba(43,111,212,0.25);
   border-radius: 10px;
   padding: 8px 12px;
 }

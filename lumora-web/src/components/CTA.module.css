@@ -21,7 +21,7 @@
 .glow {
   position: absolute;
   width: 600px; height: 400px;
-  background: radial-gradient(ellipse, rgba(124,106,247,0.08) 0%, transparent 65%);
+  background: radial-gradient(ellipse, rgba(43,111,212,0.08) 0%, transparent 65%);
   top: 50%; left: 30%;
   transform: translate(-50%,-50%);
   pointer-events: none;

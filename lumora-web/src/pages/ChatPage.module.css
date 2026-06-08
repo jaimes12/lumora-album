@@ -106,7 +106,7 @@
 
 .columnDragOver {
   border-color: var(--accent);
-  background: rgba(124,106,247,0.04);
+  background: rgba(43,111,212,0.04);
 }
 
 .colHeader {
@@ -170,14 +170,14 @@
 }
 
 .card:hover {
-  border-color: rgba(124,106,247,0.35);
+  border-color: rgba(43,111,212,0.35);
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(0,0,0,0.3);
 }
 
 .cardActive {
   border-color: var(--accent) !important;
-  background: rgba(124,106,247,0.08) !important;
+  background: rgba(43,111,212,0.08) !important;
 }
 
 .cardTop {
@@ -1126,7 +1126,7 @@
   transition: all 0.15s; flex-shrink: 0;
 }
 .chatInfoBtn:hover   { color: var(--text); background: var(--bg-2); }
-.chatInfoBtnActive   { color: var(--accent) !important; border-color: var(--accent) !important; background: rgba(167,139,250,0.1) !important; }
+.chatInfoBtnActive   { color: var(--accent) !important; border-color: var(--accent) !important; background: rgba(201,162,85,0.1) !important; }
 
 /* ── Contact Info Panel ── */
 .infoPanel {
