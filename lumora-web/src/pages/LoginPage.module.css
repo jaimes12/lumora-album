@@ -22,9 +22,7 @@
   width: auto;
   display: block;
   margin: 0 auto 28px;
-  filter: brightness(0) invert(1);
 }
-[data-theme="light"] .logo { filter: none; }
 
 .tabs {
   display: flex;
@@ -89,6 +87,32 @@
 
 .field input:focus { border-color: var(--accent); }
 .field input::placeholder { color: var(--text-muted); }
+
+.passWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passWrap input {
+  width: 100%;
+  padding-right: 42px;
+}
+
+.passToggle {
+  position: absolute;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.passToggle:hover { color: var(--text); }
 
 .error {
   font-size: 13px;
