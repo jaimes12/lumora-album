@@ -892,11 +892,66 @@
   border-radius: 10px; object-fit: cover; display: block;
   cursor: zoom-in;
 }
-.chatMediaAudio {
-  max-width: 240px; width: 100%; height: 36px;
-  border-radius: 8px; margin-bottom: 4px; display: block;
-  accent-color: var(--accent);
+/* ── Custom audio player ── */
+.audioPlayer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 6px;
+  min-width: 210px;
+  max-width: 260px;
 }
+
+.audioPlayBtn {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.audioPlayBtn:hover { opacity: 0.85; transform: scale(1.08); }
+.audioPlayBtn:active { transform: scale(0.95); }
+
+.audioPlayerOut .audioPlayBtn {
+  background: rgba(255,255,255,0.25); color: #fff;
+}
+.audioPlayerIn .audioPlayBtn {
+  background: var(--accent); color: #fff;
+}
+
+.audioTrack {
+  flex: 1; height: 3px;
+  border-radius: 3px;
+  position: relative;
+  cursor: pointer;
+}
+.audioPlayerOut .audioTrack { background: rgba(255,255,255,0.25); }
+.audioPlayerIn  .audioTrack { background: var(--border); }
+
+.audioFill {
+  position: absolute; top: 0; left: 0;
+  height: 100%; border-radius: 3px;
+  pointer-events: none;
+}
+.audioPlayerOut .audioFill { background: rgba(255,255,255,0.9); }
+.audioPlayerIn  .audioFill { background: var(--accent); }
+
+.audioThumb {
+  position: absolute; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.audioPlayerOut .audioThumb { background: #fff; }
+.audioPlayerIn  .audioThumb { background: var(--accent); }
+
+.audioTime {
+  font-size: 10px; white-space: nowrap; flex-shrink: 0;
+}
+.audioPlayerOut .audioTime { color: rgba(255,255,255,0.75); }
+.audioPlayerIn  .audioTime { color: var(--text-muted); }
 .chatMediaCaption { font-size: 12px; opacity: 0.85; margin-top: 2px; }
 .chatMediaPlaceholder { font-size: 13px; opacity: 0.6; font-style: italic; }
 

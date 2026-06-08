@@ -425,6 +425,59 @@ function Tick({ saved }) {
 // true if a name looks like a raw phone number (no spaces, mostly digits)
 const isPhoneNumber = (s) => s && /^[\d\s\-\+\(\)]{7,}$/.test(s.trim())
 
+// ─── Custom audio player ─────────────────────────────────────────────────────
+function AudioPlayer({ src, isOut }) {
+  const audioRef    = useRef(null)
+  const [playing,   setPlaying]   = useState(false)
+  const [curTime,   setCurTime]   = useState(0)
+  const [duration,  setDuration]  = useState(0)
+
+  const fmt = (s) => {
+    if (!s || isNaN(s) || !isFinite(s)) return '0:00'
+    return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
+  }
+
+  const togglePlay = () => {
+    const a = audioRef.current
+    if (!a) return
+    playing ? a.pause() : a.play().catch(() => {})
+  }
+
+  const seek = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    if (audioRef.current && duration > 0) audioRef.current.currentTime = ratio * duration
+  }
+
+  const pct = duration > 0 ? Math.min(100, (curTime / duration) * 100) : 0
+
+  return (
+    <div className={`${styles.audioPlayer} ${isOut ? styles.audioPlayerOut : styles.audioPlayerIn}`}>
+      <audio
+        ref={audioRef}
+        src={src}
+        preload="metadata"
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onEnded={() => { setPlaying(false); setCurTime(0) }}
+        onTimeUpdate={() => setCurTime(audioRef.current?.currentTime ?? 0)}
+        onLoadedMetadata={() => setDuration(audioRef.current?.duration ?? 0)}
+      />
+      <button className={styles.audioPlayBtn} onClick={togglePlay} type="button">
+        {playing
+          ? <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          : <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        }
+      </button>
+      <div className={styles.audioTrack} onClick={seek}>
+        <div className={styles.audioFill} style={{ width: `${pct}%` }} />
+        {pct > 0 && <div className={styles.audioThumb} style={{ left: `${pct}%` }} />}
+      </div>
+      <span className={styles.audioTime}>{fmt(curTime)} / {fmt(duration)}</span>
+    </div>
+  )
+}
+
 // ─── Local media cache (localStorage) ───────────────────────────────────────
 const MEDIA_KEY = 'lumora_media_cache'
 const MAX_ENTRIES = 40 // keep last 40 images to stay under localStorage limits
@@ -773,8 +826,8 @@ export function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
                         : isImage && <span className={styles.chatMediaPlaceholder}>📷 Imagen</span>
                       }
                       {isAudio && m.mediaUrl
-                        ? <audio className={styles.chatMediaAudio} controls preload="none" src={m.mediaUrl} />
-                        : isAudio && <span className={styles.chatMediaPlaceholder}>🎵 Audio</span>
+                        ? <AudioPlayer src={m.mediaUrl} isOut={m.tipo === 'out'} />
+                        : isAudio && <span className={styles.chatMediaPlaceholder}>🎤 Nota de voz</span>
                       }
                       {!isImage && !isAudio && m.texto && <p>{m.texto}</p>}
                       {isImage && m.mediaUrl && m.texto && m.texto !== '[Imagen]' && (
