@@ -25,6 +25,7 @@ import ContratosPage from './pages/ContratosPage'
 import CalendarioPage from './pages/CalendarioPage'
 import ContactosPage from './pages/ContactosPage'
 import LoginPage from './pages/LoginPage'
+import PaquetesPage from './pages/PaquetesPage'
 
 function LandingPage() {
   return (
@@ -95,6 +96,7 @@ export default function App() {
               <Route path="ventas"      element={<VentasPage />} />
               <Route path="contratos"   element={<ContratosPage />} />
               <Route path="calendario"  element={<CalendarioPage />} />
+              <Route path="paquetes"    element={<PaquetesPage />} />
             </Route>
 
             {/* Catch-all */}

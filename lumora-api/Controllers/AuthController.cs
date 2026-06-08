@@ -42,4 +42,22 @@ public class AuthController(IAuthService auth) : ControllerBase
             return StatusCode(500, new { message = "Error al iniciar sesión", detail = ex.Message });
         }
     }
+
+    [HttpPost("check-email")]
+    [AllowAnonymous]
+    public async Task<IActionResult> CheckEmail([FromBody] CheckEmailRequest req)
+    {
+        var exists = await auth.EmailExistsAsync(req.Email);
+        return Ok(new { exists });
+    }
+
+    [HttpPatch("plan")]
+    [Authorize]
+    public async Task<IActionResult> UpdatePlan([FromBody] UpdatePlanRequest req)
+    {
+        var orgId = User.FindFirst("org_id")?.Value;
+        if (string.IsNullOrEmpty(orgId)) return Unauthorized();
+        await auth.UpdatePlanAsync(orgId, req.Plan);
+        return Ok(new { ok = true });
+    }
 }

@@ -19,5 +19,9 @@ public record AuthResponse(
     string UserId,
     string OrgId,
     string Name,
-    string Email
+    string Email,
+    string Plan
 );
+
+public record CheckEmailRequest([Required, EmailAddress] string Email);
+public record UpdatePlanRequest([Required] string Plan);

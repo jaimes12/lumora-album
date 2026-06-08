@@ -1,0 +1,168 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  align-items: center;
+  padding-bottom: 40px;
+}
+
+.header {
+  text-align: center;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.sub {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  width: 100%;
+  max-width: 900px;
+  align-items: start;
+}
+
+.card {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  transition: all 0.2s;
+}
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+}
+
+.cardPopular {
+  border-color: var(--plan-color, #C9A255);
+  box-shadow: 0 0 0 1px var(--plan-color, #C9A255);
+}
+
+.cardActive {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.popularBadge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.activeBadge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.cardTop { display: flex; flex-direction: column; gap: 6px; }
+
+.planName {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.planDesc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.priceRow {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.price {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.period {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.checkIcon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.btnSelect {
+  width: 100%;
+  color: #fff;
+  border: none;
+  border-radius: 11px;
+  padding: 13px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btnSelect:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+.btnSelect:disabled { cursor: default; }
+.btnSelectActive {
+  background: var(--bg-2) !important;
+  color: var(--accent) !important;
+  border: 1px solid var(--accent);
+}
+
+.note {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}

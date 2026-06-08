@@ -1139,3 +1139,13 @@
     max-width: 100%;
   }
 }
+
+.navItemLocked {
+  opacity: 0.45;
+  cursor: pointer;
+}
+.navItemLocked:hover {
+  opacity: 0.7;
+  background: rgba(43,111,212,0.04);
+  color: var(--text-muted);
+}

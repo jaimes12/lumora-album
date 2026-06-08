@@ -14,6 +14,8 @@ public interface IAuthService
 {
     Task<AuthResponse> RegisterAsync(RegisterRequest req);
     Task<AuthResponse?> LoginAsync(LoginRequest req);
+    Task<bool> EmailExistsAsync(string email);
+    Task UpdatePlanAsync(string orgId, string plan);
 }
 
 public class AuthService(LumoraDbContext db, IConfiguration config) : IAuthService
@@ -51,13 +53,14 @@ public class AuthService(LumoraDbContext db, IConfiguration config) : IAuthServi
             user.Id,
             user.OrgId,
             user.Name,
-            user.Email
+            user.Email,
+            "free"
         );
     }
 
     public async Task<AuthResponse?> LoginAsync(LoginRequest req)
     {
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == req.Email);
+        var user = await db.Users.Include(u => u.Organization).FirstOrDefaultAsync(u => u.Email == req.Email);
         if (user is null || user.PasswordHash is null)
             return null;
 
@@ -69,8 +72,18 @@ public class AuthService(LumoraDbContext db, IConfiguration config) : IAuthServi
             user.Id,
             user.OrgId,
             user.Name,
-            user.Email
+            user.Email,
+            user.Organization?.Plan ?? "free"
         );
+    }
+
+    public async Task<bool> EmailExistsAsync(string email)
+        => await db.Users.AnyAsync(u => u.Email == email);
+
+    public async Task UpdatePlanAsync(string orgId, string plan)
+    {
+        var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == orgId);
+        if (org is not null) { org.Plan = plan; await db.SaveChangesAsync(); }
     }
 
     private static string HashPassword(string password)

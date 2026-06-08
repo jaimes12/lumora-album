@@ -13,6 +13,10 @@ const NAV_KEYS = [
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
   },
   {
+    to: '/app/paquetes', key: 'paquetes',
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
+  },
+  {
     to: '/app/clientes', key: 'clientes',
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
   },
@@ -268,6 +272,7 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const { theme, lang, toggleTheme, toggleLang, i18n } = useSettings()
   const { user, logout } = useAuth()
+  const isLocked = !user?.plan || user.plan === 'free'
   const [waConnected,        setWaConnected]        = useState(false)
   const [showWaModal,        setShowWaModal]        = useState(false)
   const [sidebarOpen,        setSidebarOpen]        = useState(false)
@@ -351,14 +356,29 @@ export default function AppLayout() {
 
           {/* Nav */}
           <nav className={styles.nav}>
-            {NAV_KEYS.map(item => (
-              <NavLink key={item.to} to={item.to}
-                onClick={() => setSidebarOpen(false)}
-                className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ''}`}>
-                <span className={styles.navIcon}>{item.icon}</span>
-                <span className={styles.navLabel}>{i18n[item.key]}</span>
-              </NavLink>
-            ))}
+            {NAV_KEYS.map(item => {
+              const locked = isLocked && item.key !== 'dashboard' && item.key !== 'paquetes'
+              if (locked) {
+                return (
+                  <div key={item.key} className={`${styles.navItem} ${styles.navItemLocked}`}
+                    onClick={() => { setSidebarOpen(false); navigate('/app/paquetes') }}
+                    title="Elige un plan para acceder"
+                  >
+                    <span className={styles.navIcon}>{item.icon}</span>
+                    <span className={styles.navLabel}>{i18n[item.key]}</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginLeft:'auto',opacity:0.4}}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                )
+              }
+              return (
+                <NavLink key={item.to} to={item.to}
+                  onClick={() => setSidebarOpen(false)}
+                  className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ''}`}>
+                  <span className={styles.navIcon}>{item.icon}</span>
+                  <span className={styles.navLabel}>{i18n[item.key]}</span>
+                </NavLink>
+              )
+            })}
           </nav>
 
           {/* ── WhatsApp section ── */}

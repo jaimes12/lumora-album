@@ -1,4 +1,6 @@
 import styles from './Hero.module.css'
+import { useState } from 'react'
+import RegisterModal from './RegisterModal'
 
 const STATS = [
   { value: '2,400+', label: 'Eventos gestionados' },
@@ -14,7 +16,11 @@ const MOCK_EVENTS = [
 ]
 
 export default function Hero() {
+  const [showRegister, setShowRegister] = useState(false)
+
   return (
+    <>
+    {showRegister && <RegisterModal onClose={() => setShowRegister(false)} />}
     <section className={styles.hero}>
       <div className={styles.glow} />
       <div className={styles.glowRight} />
@@ -37,7 +43,7 @@ export default function Hero() {
         </p>
 
         <div className={styles.btns}>
-          <button className={styles.btnPrimary}>
+          <button className={styles.btnPrimary} onClick={() => setShowRegister(true)}>
             Crear cuenta gratis
           </button>
           <button className={styles.btnSecondary}>
@@ -108,5 +114,6 @@ export default function Hero() {
         </div>
       </div>
     </section>
+    </>
   )
 }
