@@ -1,7 +1,7 @@
 const BASE = import.meta.env.VITE_API_URL ?? 'https://lumora-api-production.up.railway.app'
 
 async function request(path, options = {}) {
-  const token = localStorage.getItem('lumora_token')
+  const token = localStorage.getItem('elixe_token')
   const res = await fetch(`${BASE}${path}`, {
     headers: {
       'Content-Type': 'application/json',

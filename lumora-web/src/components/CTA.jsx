@@ -20,7 +20,7 @@ export default function CTA() {
           <button className={styles.btnPrimary}>Crear cuenta gratis</button>
           <button className={styles.btnSecondary}>Hablar con ventas</button>
         </div>
-        <p className={styles.hint}>+500 organizadores ya usan Lumora en México</p>
+        <p className={styles.hint}>+500 organizadores ya usan Elixe en México</p>
       </div>
     </section>
   )

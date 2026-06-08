@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import styles from './LoginPage.module.css'
-import logoFull from '../assets/lumora-logo.png'
+import logoFull from '../assets/elixe-logo.png'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -35,7 +35,7 @@ export default function LoginPage() {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <img src={logoFull} alt="Lumora" className={styles.logo} />
+        <img src={logoFull} alt="Elixe" className={styles.logo} />
 
         <div className={styles.tabs}>
           <button className={`${styles.tab} ${mode === 'login' ? styles.tabActive : ''}`} onClick={() => { setMode('login'); setError('') }}>
@@ -51,7 +51,7 @@ export default function LoginPage() {
             <>
               <div className={styles.field}>
                 <label>Nombre de la empresa</label>
-                <input placeholder="Ej: Lumora Events" value={form.orgName} onChange={set('orgName')} required />
+                <input placeholder="Ej: Elixe Events" value={form.orgName} onChange={set('orgName')} required />
               </div>
               <div className={styles.field}>
                 <label>Tu nombre</label>

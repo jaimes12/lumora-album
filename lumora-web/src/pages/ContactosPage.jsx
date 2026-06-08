@@ -6,7 +6,7 @@ import styles from './ContactosPage.module.css'
 
 function getStages() {
   try {
-    const s = localStorage.getItem('lumora_stages')
+    const s = localStorage.getItem('elixe_stages')
     return s ? JSON.parse(s) : DEFAULT_STAGES
   } catch { return DEFAULT_STAGES }
 }

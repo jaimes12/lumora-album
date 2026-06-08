@@ -64,13 +64,13 @@ export const DEFAULT_STAGES = [
 function useStages() {
   const [stages, setStages] = useState(() => {
     try {
-      const s = localStorage.getItem('lumora_stages')
+      const s = localStorage.getItem('elixe_stages')
       return s ? JSON.parse(s) : DEFAULT_STAGES
     } catch { return DEFAULT_STAGES }
   })
   const save = (next) => {
     setStages(next)
-    localStorage.setItem('lumora_stages', JSON.stringify(next))
+    localStorage.setItem('elixe_stages', JSON.stringify(next))
   }
   return [stages, save]
 }
@@ -479,7 +479,7 @@ function AudioPlayer({ src, isOut }) {
 }
 
 // ─── Local media cache (localStorage) ───────────────────────────────────────
-const MEDIA_KEY = 'lumora_media_cache'
+const MEDIA_KEY = 'elixe_media_cache'
 const MAX_ENTRIES = 40 // keep last 40 images to stay under localStorage limits
 
 function loadLocalMedia() {

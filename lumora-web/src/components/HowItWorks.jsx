@@ -35,7 +35,7 @@ export default function HowItWorks() {
             al evento exitoso.
           </h2>
           <p className={styles.sub}>
-            Lumora te acompaña en cada etapa del proceso. Desde el primer
+            Elixe te acompaña en cada etapa del proceso. Desde el primer
             contacto hasta la última factura.
           </p>
           <button className={styles.btn}>Empezar ahora — es gratis →</button>

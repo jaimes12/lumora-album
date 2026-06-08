@@ -4,7 +4,7 @@ import { fmt } from '../data/eventosData'
 import { contratosApi } from '../api/contratosApi'
 import { clientesApi } from '../api/clientesApi'
 import { eventosApi } from '../api/eventosApi'
-import logoFull from '../assets/lumora-logo.png'
+import logoFull from '../assets/elixe-logo.png'
 
 /* ─── Contract templates ──────────────────────────────────── */
 const TEMPLATES = [
@@ -52,7 +52,7 @@ function buildContract(template, form) {
   const hoy    = new Date()
   const fecha  = form.fechaFirma || hoy.toLocaleDateString('es-MX', { day:'numeric', month:'long', year:'numeric' })
   const ciudad = 'Ciudad de México'
-  const empresa = 'Lumora Events S.A. de C.V.'
+  const empresa = 'Elixe Events S.A. de C.V.'
   const rfc    = 'LES210601AB3'
 
   const clausulas = {
@@ -104,7 +104,7 @@ function ContractPreview({ template, form, contratoRef }) {
       {/* Letterhead */}
       <div className={styles.letterhead}>
         <div className={styles.letterheadLeft}>
-          <img src={logoFull} alt="Lumora Events" className={styles.letterheadLogoImg} />
+          <img src={logoFull} alt="Elixe Events" className={styles.letterheadLogoImg} />
         </div>
         <div className={styles.letterheadRight}>
           <div className={styles.letterheadData}>RFC: LES210601AB3</div>
@@ -141,7 +141,7 @@ function ContractPreview({ template, form, contratoRef }) {
         <div className={styles.partyBlock}>
           <span className={styles.partyLabel}>EL PRESTADOR:</span>
           <span className={styles.partyValue}>
-            <strong>LUMORA EVENTS S.A. de C.V.</strong>, RFC LES210601AB3, con domicilio en Av. Insurgentes Sur 1234, Col. Del Valle, CDMX, representada por el C. <strong>Angel Jaimes</strong> en su carácter de Director General, a quien en lo sucesivo se le denominará <strong>"EL PRESTADOR"</strong>.
+            <strong>ELIXE EVENTS S.A. de C.V.</strong>, RFC LES210601AB3, con domicilio en Av. Insurgentes Sur 1234, Col. Del Valle, CDMX, representada por el C. <strong>Angel Jaimes</strong> en su carácter de Director General, a quien en lo sucesivo se le denominará <strong>"EL PRESTADOR"</strong>.
           </span>
         </div>
         <div className={styles.partiesDecl}>
@@ -199,7 +199,7 @@ function ContractPreview({ template, form, contratoRef }) {
             <div className={styles.sigLine} />
             <div className={styles.sigName}>Angel Jaimes</div>
             <div className={styles.sigRole}>Director General</div>
-            <div className={styles.sigData}>Lumora Events S.A. de C.V.</div>
+            <div className={styles.sigData}>Elixe Events S.A. de C.V.</div>
           </div>
         </div>
         <div className={styles.sigFooter}>
@@ -283,7 +283,7 @@ export default function ContratosPage() {
     const win = window.open('', '_blank', 'width=900,height=700')
     win.document.write(`<!DOCTYPE html><html lang="es"><head>
       <meta charset="UTF-8"/>
-      <title>Contrato — ${form.clienteNombre || 'Lumora Events'}</title>
+      <title>Contrato — ${form.clienteNombre || 'Elixe Events'}</title>
       <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Georgia', serif; font-size: 11pt; color: #1a1a1a; background: #fff; padding: 20mm 18mm; line-height: 1.7; }

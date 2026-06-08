@@ -47,7 +47,7 @@ export default function Features() {
         <h2 className={styles.title}>Todo lo que necesita<br />tu empresa de eventos.</h2>
         <p className={styles.sub}>
           Sin hojas de cálculo, sin WhatsApp mal organizado, sin perder clientes.
-          Todo centralizado en Lumora.
+          Todo centralizado en Elixe.
         </p>
       </div>
 

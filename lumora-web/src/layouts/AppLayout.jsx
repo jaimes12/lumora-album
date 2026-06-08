@@ -6,8 +6,8 @@ import { whatsappApi } from '../api/whatsappApi'
 import { tasksApi } from '../api/tasksApi'
 import ProfileModal from '../components/ProfileModal'
 import styles from './AppLayout.module.css'
-import logoFull from '../assets/lumora-logo.png'
-import logoMini from '../assets/lumora-mini-logo.png'
+import logoFull from '../assets/elixe-logo.png'
+import logoMini from '../assets/elixe-logo.png'
 
 const NAV_KEYS = [
   {
@@ -278,8 +278,8 @@ export default function AppLayout() {
 
           {/* Logo */}
           <div className={styles.logoArea}>
-            <img src={logoMini} alt="Lumora" className={styles.logoMini} />
-            <img src={logoFull} alt="Lumora" className={styles.logoFull} />
+            <img src={logoMini} alt="Elixe" className={styles.logoMini} />
+            <img src={logoFull} alt="Elixe" className={styles.logoFull} />
             <button className={styles.sidebarClose} onClick={() => setSidebarOpen(false)} aria-label="Cerrar menú">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -422,7 +422,7 @@ export default function AppLayout() {
           </button>
 
           {/* Mobile logo */}
-          <img src={logoFull} alt="Lumora" className={styles.appBarLogo} />
+          <img src={logoFull} alt="Elixe" className={styles.appBarLogo} />
 
           {/* Right actions */}
           <div className={styles.appBarRight}>

@@ -8,8 +8,18 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const token    = localStorage.getItem('lumora_token')
-    const userData = localStorage.getItem('lumora_user')
+    // Migrate old lumora_ keys on first load
+    const oldToken = localStorage.getItem('lumora_token')
+    if (oldToken) {
+      localStorage.setItem('elixe_token', oldToken)
+      const oldUser = localStorage.getItem('lumora_user')
+      if (oldUser) localStorage.setItem('elixe_user', oldUser)
+      localStorage.removeItem('lumora_token')
+      localStorage.removeItem('lumora_user')
+    }
+
+    const token    = localStorage.getItem('elixe_token')
+    const userData = localStorage.getItem('elixe_user')
     if (token && userData) {
       try { setUser(JSON.parse(userData)) } catch {}
     }
@@ -18,8 +28,8 @@ export function AuthProvider({ children }) {
 
   const saveUser = (res) => {
     const u = { userId: res.userId, orgId: res.orgId, name: res.name, email: res.email, plan: res.plan ?? 'free' }
-    localStorage.setItem('lumora_token', res.token)
-    localStorage.setItem('lumora_user', JSON.stringify(u))
+    localStorage.setItem('elixe_token', res.token)
+    localStorage.setItem('elixe_user', JSON.stringify(u))
     setUser(u)
     return u
   }
@@ -38,7 +48,7 @@ export function AuthProvider({ children }) {
     await api.patch('/api/auth/plan', { plan })
     setUser(prev => {
       const next = { ...prev, plan }
-      localStorage.setItem('lumora_user', JSON.stringify(next))
+      localStorage.setItem('elixe_user', JSON.stringify(next))
       return next
     })
   }
@@ -47,7 +57,7 @@ export function AuthProvider({ children }) {
     await api.patch('/api/auth/profile', { name })
     setUser(prev => {
       const next = { ...prev, name }
-      localStorage.setItem('lumora_user', JSON.stringify(next))
+      localStorage.setItem('elixe_user', JSON.stringify(next))
       return next
     })
   }
@@ -56,7 +66,7 @@ export function AuthProvider({ children }) {
     await api.patch('/api/auth/email', { newEmail, password })
     setUser(prev => {
       const next = { ...prev, email: newEmail }
-      localStorage.setItem('lumora_user', JSON.stringify(next))
+      localStorage.setItem('elixe_user', JSON.stringify(next))
       return next
     })
   }
@@ -69,15 +79,15 @@ export function AuthProvider({ children }) {
     const res = await api.patch('/api/auth/photo', { photoData })
     setUser(prev => {
       const next = { ...prev, photo: res.url }
-      localStorage.setItem('lumora_user', JSON.stringify(next))
+      localStorage.setItem('elixe_user', JSON.stringify(next))
       return next
     })
     return res.url
   }
 
   const logout = () => {
-    localStorage.removeItem('lumora_token')
-    localStorage.removeItem('lumora_user')
+    localStorage.removeItem('elixe_token')
+    localStorage.removeItem('elixe_user')
     setUser(null)
   }
 

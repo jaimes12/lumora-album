@@ -1,5 +1,5 @@
 import styles from './Footer.module.css'
-import logoFull from '../assets/lumora-logo.png'
+import logoFull from '../assets/elixe-logo.png'
 
 export default function Footer() {
   return (
@@ -7,7 +7,7 @@ export default function Footer() {
       <div className={styles.inner}>
         <div className={styles.brand}>
           <div className={styles.logo}>
-            <img src={logoFull} alt="Lumora" className={styles.logoImg} />
+            <img src={logoFull} alt="Elixe" className={styles.logoImg} />
           </div>
           <p className={styles.tagline}>La plataforma para organizadores de eventos.</p>
         </div>
@@ -32,7 +32,7 @@ export default function Footer() {
         </div>
       </div>
       <div className={styles.bottom}>
-        <p>© 2026 Lumora. Hecho en México 🇲🇽</p>
+        <p>© 2026 Elixe. Hecho en México 🇲🇽</p>
       </div>
     </footer>
   )

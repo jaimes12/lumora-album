@@ -113,7 +113,7 @@ export const EVENTOS = [
     estado: 'confirmed',
     fecha: '29 May 2026',
     hora: '16:00',
-    venue: 'Oficina Lumora, CDMX',
+    venue: 'Oficina Elixe, CDMX',
     presupuestoTotal: 0,
     anticipo: 0,
     pagos: [],
