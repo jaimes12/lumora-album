@@ -13,10 +13,12 @@ public interface IStripeService
     Task HandleWebhookAsync(string payload, string signature);
     Task<(bool ok, string planId, string error)> ApplyPromoCodeAsync(string orgId, string code);
     Task<List<PaymentRecord>> GetPaymentHistoryAsync(string orgId);
+    Task<SubscriptionInfo?> GetSubscriptionInfoAsync(string orgId);
     string GetPublishableKey();
 }
 
 public record PaymentRecord(string Date, string Method, decimal Amount, string Status);
+public record SubscriptionInfo(bool IsStripe, string? NextBillingDate, string? StartDate);
 
 public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeService
 {
@@ -90,6 +92,8 @@ public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeS
         org.Plan = planId;
         if (!string.IsNullOrEmpty(session.CustomerId))
             org.StripeCustomerId = session.CustomerId;
+        if (!string.IsNullOrEmpty(session.SubscriptionId))
+            org.StripeSubscriptionId = session.SubscriptionId;
 
         await db.SaveChangesAsync();
         return planId;
@@ -120,8 +124,7 @@ public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeS
                 : "Tarjeta";
 
             return new PaymentRecord(
-                Date:   DateTimeOffset.FromUnixTimeSeconds(inv.Created)
-                            .ToLocalTime().ToString("d MMM yyyy"),
+                Date:   inv.Created.ToLocalTime().ToString("d MMM yyyy"),
                 Method: method,
                 Amount: inv.AmountPaid / 100m,
                 Status: "Pagado"
@@ -152,6 +155,8 @@ public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeS
                     org.Plan = planId;
                     if (!string.IsNullOrEmpty(session.CustomerId))
                         org.StripeCustomerId = session.CustomerId;
+                    if (!string.IsNullOrEmpty(session.SubscriptionId))
+                        org.StripeSubscriptionId = session.SubscriptionId;
                     await db.SaveChangesAsync();
                 }
             }
@@ -165,6 +170,24 @@ public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeS
                 if (org is not null) { org.Plan = "free"; await db.SaveChangesAsync(); }
             }
         }
+    }
+
+    public async Task<SubscriptionInfo?> GetSubscriptionInfoAsync(string orgId)
+    {
+        var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == orgId);
+        if (org is null) return null;
+
+        if (string.IsNullOrEmpty(org.StripeSubscriptionId))
+            return new SubscriptionInfo(IsStripe: false, NextBillingDate: null, StartDate: null);
+
+        Configure();
+        var subService = new SubscriptionService();
+        var sub = await subService.GetAsync(org.StripeSubscriptionId);
+
+        var nextBilling = sub.CurrentPeriodEnd.ToLocalTime().ToString("d MMM yyyy");
+        var startDate   = sub.CurrentPeriodStart.ToLocalTime().ToString("d MMM yyyy");
+
+        return new SubscriptionInfo(IsStripe: true, NextBillingDate: nextBilling, StartDate: startDate);
     }
 
     private static string Capitalize(string s) =>

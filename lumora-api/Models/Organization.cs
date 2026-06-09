@@ -19,6 +19,9 @@ public class Organization
     [Column("stripe_customer_id")]
     public string? StripeCustomerId { get; set; }
 
+    [Column("stripe_subscription_id")]
+    public string? StripeSubscriptionId { get; set; }
+
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

@@ -85,6 +85,8 @@ export default function PaquetesPage() {
   const [promoMsg,       setPromoMsg]       = useState(null) // { type: 'ok'|'err', text }
   const [historial,      setHistorial]      = useState([])
   const [histLoading,    setHistLoading]    = useState(false)
+  const [subInfo,        setSubInfo]        = useState(null)
+  const [subLoading,     setSubLoading]     = useState(false)
 
   const currentPlan = user?.plan ?? 'free'
   const activePlan  = PLANS.find(p => p.id === currentPlan)
@@ -96,6 +98,11 @@ export default function PaquetesPage() {
       .then(setHistorial)
       .catch(() => setHistorial([]))
       .finally(() => setHistLoading(false))
+    setSubLoading(true)
+    paymentsApi.getSubscription()
+      .then(setSubInfo)
+      .catch(() => setSubInfo(null))
+      .finally(() => setSubLoading(false))
   }, [currentPlan])
 
   const handleSelect = async (planId) => {
@@ -155,7 +162,11 @@ export default function PaquetesPage() {
               </div>
               <div className={styles.currentNextBill}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                Próximo cargo: <strong>28 Jun 2026</strong>
+                {subLoading
+                  ? 'Cargando…'
+                  : subInfo?.isStripe
+                    ? <>Vigente: <strong>{subInfo.startDate}</strong> → <strong>{subInfo.nextBillingDate}</strong></>
+                    : 'Plan activado con código — Sin renovación automática'}
               </div>
             </div>
             <div className={styles.currentCardRight}>
@@ -273,7 +284,9 @@ export default function PaquetesPage() {
             <div className={styles.histLoading}>Cargando historial…</div>
           ) : historial.length === 0 ? (
             <div className={styles.histEmpty}>
-              Aún no hay pagos registrados. Aparecerán aquí después de tu primer cobro.
+              {subInfo?.isStripe === false
+                ? 'Tu plan fue activado con un código promocional. No tienes cobros registrados en Stripe.'
+                : 'Aún no hay pagos registrados. Aparecerán aquí después de tu primer cobro.'}
             </div>
           ) : (
             <div className={styles.historialTable}>

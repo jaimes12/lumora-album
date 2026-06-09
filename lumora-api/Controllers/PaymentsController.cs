@@ -71,6 +71,15 @@ public class PaymentsController(IStripeService stripe) : ControllerBase
         return Ok(records);
     }
 
+    // Returns active subscription period info (next billing date, start date)
+    [HttpGet("subscription")]
+    [Authorize]
+    public async Task<IActionResult> GetSubscription()
+    {
+        var info = await stripe.GetSubscriptionInfoAsync(OrgId);
+        return Ok(info);
+    }
+
     // Stripe webhook — receives payment events from Stripe servers
     [HttpPost("webhook")]
     public async Task<IActionResult> Webhook()
