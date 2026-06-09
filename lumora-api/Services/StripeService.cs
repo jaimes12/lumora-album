@@ -26,9 +26,12 @@ public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeS
 
     public string GetPublishableKey() => config["Stripe:PublishableKey"] ?? "";
 
+    private void Configure() =>
+        StripeConfiguration.ApiKey = config["Stripe:SecretKey"] ?? "";
+
     public async Task<string> CreateCheckoutSessionAsync(string orgId, string planId, string successUrl, string cancelUrl)
     {
-        StripeConfiguration.ApiKey = config["Stripe:SecretKey"];
+        Configure();
 
         if (!Plans.TryGetValue(planId, out var plan))
             throw new ArgumentException($"Plan inválido: {planId}");
@@ -36,24 +39,24 @@ public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeS
         var options = new SessionCreateOptions
         {
             Mode = "subscription",
-            LineItems =
-            [
-                new SessionLineItemOptions
+            LineItems = new List<SessionLineItemOptions>
+            {
+                new()
                 {
                     PriceData = new SessionLineItemPriceDataOptions
                     {
-                        Currency = "mxn",
+                        Currency  = "mxn",
                         UnitAmount = plan.Centavos,
                         Recurring = new SessionLineItemPriceDataRecurringOptions { Interval = "month" },
                         ProductData = new SessionLineItemPriceDataProductDataOptions
                         {
-                            Name = $"{plan.Name} — Elixe",
+                            Name        = $"{plan.Name} — Elixe",
                             Description = $"Suscripción mensual al {plan.Name} de Elixe",
                         },
                     },
                     Quantity = 1,
                 }
-            ],
+            },
             SuccessUrl = successUrl + "?session_id={CHECKOUT_SESSION_ID}",
             CancelUrl  = cancelUrl,
             Metadata   = new Dictionary<string, string> { ["org_id"] = orgId, ["plan_id"] = planId },
@@ -67,7 +70,7 @@ public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeS
 
     public async Task<string?> VerifyAndActivatePlanAsync(string sessionId, string orgId)
     {
-        StripeConfiguration.ApiKey = config["Stripe:SecretKey"];
+        Configure();
 
         var service = new SessionService();
         var session = await service.GetAsync(sessionId);
@@ -75,8 +78,8 @@ public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeS
         if (session.PaymentStatus != "paid" && session.Status != "complete")
             return null;
 
-        var planId = session.Metadata.TryGetValue("plan_id", out var p) ? p : null;
-        if (planId is null) return null;
+        session.Metadata.TryGetValue("plan_id", out var planId);
+        if (string.IsNullOrEmpty(planId)) return null;
 
         var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == orgId);
         if (org is null) return null;
@@ -88,37 +91,29 @@ public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeS
 
     public async Task HandleWebhookAsync(string payload, string signature)
     {
-        StripeConfiguration.ApiKey = config["Stripe:SecretKey"];
-        var webhookSecret = config["Stripe:WebhookSecret"];
+        Configure();
+        var webhookSecret = config["Stripe:WebhookSecret"] ?? "";
 
-        Event stripeEvent;
+        Stripe.Event stripeEvent;
         if (!string.IsNullOrEmpty(webhookSecret))
-        {
             stripeEvent = EventUtility.ConstructEvent(payload, signature, webhookSecret);
-        }
         else
-        {
             stripeEvent = EventUtility.ParseEvent(payload);
-        }
 
-        if (stripeEvent.Type == EventTypes.CheckoutSessionCompleted)
+        if (stripeEvent.Type == "checkout.session.completed")
         {
-            var session = stripeEvent.Data.Object as Session;
-            if (session?.Metadata.TryGetValue("org_id", out var orgId) == true &&
-                session.Metadata.TryGetValue("plan_id", out var planId) == true)
+            if (stripeEvent.Data.Object is Session session &&
+                session.Metadata.TryGetValue("org_id",  out var orgId)  &&
+                session.Metadata.TryGetValue("plan_id", out var planId))
             {
                 var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == orgId);
-                if (org is not null)
-                {
-                    org.Plan = planId;
-                    await db.SaveChangesAsync();
-                }
+                if (org is not null) { org.Plan = planId; await db.SaveChangesAsync(); }
             }
         }
-        else if (stripeEvent.Type == EventTypes.CustomerSubscriptionDeleted)
+        else if (stripeEvent.Type == "customer.subscription.deleted")
         {
-            var sub = stripeEvent.Data.Object as Subscription;
-            if (sub?.Metadata.TryGetValue("org_id", out var orgId) == true)
+            if (stripeEvent.Data.Object is Subscription sub &&
+                sub.Metadata.TryGetValue("org_id", out var orgId))
             {
                 var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == orgId);
                 if (org is not null) { org.Plan = "free"; await db.SaveChangesAsync(); }
