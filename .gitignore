@@ -9,6 +9,7 @@ lumora-api/lumora-api.http
 
 # Secrets — never commit
 **/appsettings.Local.json
+**/appsettings.Development.json
 **/firebase-credentials.json
 **/*.pfx
 **/*.key

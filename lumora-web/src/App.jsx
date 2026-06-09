@@ -26,6 +26,7 @@ import VentasPage from './pages/VentasPage'
 import ContratosPage from './pages/ContratosPage'
 import CalendarioPage from './pages/CalendarioPage'
 import ContactosPage from './pages/ContactosPage'
+import PagoExitosoPage from './pages/PagoExitosoPage'
 import LoginPage from './pages/LoginPage'
 import PaquetesPage from './pages/PaquetesPage'
 import ProductosPage from './pages/ProductosPage'
@@ -101,8 +102,9 @@ export default function App() {
               <Route path="ventas"      element={<VentasPage />} />
               <Route path="contratos"   element={<ContratosPage />} />
               <Route path="calendario"  element={<CalendarioPage />} />
-              <Route path="paquetes"    element={<PaquetesPage />} />
-              <Route path="productos"   element={<ProductosPage />} />
+              <Route path="paquetes"      element={<PaquetesPage />} />
+              <Route path="productos"     element={<ProductosPage />} />
+              <Route path="pago-exitoso"  element={<PagoExitosoPage />} />
             </Route>
 
             {/* Catch-all */}

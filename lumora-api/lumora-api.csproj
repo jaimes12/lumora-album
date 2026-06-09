@@ -23,6 +23,8 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.13" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
     <!-- R2 uploads use raw HTTP + SigV4 (AWSSDK uses chunked mode not supported by R2) -->
+    <!-- Stripe payments -->
+    <PackageReference Include="Stripe.net" Version="47.3.0" />
   </ItemGroup>
 
 </Project>

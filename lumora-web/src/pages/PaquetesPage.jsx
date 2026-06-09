@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { paymentsApi } from '../api/paymentsApi'
 import styles from './PaquetesPage.module.css'
 
 const PLANS = [
@@ -84,8 +85,11 @@ const CheckIcon = () => (
 
 export default function PaquetesPage() {
   const { user, updatePlan } = useAuth()
-  const [loading,       setLoading]       = useState(null)
+  const [loading,        setLoading]        = useState(null)
   const [showChangePlan, setShowChangePlan] = useState(false)
+  const [promoCode,      setPromoCode]      = useState('')
+  const [promoLoading,   setPromoLoading]   = useState(false)
+  const [promoMsg,       setPromoMsg]       = useState(null) // { type: 'ok'|'err', text }
 
   const currentPlan = user?.plan ?? 'free'
   const activePlan  = PLANS.find(p => p.id === currentPlan)
@@ -94,10 +98,32 @@ export default function PaquetesPage() {
     if (planId === currentPlan) return
     setLoading(planId)
     try {
-      await updatePlan(planId)
+      const res = await paymentsApi.createCheckout(planId)
+      window.location.href = res.url
+    } catch (err) {
+      alert(err.message || 'Error al iniciar el pago')
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  const handleApplyPromo = async (e) => {
+    e.preventDefault()
+    if (!promoCode.trim()) return
+    setPromoLoading(true)
+    setPromoMsg(null)
+    try {
+      const res = await paymentsApi.applyPromo(promoCode.trim())
+      await updatePlan(res.plan)
+      const planName = PLANS.find(p => p.id === res.plan)?.name ?? res.plan
+      setPromoMsg({ type: 'ok', text: `¡Código aplicado! Plan ${planName} activado.` })
+      setPromoCode('')
       setShowChangePlan(false)
-    } catch {}
-    finally { setLoading(null) }
+    } catch (err) {
+      setPromoMsg({ type: 'err', text: err.message || 'Código inválido' })
+    } finally {
+      setPromoLoading(false)
+    }
   }
 
   return (
@@ -205,6 +231,33 @@ export default function PaquetesPage() {
             })}
           </div>
           <p className={styles.note}>🔒 Cancela cuando quieras · Sin contratos de permanencia</p>
+
+          {/* Promo code */}
+          <div className={styles.promoSection}>
+            <p className={styles.promoLabel}>¿Tienes un código de descuento?</p>
+            <form className={styles.promoForm} onSubmit={handleApplyPromo}>
+              <input
+                className={styles.promoInput}
+                type="text"
+                placeholder="Ej: ELIXE2026"
+                value={promoCode}
+                onChange={e => { setPromoCode(e.target.value.toUpperCase()); setPromoMsg(null) }}
+                maxLength={30}
+              />
+              <button
+                type="submit"
+                className={styles.promoBtn}
+                disabled={promoLoading || !promoCode.trim()}
+              >
+                {promoLoading ? 'Aplicando…' : 'Aplicar'}
+              </button>
+            </form>
+            {promoMsg && (
+              <p className={`${styles.promoMsg} ${promoMsg.type === 'ok' ? styles.promoMsgOk : styles.promoMsgErr}`}>
+                {promoMsg.text}
+              </p>
+            )}
+          </div>
         </section>
       )}
 

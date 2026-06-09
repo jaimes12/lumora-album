@@ -64,6 +64,7 @@ builder.Services.AddScoped<ILeadService, LeadService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IStripeService, StripeService>();
 
 // Auth
 var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "lumora-dev-secret-key-change-in-production-32chars";
@@ -445,6 +446,24 @@ try
             `created_at`  datetime(6) NOT NULL,
             PRIMARY KEY (`id`)
         ) CHARACTER SET utf8mb4",
+
+        @"CREATE TABLE IF NOT EXISTS `promo_codes` (
+            `id`          varchar(255) NOT NULL,
+            `code`        varchar(100) NOT NULL,
+            `plan_id`     varchar(100) NOT NULL DEFAULT 'negocio',
+            `description` varchar(500) NULL,
+            `max_uses`    int NOT NULL DEFAULT -1,
+            `used_count`  int NOT NULL DEFAULT 0,
+            `expires_at`  datetime(6) NULL,
+            `active`      tinyint(1) NOT NULL DEFAULT 1,
+            `created_at`  datetime(6) NOT NULL,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `uq_promo_code` (`code`)
+        ) CHARACTER SET utf8mb4",
+
+        // Seed default promo codes (INSERT IGNORE = no-op if code already exists)
+        "INSERT IGNORE INTO `promo_codes` (`id`,`code`,`plan_id`,`description`,`max_uses`,`used_count`,`active`,`created_at`) VALUES ('promo_elixe2026','ELIXE2026','negocio','Acceso gratis Plan Negocio',-1,0,1,NOW())",
+        "INSERT IGNORE INTO `promo_codes` (`id`,`code`,`plan_id`,`description`,`max_uses`,`used_count`,`active`,`created_at`) VALUES ('promo_agencia','AGENCIA2026','agencia','Acceso gratis Plan Agencia',-1,0,1,NOW())",
     };
 
     try

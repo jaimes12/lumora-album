@@ -31,6 +31,7 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
     public DbSet<OrgTask> OrgTasks => Set<OrgTask>();
     public DbSet<OrgProduct> OrgProducts => Set<OrgProduct>();
     public DbSet<EventProduct> EventProducts => Set<EventProduct>();
+    public DbSet<PromoCode> PromoCodes => Set<PromoCode>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
