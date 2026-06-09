@@ -463,6 +463,17 @@ try
             UNIQUE KEY `uq_promo_code` (`code`)
         ) CHARACTER SET utf8mb4",
 
+        @"CREATE TABLE IF NOT EXISTS `org_plan_history` (
+            `id`           varchar(255)  NOT NULL,
+            `org_id`       varchar(255)  NOT NULL,
+            `plan_id`      varchar(100)  NOT NULL,
+            `method`       varchar(100)  NOT NULL DEFAULT 'stripe',
+            `promo_code`   varchar(100)  NULL,
+            `amount`       decimal(10,2) NOT NULL DEFAULT 0,
+            `activated_at` datetime(6)   NOT NULL,
+            PRIMARY KEY (`id`)
+        ) CHARACTER SET utf8mb4",
+
         // Seed default promo codes (INSERT IGNORE = no-op if code already exists)
         "INSERT IGNORE INTO `promo_codes` (`id`,`code`,`plan_id`,`description`,`max_uses`,`used_count`,`active`,`created_at`) VALUES ('promo_elixe2026','ELIXE2026','negocio','Acceso gratis Plan Negocio',-1,0,1,NOW())",
         "INSERT IGNORE INTO `promo_codes` (`id`,`code`,`plan_id`,`description`,`max_uses`,`used_count`,`active`,`created_at`) VALUES ('promo_agencia','AGENCIA2026','agencia','Acceso gratis Plan Agencia',-1,0,1,NOW())",

@@ -101,12 +101,27 @@ public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeS
 
     public async Task<List<PaymentRecord>> GetPaymentHistoryAsync(string orgId)
     {
-        Configure();
-
         var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == orgId);
-        if (org is null || string.IsNullOrEmpty(org.StripeCustomerId))
-            return [];
+        if (org is null) return [];
 
+        // Promo-only users: return local history records
+        if (string.IsNullOrEmpty(org.StripeCustomerId))
+        {
+            var localHistory = await db.PlanHistories
+                .Where(h => h.OrgId == orgId)
+                .OrderByDescending(h => h.ActivatedAt)
+                .ToListAsync();
+
+            return localHistory.Select(h => new PaymentRecord(
+                Date:   h.ActivatedAt.ToLocalTime().ToString("d MMM yyyy"),
+                Method: h.Method == "promo" ? $"Código: {h.PromoCode}" : "Stripe",
+                Amount: h.Amount,
+                Status: "Activado"
+            )).ToList();
+        }
+
+        // Stripe users: return real invoices from Stripe
+        Configure();
         var invoiceService = new InvoiceService();
         var invoices = await invoiceService.ListAsync(new InvoiceListOptions
         {
@@ -212,6 +227,18 @@ public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeS
 
         org.Plan = promo.PlanId;
         promo.UsedCount++;
+
+        db.PlanHistories.Add(new PlanHistory
+        {
+            Id          = Guid.NewGuid().ToString(),
+            OrgId       = orgId,
+            PlanId      = promo.PlanId,
+            Method      = "promo",
+            PromoCode   = promo.Code,
+            Amount      = 0,
+            ActivatedAt = DateTime.UtcNow,
+        });
+
         await db.SaveChangesAsync();
 
         return (true, promo.PlanId, "");
