@@ -5,6 +5,7 @@ import { findOrCreateLeadByPhone } from '../api/leadsApi'
 import { useAuth } from '../context/AuthContext'
 import { PlanGateModal } from '../components/PlanGate'
 import { underLimit } from '../config/planConfig'
+import { useInfiniteScroll } from '../hooks/useInfiniteScroll'
 import styles from './ClientesPage.module.css'
 
 function NuevoClienteModal({ onClose, onCreated }) {
@@ -118,6 +119,10 @@ export default function ClientesPage() {
     return matchSearch && matchEtapa
   })
 
+  const { visible, hasMore, sentinelRef, reset } = useInfiniteScroll(filtered, 20)
+
+  useEffect(() => { reset() }, [filterEtapa, search, reset])
+
   const ultimoContacto = (c) => {
     if (!c.ultimoContacto) return 'Sin contacto'
     return new Date(c.ultimoContacto).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -187,7 +192,7 @@ export default function ClientesPage() {
               {loading && (
                 <tr><td colSpan={6} style={{ textAlign:'center', padding:40, color:'var(--text-muted)' }}>Cargando…</td></tr>
               )}
-              {!loading && filtered.map(c => {
+              {!loading && visible.map(c => {
                 const meta = ETAPA_META[c.etapa] ?? ETAPA_META.lead
                 return (
                   <tr key={c.id}
@@ -214,7 +219,12 @@ export default function ClientesPage() {
           {!loading && filtered.length === 0 && (
             <div className={styles.empty}>No se encontraron clientes</div>
           )}
+          <div ref={sentinelRef} style={{ height: 1 }} />
         </div>
+        {hasMore && <div className={styles.loadingMore}>Cargando más clientes…</div>}
+        {!hasMore && filtered.length > 20 && (
+          <div className={styles.listEnd}>{filtered.length} clientes</div>
+        )}
 
         {selected && (
           <div className={styles.drawer}>

@@ -410,3 +410,6 @@
   cursor: pointer;
 }
 .confirmNo:hover { color: var(--text); }
+
+.loadingMore { text-align:center;padding:20px;font-size:13px;color:var(--text-muted); }
+.listEnd { text-align:center;padding:16px;font-size:12px;color:var(--text-muted);opacity:0.6; }

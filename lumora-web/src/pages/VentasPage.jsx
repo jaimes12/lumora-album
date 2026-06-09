@@ -391,6 +391,7 @@ export default function VentasPage() {
   const [ventas,      setVentas]      = useState([])
   const [loading,     setLoading]     = useState(true)
   const [tab,         setTab]         = useState('cotizaciones')
+  const [search,      setSearch]      = useState('')
   const [showCreate,  setShowCreate]  = useState(null)   // null | 'quote' | 'invoice'
   const [detailItem,  setDetailItem]  = useState(null)
 
@@ -403,7 +404,15 @@ export default function VentasPage() {
 
   const cotizaciones = ventas.filter(v => v.tipo === 'quote')
   const facturas     = ventas.filter(v => v.tipo === 'invoice')
-  const data         = tab === 'cotizaciones' ? cotizaciones : facturas
+  const q = search.trim().toLowerCase()
+  const applySearch = (list) => q
+    ? list.filter(v =>
+        (v.clienteNombre || '').toLowerCase().includes(q) ||
+        (v.numero || '').toLowerCase().includes(q) ||
+        (v.eventoNombre || '').toLowerCase().includes(q)
+      )
+    : list
+  const data         = applySearch(tab === 'cotizaciones' ? cotizaciones : facturas)
   const meta         = tab === 'cotizaciones' ? COT_META : FAC_META
 
   const totalAprobado = cotizaciones
@@ -489,20 +498,38 @@ export default function VentasPage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className={styles.tabs}>
-        <button
-          className={`${styles.tab} ${tab === 'cotizaciones' ? styles.tabActive : ''}`}
-          onClick={() => setTab('cotizaciones')}
-        >
-          Cotizaciones <span className={styles.tabCount}>{cotizaciones.length}</span>
-        </button>
-        <button
-          className={`${styles.tab} ${tab === 'facturas' ? styles.tabActive : ''}`}
-          onClick={() => setTab('facturas')}
-        >
-          Facturas <span className={styles.tabCount}>{facturas.length}</span>
-        </button>
+      {/* Tabs + Search */}
+      <div className={styles.tabsRow}>
+        <div className={styles.tabs}>
+          <button
+            className={`${styles.tab} ${tab === 'cotizaciones' ? styles.tabActive : ''}`}
+            onClick={() => { setTab('cotizaciones'); setSearch('') }}
+          >
+            Cotizaciones <span className={styles.tabCount}>{cotizaciones.length}</span>
+          </button>
+          <button
+            className={`${styles.tab} ${tab === 'facturas' ? styles.tabActive : ''}`}
+            onClick={() => { setTab('facturas'); setSearch('') }}
+          >
+            Facturas <span className={styles.tabCount}>{facturas.length}</span>
+          </button>
+        </div>
+        <div className={styles.searchBox}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            type="text"
+            placeholder="Buscar por cliente, número o evento…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          {search && (
+            <button className={styles.searchClear} onClick={() => setSearch('')} aria-label="Limpiar">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Table */}

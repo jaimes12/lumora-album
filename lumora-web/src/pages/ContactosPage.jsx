@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { leadsApi } from '../api/leadsApi'
 import { DEFAULT_STAGES } from './ChatPage'
+import { useInfiniteScroll } from '../hooks/useInfiniteScroll'
 import styles from './ContactosPage.module.css'
 
 function getStages() {
@@ -85,6 +86,10 @@ export default function ContactosPage() {
     : byStage
 
   const STAGE_FILTERS = [{ id: 'todos', label: 'Todos', color: 'var(--accent)' }, ...stages]
+
+  const { visible, hasMore, sentinelRef, reset } = useInfiniteScroll(filtered, 20)
+
+  useEffect(() => { reset() }, [filter, search, reset])
 
   return (
     <div className={styles.page}>
@@ -176,7 +181,7 @@ export default function ContactosPage() {
         </div>
       ) : (
         <div className={styles.list}>
-          {filtered.map(lead => {
+          {visible.map(lead => {
             const meta    = stageMeta(lead.stage)
             const isDeleting = confirmDelete === lead.id
             return (
@@ -245,7 +250,12 @@ export default function ContactosPage() {
               </div>
             )
           })}
+          <div ref={sentinelRef} style={{ height: 1 }} />
         </div>
+      )}
+      {hasMore && <div className={styles.loadingMore}>Cargando más contactos…</div>}
+      {!hasMore && filtered.length > 20 && (
+        <div className={styles.listEnd}>{filtered.length} contactos en este embudo</div>
       )}
     </div>
   )

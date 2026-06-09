@@ -215,6 +215,7 @@ export default function ContratosPage() {
   const [vista,       setVista]       = useState('lista')   // lista | nuevo
   const [template,    setTemplate]    = useState(null)
   const [contratos,   setContratos]   = useState([])
+  const [search,      setSearch]      = useState('')
   const [contratoActivo, setContratoActivo] = useState(null)
   const contratoRef = useRef(null)
 
@@ -574,6 +575,25 @@ export default function ContratosPage() {
         </button>
       </div>
 
+      {/* Search */}
+      <div className={styles.searchWrap}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          type="text"
+          placeholder="Buscar por cliente, evento o tipo…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className={styles.searchInput}
+        />
+        {search && (
+          <button className={styles.searchClear} onClick={() => setSearch('')}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        )}
+      </div>
+
       {/* Stats */}
       <div className={styles.statsRow}>
         {[
@@ -604,7 +624,14 @@ export default function ContratosPage() {
             </tr>
           </thead>
           <tbody>
-            {contratos.map(ct => {
+            {contratos.filter(ct => {
+              const q = search.trim().toLowerCase()
+              if (!q) return true
+              const tmpl = TEMPLATES.find(t => t.id === ct.template)
+              return (ct.cliente || '').toLowerCase().includes(q) ||
+                (ct.evento || '').toLowerCase().includes(q) ||
+                (tmpl?.nombre || '').toLowerCase().includes(q)
+            }).map(ct => {
               const tmpl = TEMPLATES.find(t => t.id === ct.template)
               const est  = ESTADO_COLOR[ct.estado] || ESTADO_COLOR.borrador
               return (
