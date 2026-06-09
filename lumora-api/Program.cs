@@ -463,6 +463,24 @@ try
             UNIQUE KEY `uq_promo_code` (`code`)
         ) CHARACTER SET utf8mb4",
 
+        @"CREATE TABLE IF NOT EXISTS `pipeline_stages` (
+            `id`         varchar(255) NOT NULL,
+            `org_id`     varchar(255) NOT NULL,
+            `label`      varchar(500) NOT NULL,
+            `color`      varchar(50)  NOT NULL DEFAULT '#64748b',
+            `sort_order` int          NOT NULL DEFAULT 0,
+            PRIMARY KEY (`id`)
+        ) CHARACTER SET utf8mb4",
+
+        @"CREATE TABLE IF NOT EXISTS `quick_replies` (
+            `id`         varchar(255) NOT NULL,
+            `org_id`     varchar(255) NOT NULL,
+            `title`      varchar(500) NOT NULL,
+            `body`       longtext     NOT NULL,
+            `created_at` datetime(6)  NOT NULL,
+            PRIMARY KEY (`id`)
+        ) CHARACTER SET utf8mb4",
+
         @"CREATE TABLE IF NOT EXISTS `org_plan_history` (
             `id`           varchar(255)  NOT NULL,
             `org_id`       varchar(255)  NOT NULL,

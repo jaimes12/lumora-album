@@ -1,16 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { leadsApi } from '../api/leadsApi'
-import { DEFAULT_STAGES } from './ChatPage'
+import { useStages } from '../hooks/useStages'
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll'
 import styles from './ContactosPage.module.css'
-
-function getStages() {
-  try {
-    const s = localStorage.getItem('elixe_stages')
-    return s ? JSON.parse(s) : DEFAULT_STAGES
-  } catch { return DEFAULT_STAGES }
-}
 
 const SearchIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -45,7 +38,7 @@ export default function ContactosPage() {
   const [confirmDelete,    setConfirmDelete]    = useState(null)
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false)
   const [deletingAll,      setDeletingAll]      = useState(false)
-  const stages = getStages()
+  const [stages] = useStages()
 
   const load = useCallback(async () => {
     try { setLeads(await leadsApi.getAll()) }

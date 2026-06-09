@@ -33,6 +33,8 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
     public DbSet<EventProduct> EventProducts => Set<EventProduct>();
     public DbSet<PromoCode> PromoCodes => Set<PromoCode>();
     public DbSet<PlanHistory> PlanHistories => Set<PlanHistory>();
+    public DbSet<PipelineStage> PipelineStages => Set<PipelineStage>();
+    public DbSet<QuickReply> QuickReplies => Set<QuickReply>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {

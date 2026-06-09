@@ -3,9 +3,11 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { leadsApi, toFrontendMsg } from '../api/leadsApi'
 import { clientesApi } from '../api/clientesApi'
 import { eventosApi } from '../api/eventosApi'
+import { quickRepliesApi } from '../api/quickRepliesApi'
 import { useAuth } from '../context/AuthContext'
 import PlanGate from '../components/PlanGate'
 import { canUse } from '../config/planConfig'
+import { useStages, DEFAULT_STAGES } from '../hooks/useStages'
 import styles from './ChatPage.module.css'
 
 // ─── Phone input with country code toggle ────────────────────────────────────
@@ -54,29 +56,8 @@ function PhoneInput({ value, onChange, inputClassName }) {
   )
 }
 
-// ─── Default stages ──────────────────────────────────────────────────────────
-export const DEFAULT_STAGES = [
-  { id: 'nuevo',      label: 'Nuevo',              color: '#64748b' },
-  { id: 'contactado', label: 'Contactado',          color: '#38bdf8' },
-  { id: 'cotizacion', label: 'Cotización enviada',  color: '#fb923c' },
-  { id: 'negociando', label: 'Negociando',          color: '#a78bfa' },
-  { id: 'confirmado', label: 'Confirmado',          color: '#34d399' },
-]
-
-// ─── Hooks ───────────────────────────────────────────────────────────────────
-function useStages() {
-  const [stages, setStages] = useState(() => {
-    try {
-      const s = localStorage.getItem('elixe_stages')
-      return s ? JSON.parse(s) : DEFAULT_STAGES
-    } catch { return DEFAULT_STAGES }
-  })
-  const save = (next) => {
-    setStages(next)
-    localStorage.setItem('elixe_stages', JSON.stringify(next))
-  }
-  return [stages, save]
-}
+// ─── Re-export DEFAULT_STAGES so existing imports from this file still work ──
+export { DEFAULT_STAGES }
 
 // ─── Stage Manager ───────────────────────────────────────────────────────────
 const PRESET_COLORS = ['#64748b','#38bdf8','#34d399','#fb923c','#a78bfa','#f472b6','#fbbf24','#ef4444']
@@ -171,6 +152,139 @@ function StageManager({ stages, onSave, onClose, onClearAll }) {
           >
             🗑 Limpiar todas las conversaciones
           </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Quick Reply Manager ─────────────────────────────────────────────────────
+function QuickReplyManager({ onClose }) {
+  const [replies,  setReplies]  = useState([])
+  const [loading,  setLoading]  = useState(true)
+  const [editing,  setEditing]  = useState(null) // { id?, title, body } — null = no edit
+  const [saving,   setSaving]   = useState(false)
+
+  useEffect(() => {
+    quickRepliesApi.getAll()
+      .then(setReplies)
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const startNew  = () => setEditing({ id: null, title: '', body: '' })
+  const startEdit = (r) => setEditing({ id: r.id, title: r.title, body: r.body })
+  const cancel    = () => setEditing(null)
+
+  const save = async () => {
+    if (!editing.title.trim() || !editing.body.trim()) return
+    setSaving(true)
+    try {
+      if (editing.id) {
+        const updated = await quickRepliesApi.update(editing.id, editing.title, editing.body)
+        setReplies(rs => rs.map(r => r.id === editing.id ? updated : r))
+      } else {
+        const created = await quickRepliesApi.create(editing.title, editing.body)
+        setReplies(rs => [...rs, created])
+      }
+      setEditing(null)
+    } catch {} finally { setSaving(false) }
+  }
+
+  const remove = async (id) => {
+    await quickRepliesApi.remove(id)
+    setReplies(rs => rs.filter(r => r.id !== id))
+  }
+
+  return (
+    <div className={styles.smOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className={styles.smBox}>
+        <div className={styles.smHeader}>
+          <h3 className={styles.smTitle}>Respuestas rápidas</h3>
+          <button className={styles.smClose} onClick={onClose}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div className={styles.smTableWrap}>
+          {loading ? (
+            <p style={{ padding: '1rem', color: 'var(--muted)' }}>Cargando…</p>
+          ) : replies.length === 0 && !editing ? (
+            <p style={{ padding: '1rem', color: 'var(--muted)', fontSize: '0.85rem' }}>
+              Aún no hay respuestas rápidas. Crea la primera.
+            </p>
+          ) : (
+            <table className={styles.smTable}>
+              <thead>
+                <tr>
+                  <th className={styles.smTh}>Título</th>
+                  <th className={styles.smTh}>Cuerpo</th>
+                  <th className={styles.smTh}></th>
+                </tr>
+              </thead>
+              <tbody>
+                {replies.map(r => (
+                  <tr key={r.id} className={styles.smRow}>
+                    {editing?.id === r.id ? (
+                      <>
+                        <td className={styles.smTd}>
+                          <input className={styles.smNameInput} value={editing.title}
+                            onChange={e => setEditing(v => ({ ...v, title: e.target.value }))} />
+                        </td>
+                        <td className={styles.smTd}>
+                          <textarea className={styles.smNameInput} value={editing.body} rows={2}
+                            style={{ resize: 'vertical', fontFamily: 'inherit' }}
+                            onChange={e => setEditing(v => ({ ...v, body: e.target.value }))} />
+                        </td>
+                        <td className={styles.smTd} style={{ whiteSpace: 'nowrap' }}>
+                          <button className={styles.smSaveBtn} style={{ marginRight: 4 }} onClick={save} disabled={saving}>
+                            {saving ? '…' : 'OK'}
+                          </button>
+                          <button className={styles.smDeleteBtn} onClick={cancel}>✕</button>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className={styles.smTd} style={{ fontWeight: 500 }}>{r.title}</td>
+                        <td className={styles.smTd} style={{ color: 'var(--muted)', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.body}</td>
+                        <td className={styles.smTd} style={{ whiteSpace: 'nowrap' }}>
+                          <button className={styles.smAddBtn} style={{ marginRight: 4, padding: '2px 8px' }} onClick={() => startEdit(r)}>✏</button>
+                          <button className={styles.smDeleteBtn} onClick={() => remove(r.id)}>✕</button>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {editing && !editing.id && (
+          <div style={{ padding: '0 1rem 0.5rem' }}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+              <input className={styles.smNameInput} style={{ flex: 1 }} placeholder="Título del acceso directo"
+                value={editing.title} onChange={e => setEditing(v => ({ ...v, title: e.target.value }))} />
+            </div>
+            <textarea className={styles.smNameInput} style={{ width: '100%', resize: 'vertical', fontFamily: 'inherit', minHeight: 72 }}
+              placeholder="Texto del mensaje que se pegará"
+              value={editing.body} onChange={e => setEditing(v => ({ ...v, body: e.target.value }))} rows={3} />
+          </div>
+        )}
+
+        <div className={styles.smFooter}>
+          {editing ? (
+            <>
+              <button className={styles.smAddBtn} onClick={cancel}>Cancelar</button>
+              <button className={styles.smSaveBtn} onClick={save} disabled={saving || !editing.title.trim() || !editing.body.trim()}>
+                {saving ? 'Guardando…' : 'Guardar'}
+              </button>
+            </>
+          ) : (
+            <button className={styles.smAddBtn} onClick={startNew}>+ Nueva respuesta rápida</button>
+          )}
         </div>
       </div>
     </div>
@@ -532,7 +646,7 @@ function compressImage(file, maxPx = 1280, quality = 0.82) {
 const PAGE = 20
 
 // ─── Chat Modal ──────────────────────────────────────────────────────────────
-export function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
+export function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate, onOpenQRManager }) {
   const [lead,        setLead]        = useState(initLead)
   const [messages,    setMessages]    = useState(initLead.mensajes ?? [])
   // If we got a full page on initial load, assume there are more until poll confirms
@@ -544,8 +658,10 @@ export function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
   const [message,     setMessage]     = useState('')
   const [sending,     setSending]     = useState(false)
   const [sendError,   setSendError]   = useState('')
-  const [showInfo,    setShowInfo]    = useState(true)
-  const [mediaFile,   setMediaFile]   = useState(null)
+  const [showInfo,     setShowInfo]     = useState(true)
+  const [mediaFile,    setMediaFile]    = useState(null)
+  const [quickReplies, setQuickReplies] = useState([])
+  const [showQRPicker, setShowQRPicker] = useState(false)
 
   const msgsRef      = useRef(null)       // scroll container
   const bottomRef    = useRef(null)
@@ -649,6 +765,11 @@ export function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
     window.addEventListener('focus', onFocus)
     return () => { clearInterval(id); window.removeEventListener('focus', onFocus) }
   }, [pollMessages])
+
+  // ── Load quick replies ────────────────────────────────────────────────────
+  useEffect(() => {
+    quickRepliesApi.getAll().then(setQuickReplies).catch(() => {})
+  }, [])
 
   const pickFile = async (e) => {
     const file = e.target.files?.[0]
@@ -876,6 +997,32 @@ export function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
               </div>
             )}
 
+            {/* Quick reply picker */}
+            {showQRPicker && quickReplies.length > 0 && (
+              <div className={styles.qrPicker}>
+                {quickReplies.map(r => (
+                  <button
+                    key={r.id}
+                    className={styles.qrPickerItem}
+                    onMouseDown={e => {
+                      e.preventDefault()
+                      setMessage(r.body)
+                      setShowQRPicker(false)
+                    }}
+                  >
+                    <span className={styles.qrPickerTitle}>{r.title}</span>
+                    <span className={styles.qrPickerBody}>{r.body}</span>
+                  </button>
+                ))}
+                <button
+                  className={styles.qrPickerManage}
+                  onMouseDown={e => { e.preventDefault(); setShowQRPicker(false); onOpenQRManager?.() }}
+                >
+                  ⚙ Administrar respuestas
+                </button>
+              </div>
+            )}
+
             {/* Input */}
             <div className={styles.chatInputArea}>
               {/* Hidden file input */}
@@ -896,6 +1043,19 @@ export function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
                   <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
                 </svg>
               </button>
+              {quickReplies.length > 0 && (
+                <button
+                  className={`${styles.chatAttachBtn} ${showQRPicker ? styles.chatAttachBtnActive : ''}`}
+                  onClick={() => setShowQRPicker(v => !v)}
+                  onBlur={() => setTimeout(() => setShowQRPicker(false), 150)}
+                  title="Respuestas rápidas"
+                  type="button"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                  </svg>
+                </button>
+              )}
               <textarea
                 className={styles.chatInput}
                 placeholder="Escribe un mensaje… (Enter para enviar)"
@@ -903,6 +1063,16 @@ export function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate }) {
                 rows={1}
                 onChange={e => setMessage(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+                onPaste={async (e) => {
+                  const items = Array.from(e.clipboardData?.items ?? [])
+                  const imgItem = items.find(item => item.type.startsWith('image/'))
+                  if (!imgItem) return
+                  e.preventDefault()
+                  const file = imgItem.getAsFile()
+                  if (!file) return
+                  const dataUrl = await compressImage(file)
+                  setMediaFile({ name: 'imagen.jpg', dataUrl, base64: dataUrl.split(',')[1], mimeType: 'image/jpeg' })
+                }}
               />
               <button className={styles.chatSendBtn} onClick={send} disabled={(!message.trim() && !mediaFile) || sending}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -952,8 +1122,9 @@ function ChatPageInner() {
   const [dragging,         setDragging]         = useState(null)
   const [dragOver,         setDragOver]         = useState(null)
   const [mobileTab,        setMobileTab]        = useState('chats')
-  const [showCreate,       setShowCreate]       = useState(false)
-  const [showStageManager, setShowStageManager] = useState(false)
+  const [showCreate,        setShowCreate]        = useState(false)
+  const [showStageManager,  setShowStageManager]  = useState(false)
+  const [showQRManager,     setShowQRManager]     = useState(false)
 
   const loadLeads = useCallback(async () => {
     try { setLeads(await leadsApi.getAll()) }
@@ -1038,11 +1209,13 @@ function ChatPageInner() {
           }}
         />
       )}
+      {showQRManager && <QuickReplyManager onClose={() => setShowQRManager(false)} />}
       {activeLead && (
         <ChatModal
           lead={activeLead}
           stages={stages}
           onClose={() => setActiveLead(null)}
+          onOpenQRManager={() => setShowQRManager(true)}
           onLeadUpdate={(id, changes) => {
             handleLeadUpdate(id, changes)
             setActiveLead(prev => prev?.id === id ? { ...prev, ...changes } : prev)
@@ -1071,6 +1244,12 @@ function ChatPageInner() {
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
             </svg>
             Embudos
+          </button>
+          <button className={styles.btnSettings} onClick={() => setShowQRManager(true)}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+            Respuestas
           </button>
           <button className={styles.btnNew} onClick={() => setShowCreate(true)}>+ Nuevo lead</button>
         </div>

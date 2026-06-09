@@ -1008,6 +1008,30 @@
   flex-shrink: 0; transition: color 0.15s, border-color 0.15s;
 }
 .chatAttachBtn:hover { color: var(--accent); border-color: var(--accent); }
+.chatAttachBtnActive { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+
+/* ── Quick reply picker ────────────────────────────────────────────── */
+.qrPicker {
+  position: absolute; bottom: calc(100% + 6px); left: 0; right: 0;
+  background: var(--bg-1); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18); z-index: 50;
+  max-height: 280px; overflow-y: auto; display: flex; flex-direction: column;
+}
+.qrPickerItem {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  padding: 10px 14px; border: none; background: transparent; cursor: pointer;
+  text-align: left; border-bottom: 1px solid var(--border); transition: background 0.1s;
+}
+.qrPickerItem:last-of-type { border-bottom: none; }
+.qrPickerItem:hover { background: var(--bg-2); }
+.qrPickerTitle { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+.qrPickerBody { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.qrPickerManage {
+  padding: 8px 14px; font-size: 0.78rem; color: var(--text-muted);
+  background: var(--bg-2); border: none; cursor: pointer; text-align: left;
+  border-top: 1px solid var(--border); border-radius: 0 0 12px 12px;
+}
+.qrPickerManage:hover { color: var(--accent); }
 
 .chatMediaPreview {
   display: flex; align-items: center; gap: 8px;
