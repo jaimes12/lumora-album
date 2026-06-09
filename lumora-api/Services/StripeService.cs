@@ -12,8 +12,11 @@ public interface IStripeService
     Task<string?> VerifyAndActivatePlanAsync(string sessionId, string orgId);
     Task HandleWebhookAsync(string payload, string signature);
     Task<(bool ok, string planId, string error)> ApplyPromoCodeAsync(string orgId, string code);
+    Task<List<PaymentRecord>> GetPaymentHistoryAsync(string orgId);
     string GetPublishableKey();
 }
+
+public record PaymentRecord(string Date, string Method, decimal Amount, string Status);
 
 public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeService
 {
@@ -85,8 +88,45 @@ public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeS
         if (org is null) return null;
 
         org.Plan = planId;
+        if (!string.IsNullOrEmpty(session.CustomerId))
+            org.StripeCustomerId = session.CustomerId;
+
         await db.SaveChangesAsync();
         return planId;
+    }
+
+    public async Task<List<PaymentRecord>> GetPaymentHistoryAsync(string orgId)
+    {
+        Configure();
+
+        var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == orgId);
+        if (org is null || string.IsNullOrEmpty(org.StripeCustomerId))
+            return [];
+
+        var invoiceService = new InvoiceService();
+        var invoices = await invoiceService.ListAsync(new InvoiceListOptions
+        {
+            Customer = org.StripeCustomerId,
+            Limit    = 24,
+            Status   = "paid",
+            Expand   = ["data.payment_intent.payment_method"],
+        });
+
+        return invoices.Data.Select(inv =>
+        {
+            var card   = inv.PaymentIntent?.PaymentMethod?.Card;
+            var method = card is not null
+                ? $"{Capitalize(card.Brand)} •••• {card.Last4}"
+                : "Tarjeta";
+
+            return new PaymentRecord(
+                Date:   DateTimeOffset.FromUnixTimeSeconds(inv.Created)
+                            .ToLocalTime().ToString("d MMM yyyy"),
+                Method: method,
+                Amount: inv.AmountPaid / 100m,
+                Status: "Pagado"
+            );
+        }).ToList();
     }
 
     public async Task HandleWebhookAsync(string payload, string signature)
@@ -107,7 +147,13 @@ public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeS
                 session.Metadata.TryGetValue("plan_id", out var planId))
             {
                 var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == orgId);
-                if (org is not null) { org.Plan = planId; await db.SaveChangesAsync(); }
+                if (org is not null)
+                {
+                    org.Plan = planId;
+                    if (!string.IsNullOrEmpty(session.CustomerId))
+                        org.StripeCustomerId = session.CustomerId;
+                    await db.SaveChangesAsync();
+                }
             }
         }
         else if (stripeEvent.Type == "customer.subscription.deleted")
@@ -120,6 +166,9 @@ public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeS
             }
         }
     }
+
+    private static string Capitalize(string s) =>
+        string.IsNullOrEmpty(s) ? s : char.ToUpper(s[0]) + s[1..];
 
     public async Task<(bool ok, string planId, string error)> ApplyPromoCodeAsync(string orgId, string code)
     {

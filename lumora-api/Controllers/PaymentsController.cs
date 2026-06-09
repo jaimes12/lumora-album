@@ -62,6 +62,15 @@ public class PaymentsController(IStripeService stripe) : ControllerBase
         return Ok(new { plan = planId });
     }
 
+    // Returns Stripe invoice history for the authenticated org
+    [HttpGet("history")]
+    [Authorize]
+    public async Task<IActionResult> GetHistory()
+    {
+        var records = await stripe.GetPaymentHistoryAsync(OrgId);
+        return Ok(records);
+    }
+
     // Stripe webhook — receives payment events from Stripe servers
     [HttpPost("webhook")]
     public async Task<IActionResult> Webhook()

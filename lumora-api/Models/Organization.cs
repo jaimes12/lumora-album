@@ -16,6 +16,9 @@ public class Organization
     [Column("plan")]
     public string Plan { get; set; } = "free";
 
+    [Column("stripe_customer_id")]
+    public string? StripeCustomerId { get; set; }
+
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

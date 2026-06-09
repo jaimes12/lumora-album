@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { paymentsApi } from '../api/paymentsApi'
 import styles from './PaquetesPage.module.css'
@@ -69,13 +69,6 @@ const PLANS = [
   },
 ]
 
-const HISTORIAL_MOCK = [
-  { fecha: '28 May 2026', monto: 999, estado: 'Pagado', metodo: 'Visa •••• 4242' },
-  { fecha: '28 Abr 2026', monto: 999, estado: 'Pagado', metodo: 'Visa •••• 4242' },
-  { fecha: '28 Mar 2026', monto: 999, estado: 'Pagado', metodo: 'Visa •••• 4242' },
-  { fecha: '28 Feb 2026', monto: 999, estado: 'Pagado', metodo: 'Visa •••• 4242' },
-  { fecha: '28 Ene 2026', monto: 999, estado: 'Pagado', metodo: 'Visa •••• 4242' },
-]
 
 const CheckIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -90,9 +83,20 @@ export default function PaquetesPage() {
   const [promoCode,      setPromoCode]      = useState('')
   const [promoLoading,   setPromoLoading]   = useState(false)
   const [promoMsg,       setPromoMsg]       = useState(null) // { type: 'ok'|'err', text }
+  const [historial,      setHistorial]      = useState([])
+  const [histLoading,    setHistLoading]    = useState(false)
 
   const currentPlan = user?.plan ?? 'free'
   const activePlan  = PLANS.find(p => p.id === currentPlan)
+
+  useEffect(() => {
+    if (currentPlan === 'free') return
+    setHistLoading(true)
+    paymentsApi.getHistory()
+      .then(setHistorial)
+      .catch(() => setHistorial([]))
+      .finally(() => setHistLoading(false))
+  }, [currentPlan])
 
   const handleSelect = async (planId) => {
     if (planId === currentPlan) return
@@ -265,25 +269,33 @@ export default function PaquetesPage() {
       {currentPlan !== 'free' && (
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Historial de mensualidades</h2>
-          <div className={styles.historialTable}>
-            <div className={styles.historialHeader}>
-              <span>Fecha</span>
-              <span>Método</span>
-              <span>Monto</span>
-              <span>Estado</span>
+          {histLoading ? (
+            <div className={styles.histLoading}>Cargando historial…</div>
+          ) : historial.length === 0 ? (
+            <div className={styles.histEmpty}>
+              Aún no hay pagos registrados. Aparecerán aquí después de tu primer cobro.
             </div>
-            {HISTORIAL_MOCK.map((row, i) => (
-              <div key={i} className={styles.historialRow}>
-                <span className={styles.histFecha}>{row.fecha}</span>
-                <span className={styles.histMetodo}>{row.metodo}</span>
-                <span className={styles.histMonto}>${row.monto.toLocaleString('es-MX')}</span>
-                <span className={styles.histEstado}>
-                  <span className={styles.estadoDot} />
-                  {row.estado}
-                </span>
+          ) : (
+            <div className={styles.historialTable}>
+              <div className={styles.historialHeader}>
+                <span>Fecha</span>
+                <span>Método</span>
+                <span>Monto</span>
+                <span>Estado</span>
               </div>
-            ))}
-          </div>
+              {historial.map((row, i) => (
+                <div key={i} className={styles.historialRow}>
+                  <span className={styles.histFecha}>{row.date}</span>
+                  <span className={styles.histMetodo}>{row.method}</span>
+                  <span className={styles.histMonto}>${row.amount.toLocaleString('es-MX')}</span>
+                  <span className={styles.histEstado}>
+                    <span className={styles.estadoDot} />
+                    {row.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
     </div>
