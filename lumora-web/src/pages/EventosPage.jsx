@@ -287,6 +287,7 @@ export default function EventosPage() {
 
   useEffect(() => {
     eventosApi.getAll()
+      .then(evs => [...evs].sort((a, b) => b.createdAtISO.localeCompare(a.createdAtISO)))
       .then(setEventos)
       .catch(() => setEventos([]))
       .finally(() => setLoading(false))
@@ -298,7 +299,9 @@ export default function EventosPage() {
     ? byStatus.filter(e =>
         e.nombre.toLowerCase().includes(q) ||
         e.clienteNombre.toLowerCase().includes(q) ||
-        (e.clientePhone || '').replace(/\D/g, '').includes(q.replace(/\D/g, ''))
+        (e.clientePhone || '').replace(/\D/g, '').includes(q.replace(/\D/g, '')) ||
+        (e.tipo || '').toLowerCase().includes(q) ||
+        (e.venue || '').toLowerCase().includes(q)
       )
     : byStatus
 
@@ -405,6 +408,7 @@ export default function EventosPage() {
                     </span>
                   </div>
                   <h3 className={styles.cardNombre}>{ev.nombre}</h3>
+                  <span className={styles.cardCliente}>{ev.clienteNombre || '—'}</span>
                   <div className={styles.cardMeta}>
                     <span className={styles.cardMetaItem}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -420,12 +424,7 @@ export default function EventosPage() {
                     </span>
                   </div>
                   <div className={styles.cardFooter}>
-                    <div className={styles.clientChip}>
-                      <div className={styles.clientAvatar}>
-                        {(ev.clienteNombre || '?').split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase()}
-                      </div>
-                      <span>{ev.clienteNombre || ev.clienteId}</span>
-                    </div>
+                    <span className={styles.cardRegistro}>Registrado: {ev.createdAtISO}</span>
                     <span className={styles.presupuesto}>${Number(ev.presupuestoTotal).toLocaleString('es-MX')}</span>
                   </div>
                 </div>
