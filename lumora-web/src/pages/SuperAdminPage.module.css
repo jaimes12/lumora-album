@@ -582,3 +582,129 @@
 .historyTable th { text-align: left; color: #888899; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 10px; border-bottom: 1px solid #252535; }
 .historyTable td { padding: 6px 10px; border-bottom: 1px solid rgba(37,37,53,0.5); color: #e6e6f0; }
 .historyTable tbody tr:last-child td { border-bottom: none; }
+
+/* ── Promo codes tab ───────────────────────────────────────────────────── */
+.promoHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.promoStats { display: flex; gap: 20px; }
+.promoStatItem { font-size: 13px; color: #888899; }
+
+.btnPrimary {
+  background: #7c6af7;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity .15s;
+  white-space: nowrap;
+}
+.btnPrimary:hover { opacity: .85; }
+
+.btnSecondary {
+  background: none;
+  border: 1px solid #252535;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: #888899;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+}
+.btnSecondary:hover { border-color: #888899; color: #e6e6f0; }
+
+.codeChip {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: #7c6af7;
+  background: rgba(124, 106, 247, 0.12);
+  padding: 2px 8px;
+  border-radius: 5px;
+  letter-spacing: 0.05em;
+}
+
+.discountBadge {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.statusPill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+.delConfirm { display: flex; align-items: center; gap: 4px; }
+.delYes { background: #ef4444; color: #fff; border: none; border-radius: 5px; padding: 3px 8px; cursor: pointer; font-size: 11px; font-weight: 700; }
+.delNo  { background: #252535; color: #888899; border: none; border-radius: 5px; padding: 3px 8px; cursor: pointer; font-size: 11px; }
+
+/* Promo modal */
+.promoOverlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.65);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 16px;
+}
+.promoModal {
+  background: #181824;
+  border: 1px solid #252535;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.5);
+}
+.promoModalHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px 0;
+}
+.promoModalTitle { font-size: 15px; font-weight: 700; margin: 0; color: #e6e6f0; }
+.promoModalClose  { background: none; border: none; cursor: pointer; color: #888899; font-size: 16px; padding: 4px 8px; }
+.promoModalBody   { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 14px; }
+
+.promoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.promoField { display: flex; flex-direction: column; gap: 5px; }
+.promoField label { font-size: 11px; font-weight: 600; color: #aaaabc; text-transform: uppercase; letter-spacing: 0.05em; }
+.promoField input,
+.promoField select {
+  background: #0d0d14;
+  border: 1px solid #252535;
+  border-radius: 7px;
+  padding: 9px 11px;
+  font-size: 13px;
+  color: #e6e6f0;
+  outline: none;
+  transition: border-color .15s;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+.promoField input:focus,
+.promoField select:focus { border-color: #7c6af7; }
+.promoField input:disabled { opacity: .5; cursor: not-allowed; }
+.promoField input::placeholder { color: #444455; }
+.promoField select option { background: #181824; }
+
+.promoError {
+  font-size: 12px; color: #ef4444; margin: 0;
+  padding: 8px 12px;
+  background: rgba(239,68,68,.08);
+  border-radius: 6px;
+}
+
+.promoModalActions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }

@@ -384,6 +384,234 @@ function PlansTab() {
   )
 }
 
+// ── Promo codes tab ────────────────────────────────────────────────────────
+const EMPTY_FORM = { code: '', planId: 'negocio', description: '', discountPct: 100, maxUses: -1, expiresAt: '' }
+
+function PromoCodesTab() {
+  const [rows,    setRows]    = useState(null)
+  const [modal,   setModal]   = useState(false)
+  const [editing, setEditing] = useState(null) // row being edited
+  const [form,    setForm]    = useState(EMPTY_FORM)
+  const [saving,  setSaving]  = useState(false)
+  const [error,   setError]   = useState('')
+  const [delConf, setDelConf] = useState(null)
+
+  useEffect(() => {
+    superadminApi.getPromoCodes().then(setRows).catch(() => setRows([]))
+  }, [])
+
+  if (!rows) return <div className={styles.loadingMsg}>Cargando códigos…</div>
+
+  const openCreate = () => { setEditing(null); setForm(EMPTY_FORM); setError(''); setModal(true) }
+  const openEdit   = r  => { setEditing(r); setForm({ code: r.code, planId: r.planId, description: r.description ?? '', discountPct: r.discountPct, maxUses: r.maxUses, expiresAt: r.expiresAt ?? '' }); setError(''); setModal(true) }
+  const closeModal = () => { setModal(false); setEditing(null) }
+
+  const save = async () => {
+    if (!form.code.trim()) { setError('El código es obligatorio'); return }
+    setSaving(true); setError('')
+    try {
+      const payload = {
+        code:        form.code.trim().toUpperCase(),
+        planId:      form.planId,
+        description: form.description || null,
+        discountPct: Number(form.discountPct),
+        maxUses:     Number(form.maxUses),
+        expiresAt:   form.expiresAt ? new Date(form.expiresAt).toISOString() : null,
+      }
+      if (editing) {
+        const updated = await superadminApi.updatePromoCode(editing.id, payload)
+        setRows(prev => prev.map(r => r.id === editing.id ? updated : r))
+      } else {
+        const created = await superadminApi.createPromoCode(payload)
+        setRows(prev => [created, ...prev])
+      }
+      closeModal()
+    } catch (e) {
+      setError(e.message?.includes('409') || e.status === 409 ? 'Ese código ya existe' : 'Error al guardar')
+    } finally { setSaving(false) }
+  }
+
+  const toggle = async (row) => {
+    const updated = await superadminApi.togglePromoCode(row.id).catch(() => null)
+    if (updated) setRows(prev => prev.map(r => r.id === row.id ? { ...r, active: updated.active } : r))
+  }
+
+  const confirmDelete = async (id) => {
+    await superadminApi.deletePromoCode(id).catch(() => {})
+    setRows(prev => prev.filter(r => r.id !== id))
+    setDelConf(null)
+  }
+
+  const active   = rows.filter(r => r.active && !r.exhausted).length
+  const inactive = rows.filter(r => !r.active || r.exhausted).length
+
+  return (
+    <div className={styles.plansWrap}>
+      {/* Header */}
+      <div className={styles.promoHeader}>
+        <div className={styles.promoStats}>
+          <span className={styles.promoStatItem}><strong style={{ color: '#34d399' }}>{active}</strong> activos</span>
+          <span className={styles.promoStatItem}><strong style={{ color: '#888899' }}>{inactive}</strong> inactivos/agotados</span>
+          <span className={styles.promoStatItem}><strong style={{ color: '#e6e6f0' }}>{rows.length}</strong> total</span>
+        </div>
+        <button className={styles.btnPrimary} onClick={openCreate}>+ Nuevo código</button>
+      </div>
+
+      {/* Table */}
+      <div className={styles.tableWrap}>
+        <div className={styles.tableScroll}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Plan</th>
+                <th>Descuento</th>
+                <th>Usos</th>
+                <th>Estado</th>
+                <th>Vence</th>
+                <th>Descripción</th>
+                <th>Creado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.length === 0 && (
+                <tr><td colSpan={9} className={styles.tableEmpty}>Sin códigos. Crea el primero.</td></tr>
+              )}
+              {rows.map(row => {
+                const statusColor = row.exhausted ? '#6b7280' : row.active ? '#34d399' : '#f59e0b'
+                const statusLabel = row.exhausted ? 'Agotado' : row.active ? 'Activo' : 'Inactivo'
+                return (
+                  <tr key={row.id}>
+                    <td><code className={styles.codeChip}>{row.code}</code></td>
+                    <td><span className={styles.planBadge} style={{ background: `${PLAN_COLORS[row.planId] ?? '#6b7280'}20`, color: PLAN_COLORS[row.planId] ?? '#6b7280' }}>{row.planLabel}</span></td>
+                    <td>
+                      <span className={styles.discountBadge} style={{ color: row.discountPct === 100 ? '#34d399' : '#c9a227' }}>
+                        {row.discountPct}%{row.discountPct === 100 ? ' gratis' : ' dto.'}
+                      </span>
+                    </td>
+                    <td className={styles.muted}>
+                      {row.usedCount} / {row.maxUses === -1 ? '∞' : row.maxUses}
+                    </td>
+                    <td>
+                      <span className={styles.statusPill} style={{ background: `${statusColor}18`, color: statusColor }}>
+                        {statusLabel}
+                      </span>
+                    </td>
+                    <td className={styles.muted}>{row.expiresAt ?? '—'}</td>
+                    <td className={styles.muted} style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description || '—'}</td>
+                    <td className={styles.muted}>{row.createdAt}</td>
+                    <td>
+                      <div className={styles.rowActions}>
+                        <button className={styles.actionBtn} title="Editar" onClick={() => openEdit(row)}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        {!row.exhausted && (
+                          <button className={styles.actionBtn} title={row.active ? 'Desactivar' : 'Activar'} onClick={() => toggle(row)}>
+                            {row.active
+                              ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                              : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            }
+                          </button>
+                        )}
+                        {delConf === row.id
+                          ? <span className={styles.delConfirm}>
+                              <button className={styles.delYes} onClick={() => confirmDelete(row.id)}>Sí</button>
+                              <button className={styles.delNo}  onClick={() => setDelConf(null)}>No</button>
+                            </span>
+                          : <button className={styles.actionBtn} title="Eliminar" onClick={() => setDelConf(row.id)}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                            </button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+        <div className={styles.tableCount}>{rows.length} códigos</div>
+      </div>
+
+      {/* Modal */}
+      {modal && (
+        <div className={styles.promoOverlay} onClick={closeModal}>
+          <div className={styles.promoModal} onClick={e => e.stopPropagation()}>
+            <div className={styles.promoModalHeader}>
+              <h3 className={styles.promoModalTitle}>{editing ? 'Editar código' : 'Nuevo código promo'}</h3>
+              <button className={styles.promoModalClose} onClick={closeModal}>✕</button>
+            </div>
+            <div className={styles.promoModalBody}>
+              <div className={styles.promoGrid}>
+                <div className={styles.promoField}>
+                  <label>Código</label>
+                  <input
+                    value={form.code}
+                    onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
+                    placeholder="VERANO2026"
+                    disabled={!!editing}
+                  />
+                </div>
+                <div className={styles.promoField}>
+                  <label>Plan que activa</label>
+                  <select value={form.planId} onChange={e => setForm(f => ({ ...f, planId: e.target.value }))}>
+                    <option value="solo">Solo</option>
+                    <option value="negocio">Negocio</option>
+                    <option value="agencia">Agencia</option>
+                    <option value="free">Sin plan (gratis)</option>
+                  </select>
+                </div>
+                <div className={styles.promoField}>
+                  <label>Descuento %</label>
+                  <select value={form.discountPct} onChange={e => setForm(f => ({ ...f, discountPct: Number(e.target.value) }))}>
+                    <option value={10}>10% — Descuento parcial</option>
+                    <option value={20}>20% — Descuento parcial</option>
+                    <option value={50}>50% — Mitad de precio</option>
+                    <option value={100}>100% — Gratis (activa directo)</option>
+                  </select>
+                </div>
+                <div className={styles.promoField}>
+                  <label>Máx. usos (-1 = ilimitado)</label>
+                  <input
+                    type="number"
+                    value={form.maxUses}
+                    onChange={e => setForm(f => ({ ...f, maxUses: Number(e.target.value) }))}
+                    min={-1}
+                  />
+                </div>
+                <div className={styles.promoField} style={{ gridColumn: '1 / -1' }}>
+                  <label>Fecha de expiración (opcional)</label>
+                  <input
+                    type="date"
+                    value={form.expiresAt}
+                    onChange={e => setForm(f => ({ ...f, expiresAt: e.target.value }))}
+                  />
+                </div>
+                <div className={styles.promoField} style={{ gridColumn: '1 / -1' }}>
+                  <label>Descripción (opcional)</label>
+                  <input
+                    value={form.description}
+                    onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                    placeholder="Código de lanzamiento 2026"
+                  />
+                </div>
+              </div>
+              {error && <p className={styles.promoError}>{error}</p>}
+              <div className={styles.promoModalActions}>
+                <button className={styles.btnSecondary} onClick={closeModal}>Cancelar</button>
+                <button className={styles.btnPrimary} onClick={save} disabled={saving}>
+                  {saving ? 'Guardando…' : editing ? 'Guardar cambios' : 'Crear código'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
 const TABS = [
   { key: 'resumen',       label: 'Resumen' },
@@ -392,6 +620,7 @@ const TABS = [
   { key: 'eventos',       label: 'Eventos' },
   { key: 'clientes',      label: 'Clientes' },
   { key: 'planes',        label: 'Planes' },
+  { key: 'promos',        label: 'Códigos promo' },
 ]
 
 export default function SuperAdminPage() {
@@ -597,6 +826,9 @@ export default function SuperAdminPage() {
 
           {/* ── PLANES ── */}
           {tab === 'planes' && <PlansTab />}
+
+          {/* ── PROMOS ── */}
+          {tab === 'promos' && <PromoCodesTab />}
         </div>
       </main>
     </div>

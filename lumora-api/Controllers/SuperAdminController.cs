@@ -278,6 +278,92 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
         return Ok(new { plan = req.Plan, planLabel = PlanLabel(req.Plan) });
     }
 
+    // ── Promo codes CRUD ──────────────────────────────────────────────────────
+    [Authorize]
+    [HttpGet("promo-codes")]
+    public async Task<IActionResult> GetPromoCodes()
+    {
+        if (!IsSuperAdmin) return Forbid();
+        var codes = await db.PromoCodes.OrderByDescending(p => p.CreatedAt).ToListAsync();
+        return Ok(codes.Select(p => new {
+            p.Id, p.Code, p.PlanId, p.Description,
+            planLabel   = PlanLabel(p.PlanId),
+            p.DiscountPct,
+            p.MaxUses, p.UsedCount, p.Active,
+            expiresAt   = p.ExpiresAt?.ToString("yyyy-MM-dd"),
+            createdAt   = p.CreatedAt.ToString("dd/MM/yyyy"),
+            exhausted   = p.MaxUses >= 0 && p.UsedCount >= p.MaxUses,
+        }));
+    }
+
+    [Authorize]
+    [HttpPost("promo-codes")]
+    public async Task<IActionResult> CreatePromoCode([FromBody] PromoCodeRequest req)
+    {
+        if (!IsSuperAdmin) return Forbid();
+
+        var code = req.Code.Trim().ToUpperInvariant();
+        if (await db.PromoCodes.AnyAsync(p => p.Code == code))
+            return Conflict(new { message = "El código ya existe" });
+
+        var promo = new lumora_api.Models.PromoCode
+        {
+            Id          = Guid.NewGuid().ToString(),
+            Code        = code,
+            PlanId      = req.PlanId,
+            Description = req.Description,
+            DiscountPct = req.DiscountPct,
+            MaxUses     = req.MaxUses,
+            ExpiresAt   = req.ExpiresAt.HasValue ? DateTime.SpecifyKind(req.ExpiresAt.Value, DateTimeKind.Utc) : null,
+            Active      = true,
+            CreatedAt   = DateTime.UtcNow,
+        };
+        db.PromoCodes.Add(promo);
+        await db.SaveChangesAsync();
+        return Ok(new { promo.Id, promo.Code, promo.PlanId, planLabel = PlanLabel(promo.PlanId), promo.DiscountPct, promo.MaxUses, promo.UsedCount, promo.Active, expiresAt = promo.ExpiresAt?.ToString("yyyy-MM-dd"), createdAt = promo.CreatedAt.ToString("dd/MM/yyyy"), exhausted = false });
+    }
+
+    [Authorize]
+    [HttpPut("promo-codes/{id}")]
+    public async Task<IActionResult> UpdatePromoCode(string id, [FromBody] PromoCodeRequest req)
+    {
+        if (!IsSuperAdmin) return Forbid();
+        var promo = await db.PromoCodes.FindAsync(id);
+        if (promo is null) return NotFound();
+
+        promo.PlanId      = req.PlanId;
+        promo.Description = req.Description;
+        promo.DiscountPct = req.DiscountPct;
+        promo.MaxUses     = req.MaxUses;
+        promo.ExpiresAt   = req.ExpiresAt.HasValue ? DateTime.SpecifyKind(req.ExpiresAt.Value, DateTimeKind.Utc) : null;
+        await db.SaveChangesAsync();
+        return Ok(new { promo.Id, promo.Code, promo.PlanId, planLabel = PlanLabel(promo.PlanId), promo.DiscountPct, promo.MaxUses, promo.UsedCount, promo.Active, expiresAt = promo.ExpiresAt?.ToString("yyyy-MM-dd"), createdAt = promo.CreatedAt.ToString("dd/MM/yyyy"), exhausted = promo.MaxUses >= 0 && promo.UsedCount >= promo.MaxUses });
+    }
+
+    [Authorize]
+    [HttpPatch("promo-codes/{id}/toggle")]
+    public async Task<IActionResult> TogglePromoCode(string id)
+    {
+        if (!IsSuperAdmin) return Forbid();
+        var promo = await db.PromoCodes.FindAsync(id);
+        if (promo is null) return NotFound();
+        promo.Active = !promo.Active;
+        await db.SaveChangesAsync();
+        return Ok(new { promo.Id, promo.Active });
+    }
+
+    [Authorize]
+    [HttpDelete("promo-codes/{id}")]
+    public async Task<IActionResult> DeletePromoCode(string id)
+    {
+        if (!IsSuperAdmin) return Forbid();
+        var promo = await db.PromoCodes.FindAsync(id);
+        if (promo is null) return NotFound();
+        db.PromoCodes.Remove(promo);
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
+
     private static string PlanLabel(string plan) => plan switch {
         "solo"    => "Solo",
         "negocio" => "Negocio",
@@ -292,3 +378,11 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
 
 public record SuperAdminLoginRequest(string Email, string Password);
 public record ChangePlanRequest(string Plan);
+public record PromoCodeRequest(
+    string Code,
+    string PlanId,
+    string? Description,
+    int DiscountPct,
+    int MaxUses,
+    DateTime? ExpiresAt
+);

@@ -28,6 +28,9 @@ public class PromoCode
     [Column("expires_at")]
     public DateTime? ExpiresAt { get; set; }
 
+    [Column("discount_pct")]
+    public int DiscountPct { get; set; } = 100; // 10, 20, 50, 100
+
     [Column("active")]
     public bool Active { get; set; } = true;
 

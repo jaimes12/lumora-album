@@ -506,6 +506,9 @@ try
             PRIMARY KEY (`org_id`)
         ) CHARACTER SET utf8mb4",
 
+        // Add discount_pct column if missing (idempotent)
+        "ALTER TABLE `promo_codes` ADD COLUMN IF NOT EXISTS `discount_pct` int NOT NULL DEFAULT 100",
+
         // Seed default promo codes (INSERT IGNORE = no-op if code already exists)
         "INSERT IGNORE INTO `promo_codes` (`id`,`code`,`plan_id`,`description`,`max_uses`,`used_count`,`active`,`created_at`) VALUES ('promo_elixe2026','ELIXE2026','negocio','Acceso gratis Plan Negocio',-1,0,1,NOW())",
         "INSERT IGNORE INTO `promo_codes` (`id`,`code`,`plan_id`,`description`,`max_uses`,`used_count`,`active`,`created_at`) VALUES ('promo_agencia','AGENCIA2026','agencia','Acceso gratis Plan Agencia',-1,0,1,NOW())",
