@@ -404,7 +404,7 @@ export default function AppLayout() {
                 </div>
                 <div className={styles.userInfo}>
                   <span className={styles.userName}>{user?.name ?? 'Usuario'}</span>
-                  <span className={styles.userRole}>{isAdmin ? i18n.admin : 'Trabajador'}</span>
+                  <span className={styles.userRole}>{isAdmin ? i18n.admin : 'Usuario'}</span>
                 </div>
                 <button
                   className={styles.logoutBtn}

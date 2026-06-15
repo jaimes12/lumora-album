@@ -4,7 +4,7 @@ import { trabajadoresApi } from '../api/trabajadoresApi'
 import { getLimits } from '../config/planConfig'
 import styles from './TrabajadoresPage.module.css'
 
-function WorkerModal({ worker, onClose, onSaved }) {
+function UsuarioModal({ worker, onClose, onSaved }) {
   const isEdit = !!worker
   const [form, setForm] = useState({
     name:     worker?.name     ?? '',
@@ -25,14 +25,12 @@ function WorkerModal({ worker, onClose, onSaved }) {
     try {
       if (isEdit) {
         const updated = await trabajadoresApi.update(worker.id, {
-          name: form.name, phone: form.phone || null,
-          password: form.password || null,
+          name: form.name, phone: form.phone || null, password: form.password || null,
         })
         onSaved(updated, true)
       } else {
         const created = await trabajadoresApi.create({
-          name: form.name, email: form.email,
-          phone: form.phone || null, password: form.password,
+          name: form.name, email: form.email, phone: form.phone || null, password: form.password,
         })
         onSaved(created, false)
       }
@@ -49,7 +47,7 @@ function WorkerModal({ worker, onClose, onSaved }) {
     <div className={styles.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
       <div className={styles.modal}>
         <div className={styles.modalHeader}>
-          <h2 className={styles.modalTitle}>{isEdit ? 'Editar trabajador' : 'Nuevo trabajador'}</h2>
+          <h2 className={styles.modalTitle}>{isEdit ? 'Editar usuario' : 'Nuevo usuario'}</h2>
           <button className={styles.modalClose} onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className={styles.modalForm}>
@@ -75,7 +73,7 @@ function WorkerModal({ worker, onClose, onSaved }) {
           <div className={styles.modalActions}>
             <button type="button" className={styles.btnSecondary} onClick={onClose}>Cancelar</button>
             <button type="submit" className={styles.btnPrimary} disabled={saving}>
-              {saving ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Crear trabajador'}
+              {saving ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Crear usuario'}
             </button>
           </div>
         </form>
@@ -93,7 +91,6 @@ export default function TrabajadoresPage() {
   const [delConfirm,  setDelConfirm]  = useState(null)
   const [deleting,    setDeleting]    = useState(false)
 
-  const limits     = getLimits(user?.plan)
   const maxWorkers = { free: 0, solo: 2, negocio: 5, agencia: 15 }[user?.plan] ?? 0
   const canAdd     = workers.length < maxWorkers
 
@@ -124,7 +121,7 @@ export default function TrabajadoresPage() {
   return (
     <div className={styles.page}>
       {showModal && (
-        <WorkerModal
+        <UsuarioModal
           worker={editWorker}
           onClose={() => { setShowModal(false); setEditWorker(null) }}
           onSaved={handleSaved}
@@ -133,21 +130,21 @@ export default function TrabajadoresPage() {
 
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>Trabajadores</h1>
+          <h1 className={styles.title}>Usuarios</h1>
           <p className={styles.sub}>
-            {workers.length} de {maxWorkers} disponibles en tu plan
+            {workers.length} de {maxWorkers} usuarios disponibles en tu plan
           </p>
         </div>
         <button
           className={styles.btnPrimary}
           onClick={() => { setEditWorker(null); setShowModal(true) }}
           disabled={!canAdd}
-          title={!canAdd ? `Has alcanzado el límite de tu plan (${maxWorkers})` : ''}
+          title={!canAdd ? `Límite de tu plan: ${maxWorkers} usuarios` : ''}
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          Agregar trabajador
+          Agregar usuario
         </button>
       </div>
 
@@ -156,7 +153,7 @@ export default function TrabajadoresPage() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
-          Has alcanzado el límite de tu plan ({maxWorkers} trabajadores). Actualiza tu plan para agregar más.
+          Has alcanzado el límite de tu plan ({maxWorkers} usuarios). Actualiza tu plan para agregar más.
         </div>
       )}
 
@@ -170,7 +167,7 @@ export default function TrabajadoresPage() {
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
             <line x1="23" y1="11" x2="17" y2="11"/><line x1="20" y1="8" x2="20" y2="14"/>
           </svg>
-          <p>Sin trabajadores aún</p>
+          <p>Sin usuarios aún</p>
           {canAdd && <button className={styles.btnPrimary} onClick={() => setShowModal(true)}>Agregar primero</button>}
         </div>
       ) : (
@@ -183,7 +180,7 @@ export default function TrabajadoresPage() {
                 <span className={styles.cardEmail}>{w.email}</span>
                 {w.phone && <span className={styles.cardPhone}>{w.phone}</span>}
               </div>
-              <div className={styles.cardBadge}>Trabajador</div>
+              <div className={styles.cardBadge}>Usuario</div>
               <div className={styles.cardActions}>
                 <button className={styles.actionBtn} onClick={() => { setEditWorker(w); setShowModal(true) }} title="Editar">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

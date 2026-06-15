@@ -14,8 +14,12 @@ namespace lumora_api.Controllers;
 [Authorize]
 public class WorkersController(LumoraDbContext db) : ControllerBase
 {
-    private string OrgId    => User.FindFirst("org_id")?.Value  ?? string.Empty;
-    private string UserRole => User.FindFirst("role")?.Value    ?? string.Empty;
+    private string OrgId => User.FindFirst("org_id")?.Value ?? string.Empty;
+    // Fallback to "admin" for existing sessions issued before the role claim was added
+    private string UserRole =>
+        User.FindFirst("role")?.Value ??
+        User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ??
+        "admin";
 
     private static readonly Dictionary<string, int> PlanMaxWorkers = new()
     {
