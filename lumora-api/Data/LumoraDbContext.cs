@@ -35,6 +35,7 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
     public DbSet<PlanHistory> PlanHistories => Set<PlanHistory>();
     public DbSet<PipelineStage> PipelineStages => Set<PipelineStage>();
     public DbSet<QuickReply> QuickReplies => Set<QuickReply>();
+    public DbSet<OrgSettings> OrgSettings => Set<OrgSettings>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {

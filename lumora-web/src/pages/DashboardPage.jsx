@@ -4,11 +4,6 @@ import { dashboardApi } from '../api/dashboardApi'
 import { ESTADO_META } from '../data/eventosData'
 import styles from './DashboardPage.module.css'
 
-const BAR_DATA = [
-  { label: 'Lun', value: 55 }, { label: 'Mar', value: 72 }, { label: 'Mié', value: 48 },
-  { label: 'Jue', value: 85 }, { label: 'Vie', value: 63 }, { label: 'Sáb', value: 91 },
-  { label: 'Dom', value: 40 },
-]
 
 const ICONS = {
   eventos: (
@@ -99,14 +94,26 @@ export default function DashboardPage() {
             <span className={styles.chartSub}>en miles de pesos</span>
           </div>
           <div className={styles.barChart}>
-            {BAR_DATA.map(d => (
-              <div key={d.label} className={styles.barCol}>
-                <div className={styles.barTrack}>
-                  <div className={styles.bar} style={{ height: `${d.value}%` }} />
-                </div>
-                <span className={styles.barLabel}>{d.label}</span>
-              </div>
-            ))}
+            {loading
+              ? Array(7).fill(0).map((_, i) => (
+                  <div key={i} className={styles.barCol}>
+                    <div className={styles.barTrack}><div className={styles.bar} style={{ height: '20%', opacity: 0.2 }} /></div>
+                    <span className={styles.barLabel} style={{ opacity: 0.3 }}>···</span>
+                  </div>
+                ))
+              : (() => {
+                  const bars = stats?.weeklyActivity ?? []
+                  const maxVal = Math.max(...bars.map(d => d.value), 1)
+                  return bars.map(d => (
+                    <div key={d.label} className={styles.barCol}>
+                      <div className={styles.barTrack}>
+                        <div className={styles.bar} style={{ height: `${Math.max((d.value / maxVal) * 100, d.value > 0 ? 4 : 0)}%` }} />
+                      </div>
+                      <span className={styles.barLabel}>{d.label}</span>
+                    </div>
+                  ))
+                })()
+            }
           </div>
         </div>
 

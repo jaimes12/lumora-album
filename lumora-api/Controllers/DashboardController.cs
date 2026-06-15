@@ -85,6 +85,27 @@ public class DashboardController(LumoraDbContext db) : ControllerBase
         }
         catch { }
 
-        return Ok(new { eventsThisMonth, revenueThisMonth, newClientsThisMonth, pendingSales, upcomingEvents });
+        object weeklyActivity = Array.Empty<object>();
+        try
+        {
+            var dow = (int)now.DayOfWeek; // 0=Sun, 1=Mon, ..., 6=Sat
+            var weekStart = now.Date.AddDays(dow == 0 ? -6 : -(dow - 1));
+
+            var raw = await db.EventPayments
+                .Where(p => p.OrgId == orgId && p.PaidAt >= weekStart && p.PaidAt < weekStart.AddDays(7))
+                .Select(p => new { p.PaidAt, p.Amount })
+                .ToListAsync();
+
+            var labels = new[] { "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom" };
+            weeklyActivity = Enumerable.Range(0, 7).Select(i =>
+            {
+                var date  = weekStart.AddDays(i);
+                var total = raw.Where(p => p.PaidAt.Date == date).Sum(p => (decimal)p.Amount);
+                return new { label = labels[i], value = total };
+            }).ToList();
+        }
+        catch { }
+
+        return Ok(new { eventsThisMonth, revenueThisMonth, newClientsThisMonth, pendingSales, upcomingEvents, weeklyActivity });
     }
 }

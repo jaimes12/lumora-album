@@ -492,6 +492,18 @@ try
             PRIMARY KEY (`id`)
         ) CHARACTER SET utf8mb4",
 
+        @"CREATE TABLE IF NOT EXISTS `org_settings` (
+            `org_id`        varchar(255)  NOT NULL,
+            `company_name`  varchar(500)  NOT NULL DEFAULT '',
+            `rfc`           varchar(100)  NOT NULL DEFAULT '',
+            `director_name` varchar(500)  NOT NULL DEFAULT '',
+            `phone`         varchar(100)  NOT NULL DEFAULT '',
+            `email`         varchar(500)  NOT NULL DEFAULT '',
+            `city`          varchar(500)  NOT NULL DEFAULT '',
+            `address`       varchar(500)  NOT NULL DEFAULT '',
+            PRIMARY KEY (`org_id`)
+        ) CHARACTER SET utf8mb4",
+
         // Seed default promo codes (INSERT IGNORE = no-op if code already exists)
         "INSERT IGNORE INTO `promo_codes` (`id`,`code`,`plan_id`,`description`,`max_uses`,`used_count`,`active`,`created_at`) VALUES ('promo_elixe2026','ELIXE2026','negocio','Acceso gratis Plan Negocio',-1,0,1,NOW())",
         "INSERT IGNORE INTO `promo_codes` (`id`,`code`,`plan_id`,`description`,`max_uses`,`used_count`,`active`,`created_at`) VALUES ('promo_agencia','AGENCIA2026','agencia','Acceso gratis Plan Agencia',-1,0,1,NOW())",

@@ -4,6 +4,7 @@ import { fmt } from '../data/eventosData'
 import { contratosApi } from '../api/contratosApi'
 import { clientesApi } from '../api/clientesApi'
 import { eventosApi } from '../api/eventosApi'
+import { orgSettingsApi } from '../api/orgSettingsApi'
 import logoFull from '../assets/elixe-logo.png'
 
 /* ─── Contract templates ──────────────────────────────────── */
@@ -48,12 +49,12 @@ const ESTADO_COLOR = {
 }
 
 /* ─── Contract renderer ───────────────────────────────────── */
-function buildContract(template, form) {
+function buildContract(template, form, org = {}) {
   const hoy    = new Date()
   const fecha  = form.fechaFirma || hoy.toLocaleDateString('es-MX', { day:'numeric', month:'long', year:'numeric' })
-  const ciudad = 'Ciudad de México'
-  const empresa = 'Elixe Events S.A. de C.V.'
-  const rfc    = 'LES210601AB3'
+  const ciudad  = org.city        || 'Ciudad de México'
+  const empresa = org.companyName || 'Elixe Events S.A. de C.V.'
+  const rfc     = org.rfc         || 'LES210601AB3'
 
   const clausulas = {
     boda: [
@@ -93,8 +94,8 @@ function buildContract(template, form) {
 }
 
 /* ─── Contract preview component ─────────────────────────── */
-function ContractPreview({ template, form, contratoRef }) {
-  const clausulas = buildContract(template, form)
+function ContractPreview({ template, form, contratoRef, org = {} }) {
+  const clausulas = buildContract(template, form, org)
   const hoy = new Date()
   const fechaFormato = hoy.toLocaleDateString('es-MX', { day:'numeric', month:'long', year:'numeric' })
   const numContrato = `LM-${new Date().getFullYear()}-${String(Math.floor(Math.random()*9000)+1000)}`
@@ -107,9 +108,9 @@ function ContractPreview({ template, form, contratoRef }) {
           <img src={logoFull} alt="Elixe Events" className={styles.letterheadLogoImg} />
         </div>
         <div className={styles.letterheadRight}>
-          <div className={styles.letterheadData}>RFC: LES210601AB3</div>
-          <div className={styles.letterheadData}>Tel: +52 55 1234 5678</div>
-          <div className={styles.letterheadData}>contacto@lumora.mx</div>
+          <div className={styles.letterheadData}>RFC: {org.rfc || 'LES210601AB3'}</div>
+          <div className={styles.letterheadData}>Tel: {org.phone || '+52 55 1234 5678'}</div>
+          <div className={styles.letterheadData}>{org.email || 'contacto@lumora.mx'}</div>
         </div>
       </div>
 
@@ -141,7 +142,7 @@ function ContractPreview({ template, form, contratoRef }) {
         <div className={styles.partyBlock}>
           <span className={styles.partyLabel}>EL PRESTADOR:</span>
           <span className={styles.partyValue}>
-            <strong>ELIXE EVENTS S.A. de C.V.</strong>, RFC LES210601AB3, con domicilio en Av. Insurgentes Sur 1234, Col. Del Valle, CDMX, representada por el C. <strong>Angel Jaimes</strong> en su carácter de Director General, a quien en lo sucesivo se le denominará <strong>"EL PRESTADOR"</strong>.
+            <strong>{(org.companyName || 'ELIXE EVENTS S.A. de C.V.').toUpperCase()}</strong>, RFC {org.rfc || 'LES210601AB3'}, con domicilio en {org.address || 'Av. Insurgentes Sur 1234, Col. Del Valle, CDMX'}, representada por el C. <strong>{org.directorName || 'Angel Jaimes'}</strong> en su carácter de Director General, a quien en lo sucesivo se le denominará <strong>"EL PRESTADOR"</strong>.
           </span>
         </div>
         <div className={styles.partiesDecl}>
@@ -197,9 +198,9 @@ function ContractPreview({ template, form, contratoRef }) {
           </div>
           <div className={styles.sigBlock}>
             <div className={styles.sigLine} />
-            <div className={styles.sigName}>Angel Jaimes</div>
+            <div className={styles.sigName}>{org.directorName || 'Angel Jaimes'}</div>
             <div className={styles.sigRole}>Director General</div>
-            <div className={styles.sigData}>Elixe Events S.A. de C.V.</div>
+            <div className={styles.sigData}>{org.companyName || 'Elixe Events S.A. de C.V.'}</div>
           </div>
         </div>
         <div className={styles.sigFooter}>
@@ -219,13 +220,15 @@ export default function ContratosPage() {
   const [contratoActivo, setContratoActivo] = useState(null)
   const contratoRef = useRef(null)
 
-  const [clientesList, setClientesList] = useState([])
-  const [eventosList,  setEventosList]  = useState([])
+  const [clientesList,  setClientesList]  = useState([])
+  const [eventosList,   setEventosList]   = useState([])
+  const [orgSettings,   setOrgSettings]   = useState({})
 
   useEffect(() => {
     contratosApi.getAll().then(setContratos).catch(() => setContratos([]))
     clientesApi.getAll().then(setClientesList).catch(() => setClientesList([]))
     eventosApi.getAll().then(setEventosList).catch(() => setEventosList([]))
+    orgSettingsApi.get().then(setOrgSettings).catch(() => {})
   }, [])
 
   const [form, setForm] = useState({
@@ -550,7 +553,7 @@ export default function ContratosPage() {
               </div>
             ) : (
               <div className={styles.previewScroll}>
-                <ContractPreview template={template} form={form} contratoRef={contratoRef} />
+                <ContractPreview template={template} form={form} contratoRef={contratoRef} org={orgSettings} />
               </div>
             )}
           </div>
