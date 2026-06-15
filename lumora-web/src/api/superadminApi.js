@@ -33,9 +33,14 @@ export const superadminApi = {
   logout: () => localStorage.removeItem(SA_KEY),
   hasSession: () => !!localStorage.getItem(SA_KEY),
 
-  getOverview: () => saRequest('/api/superadmin/overview'),
-  getOrgs:     () => saRequest('/api/superadmin/orgs'),
-  getUsers:    () => saRequest('/api/superadmin/users'),
-  getEvents:   () => saRequest('/api/superadmin/events'),
-  getClients:  () => saRequest('/api/superadmin/clients'),
+  getOverview:   () => saRequest('/api/superadmin/overview'),
+  getOrgs:       () => saRequest('/api/superadmin/orgs'),
+  getUsers:      () => saRequest('/api/superadmin/users'),
+  getEvents:     () => saRequest('/api/superadmin/events'),
+  getClients:    () => saRequest('/api/superadmin/clients'),
+  getPlans:      () => saRequest('/api/superadmin/plans'),
+  changePlan:    (orgId, plan) => saRequest(`/api/superadmin/orgs/${orgId}/plan`, {
+    method: 'PUT',
+    body: JSON.stringify({ plan }),
+  }),
 }

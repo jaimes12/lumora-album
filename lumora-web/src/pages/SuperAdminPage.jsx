@@ -206,6 +206,184 @@ function DataTable({ columns, rows, empty = 'Sin registros' }) {
   )
 }
 
+// ── Plans tab ──────────────────────────────────────────────────────────────
+const PLAN_LABELS = { free: 'Sin plan', solo: 'Solo', negocio: 'Negocio', agencia: 'Agencia' }
+const ALL_PLANS   = ['free', 'solo', 'negocio', 'agencia']
+
+function PlansTab() {
+  const [rows,       setRows]       = useState(null)
+  const [expanded,   setExpanded]   = useState(null)
+  const [editing,    setEditing]    = useState(null) // orgId
+  const [newPlan,    setNewPlan]    = useState('')
+  const [saving,     setSaving]     = useState(false)
+  const [q,          setQ]          = useState('')
+
+  useEffect(() => {
+    superadminApi.getPlans().then(setRows).catch(() => setRows([]))
+  }, [])
+
+  if (!rows) return <div className={styles.loadingMsg}>Cargando planes…</div>
+
+  const filtered = q
+    ? rows.filter(r => `${r.name} ${r.planLabel} ${r.stripeSubscriptionId ?? ''}`.toLowerCase().includes(q.toLowerCase()))
+    : rows
+
+  // Resumen por plan
+  const byPlan = ALL_PLANS.map(p => ({ plan: p, label: PLAN_LABELS[p], count: rows.filter(r => r.plan === p).length }))
+  const paid   = rows.filter(r => r.plan !== 'free')
+
+  const startEdit = (row) => { setEditing(row.id); setNewPlan(row.plan) }
+  const cancelEdit = ()   => setEditing(null)
+
+  const savePlan = async (orgId) => {
+    setSaving(true)
+    try {
+      await superadminApi.changePlan(orgId, newPlan)
+      setRows(prev => prev.map(r => r.id === orgId
+        ? { ...r, plan: newPlan, planLabel: PLAN_LABELS[newPlan],
+            history: [{ planId: newPlan, planLabel: PLAN_LABELS[newPlan], method: 'superadmin', amount: 0, activatedAt: new Date().toLocaleDateString('es-MX') }, ...r.history] }
+        : r))
+      setEditing(null)
+    } catch { /* keep editing open */ }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <div className={styles.plansWrap}>
+      {/* Stats */}
+      <div className={styles.planStats}>
+        {byPlan.map(p => (
+          <div key={p.plan} className={styles.planStatCard}>
+            <div className={styles.planStatDot} style={{ background: PLAN_COLORS[p.plan] ?? '#6b7280' }} />
+            <div>
+              <div className={styles.planStatCount}>{p.count}</div>
+              <div className={styles.planStatLabel}>{p.label}</div>
+            </div>
+          </div>
+        ))}
+        <div className={styles.planStatCard} style={{ borderColor: '#34d39940' }}>
+          <div className={styles.planStatDot} style={{ background: '#34d399' }} />
+          <div>
+            <div className={styles.planStatCount}>${rows.reduce((s, r) => s + (r.totalPaid ?? 0), 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}</div>
+            <div className={styles.planStatLabel}>Total cobrado</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search */}
+      <div className={styles.tableSearch} style={{ background: '#181824', borderRadius: 10, border: '1px solid #252535', marginBottom: 0 }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input placeholder="Buscar organización…" value={q} onChange={e => setQ(e.target.value)} />
+        {q && <button onClick={() => setQ('')}>✕</button>}
+      </div>
+
+      {/* Table */}
+      <div className={styles.tableWrap}>
+        <div className={styles.tableScroll}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Organización</th>
+                <th>Plan actual</th>
+                <th>Admins</th>
+                <th>Total pagado</th>
+                <th>Último pago</th>
+                <th>Método</th>
+                <th>Stripe Sub ID</th>
+                <th>Registro</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(row => (
+                <>
+                  <tr key={row.id} className={expanded === row.id ? styles.trExpanded : ''}>
+                    <td><strong>{row.name}</strong></td>
+                    <td>
+                      {editing === row.id ? (
+                        <div className={styles.planEditRow}>
+                          <select
+                            value={newPlan}
+                            onChange={e => setNewPlan(e.target.value)}
+                            className={styles.planSelect}
+                          >
+                            {ALL_PLANS.map(p => <option key={p} value={p}>{PLAN_LABELS[p]}</option>)}
+                          </select>
+                          <button className={styles.btnSave} onClick={() => savePlan(row.id)} disabled={saving}>
+                            {saving ? '…' : '✓'}
+                          </button>
+                          <button className={styles.btnCancel} onClick={cancelEdit}>✕</button>
+                        </div>
+                      ) : (
+                        <span className={styles.planBadge} style={{ background: `${PLAN_COLORS[row.plan] ?? '#6b7280'}20`, color: PLAN_COLORS[row.plan] ?? '#6b7280' }}>
+                          {row.planLabel}
+                        </span>
+                      )}
+                    </td>
+                    <td className={styles.muted}>{row.adminCount}</td>
+                    <td><strong>${Number(row.totalPaid ?? 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}</strong></td>
+                    <td className={styles.muted}>{row.lastActivatedAt}</td>
+                    <td className={styles.muted}>{row.lastMethod}</td>
+                    <td className={styles.muted} style={{ fontSize: 11 }}>{row.stripeSubscriptionId ? row.stripeSubscriptionId.slice(0, 20) + '…' : '—'}</td>
+                    <td className={styles.muted}>{row.createdAt}</td>
+                    <td>
+                      <div className={styles.rowActions}>
+                        {editing !== row.id && (
+                          <button className={styles.actionBtn} title="Cambiar plan" onClick={() => startEdit(row)}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          </button>
+                        )}
+                        <button
+                          className={styles.actionBtn}
+                          title={expanded === row.id ? 'Ocultar historial' : 'Ver historial'}
+                          onClick={() => setExpanded(expanded === row.id ? null : row.id)}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points={expanded === row.id ? '18 15 12 9 6 15' : '6 9 12 15 18 9'}/></svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  {expanded === row.id && (
+                    <tr key={`${row.id}-history`} className={styles.historyRow}>
+                      <td colSpan={9}>
+                        <div className={styles.historyWrap}>
+                          <div className={styles.historyTitle}>Historial de plan — {row.name}</div>
+                          {row.history.length === 0
+                            ? <div className={styles.historyEmpty}>Sin historial registrado</div>
+                            : (
+                              <table className={styles.historyTable}>
+                                <thead><tr><th>Plan</th><th>Método</th><th>Código promo</th><th>Monto</th><th>Fecha</th></tr></thead>
+                                <tbody>
+                                  {row.history.map((h, i) => (
+                                    <tr key={i}>
+                                      <td><span className={styles.planBadge} style={{ background: `${PLAN_COLORS[h.planId] ?? '#6b7280'}20`, color: PLAN_COLORS[h.planId] ?? '#6b7280' }}>{h.planLabel}</span></td>
+                                      <td className={styles.muted}>{h.method}</td>
+                                      <td className={styles.muted}>{h.promoCode || '—'}</td>
+                                      <td><strong>${Number(h.amount).toLocaleString('es-MX', { maximumFractionDigits: 0 })}</strong></td>
+                                      <td className={styles.muted}>{h.activatedAt}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            )
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className={styles.tableCount}>{filtered.length} organizaciones · {paid.length} con plan activo</div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
 const TABS = [
   { key: 'resumen',       label: 'Resumen' },
@@ -213,6 +391,7 @@ const TABS = [
   { key: 'usuarios',      label: 'Usuarios' },
   { key: 'eventos',       label: 'Eventos' },
   { key: 'clientes',      label: 'Clientes' },
+  { key: 'planes',        label: 'Planes' },
 ]
 
 export default function SuperAdminPage() {
@@ -415,6 +594,9 @@ export default function SuperAdminPage() {
               ]}
             />
           )}
+
+          {/* ── PLANES ── */}
+          {tab === 'planes' && <PlansTab />}
         </div>
       </main>
     </div>

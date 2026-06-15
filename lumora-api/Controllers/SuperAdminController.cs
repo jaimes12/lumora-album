@@ -208,6 +208,76 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
         return Ok(result);
     }
 
+    // ── Plans list ────────────────────────────────────────────────────────────
+    [Authorize]
+    [HttpGet("plans")]
+    public async Task<IActionResult> GetPlans()
+    {
+        if (!IsSuperAdmin) return Forbid();
+
+        var orgs    = await db.Organizations.OrderByDescending(o => o.CreatedAt).ToListAsync();
+        var users   = await db.Users.ToListAsync();
+        var history = await db.PlanHistories.ToListAsync();
+
+        var result = orgs.Select(o => {
+            var orgHistory = history
+                .Where(h => h.OrgId == o.Id)
+                .OrderByDescending(h => h.ActivatedAt)
+                .Select(h => new {
+                    h.PlanId, h.Method, h.PromoCode, h.Amount,
+                    activatedAt = h.ActivatedAt.ToString("dd/MM/yyyy HH:mm"),
+                    planLabel   = PlanLabel(h.PlanId),
+                })
+                .ToList();
+
+            var last = orgHistory.FirstOrDefault();
+            return new {
+                o.Id, o.Name, o.Plan,
+                planLabel             = PlanLabel(o.Plan),
+                stripeSubscriptionId  = o.StripeSubscriptionId,
+                stripeCustomerId      = o.StripeCustomerId,
+                adminCount            = users.Count(u => u.OrgId == o.Id && u.Role == "admin"),
+                lastActivatedAt       = last?.activatedAt ?? "—",
+                lastMethod            = last?.Method ?? "—",
+                totalPaid             = orgHistory.Sum(h => h.Amount),
+                history               = orgHistory,
+                createdAt             = o.CreatedAt.ToString("dd/MM/yyyy"),
+            };
+        }).ToList();
+
+        return Ok(result);
+    }
+
+    // ── Change org plan ───────────────────────────────────────────────────────
+    [Authorize]
+    [HttpPut("orgs/{orgId}/plan")]
+    public async Task<IActionResult> ChangePlan(string orgId, [FromBody] ChangePlanRequest req)
+    {
+        if (!IsSuperAdmin) return Forbid();
+
+        var org = await db.Organizations.FindAsync(orgId);
+        if (org is null) return NotFound();
+
+        var validPlans = new[] { "free", "solo", "negocio", "agencia" };
+        if (!validPlans.Contains(req.Plan)) return BadRequest("Plan inválido");
+
+        org.Plan = req.Plan;
+
+        db.PlanHistories.Add(new lumora_api.Models.PlanHistory
+        {
+            Id          = Guid.NewGuid().ToString(),
+            OrgId       = orgId,
+            PlanId      = req.Plan,
+            Method      = "superadmin",
+            PromoCode   = null,
+            Amount      = 0,
+            ActivatedAt = DateTime.UtcNow,
+        });
+
+        await db.SaveChangesAsync();
+        return Ok(new { plan = req.Plan, planLabel = PlanLabel(req.Plan) });
+    }
+
     private static string PlanLabel(string plan) => plan switch {
         "solo"    => "Solo",
         "negocio" => "Negocio",
@@ -221,3 +291,4 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
 }
 
 public record SuperAdminLoginRequest(string Email, string Password);
+public record ChangePlanRequest(string Plan);
