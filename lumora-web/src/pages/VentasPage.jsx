@@ -571,14 +571,19 @@ export default function VentasPage() {
   const [stats,        setStats]        = useState(null)
   const [loadingStats, setLoadingStats] = useState(true)
   const [mesFilter,    setMesFilter]    = useState('all')
-  const [mesesList,    setMesesList]    = useState([])
+
+  const currentYear = new Date().getFullYear()
+  const MES_NOMBRES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+  const allMeses = MES_NOMBRES.map((name, i) => ({
+    value: `${currentYear}-${String(i + 1).padStart(2, '0')}`,
+    label: `${name} ${currentYear}`,
+  }))
 
   useEffect(() => {
     ventasApi.getAll()
       .then(setVentas)
       .catch(() => setVentas([]))
       .finally(() => setLoading(false))
-    ventasStatsApi.getMeses().then(setMesesList).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -653,7 +658,7 @@ export default function VentasPage() {
               onChange={e => setMesFilter(e.target.value)}
             >
               <option value="all">Todos los meses</option>
-              {mesesList.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+              {allMeses.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
             </select>
           ) : (
             <>
