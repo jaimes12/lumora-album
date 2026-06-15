@@ -16,6 +16,7 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
 
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<SuperAdminUser> SuperAdmins => Set<SuperAdminUser>();
     public DbSet<Client> Clients => Set<Client>();
     public DbSet<Event> Events => Set<Event>();
     public DbSet<Vendor> Vendors => Set<Vendor>();

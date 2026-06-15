@@ -23,7 +23,7 @@ async function saRequest(path, options = {}) {
 
 export const superadminApi = {
   login: async (email, password) => {
-    const res = await saRequest('/api/auth/login', {
+    const res = await saRequest('/api/superadmin/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     })

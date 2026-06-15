@@ -508,6 +508,16 @@ try
         // Seed default promo codes (INSERT IGNORE = no-op if code already exists)
         "INSERT IGNORE INTO `promo_codes` (`id`,`code`,`plan_id`,`description`,`max_uses`,`used_count`,`active`,`created_at`) VALUES ('promo_elixe2026','ELIXE2026','negocio','Acceso gratis Plan Negocio',-1,0,1,NOW())",
         "INSERT IGNORE INTO `promo_codes` (`id`,`code`,`plan_id`,`description`,`max_uses`,`used_count`,`active`,`created_at`) VALUES ('promo_agencia','AGENCIA2026','agencia','Acceso gratis Plan Agencia',-1,0,1,NOW())",
+
+        // Superadmin table
+        @"CREATE TABLE IF NOT EXISTS `superadmins` (
+            `id`            varchar(255) NOT NULL,
+            `email`         varchar(255) NOT NULL,
+            `password_hash` varchar(500) NOT NULL,
+            `created_at`    datetime(6)  NOT NULL,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `uq_superadmin_email` (`email`)
+        ) CHARACTER SET utf8mb4",
     };
 
     try
@@ -524,6 +534,31 @@ try
         try { await db.Database.ExecuteSqlRawAsync("SET FOREIGN_KEY_CHECKS = 1"); }
         catch { }
     }
+
+    // Seed superadmin account if it doesn't exist yet
+    try
+    {
+        var saEmail = "jaimes.angel.jtv@gmail.com";
+        var exists = await db.SuperAdmins.AnyAsync(s => s.Email == saEmail);
+        if (!exists)
+        {
+            var saltBytes = System.Security.Cryptography.RandomNumberGenerator.GetBytes(16);
+            var hashBytes = System.Security.Cryptography.Rfc2898DeriveBytes.Pbkdf2(
+                System.Text.Encoding.UTF8.GetBytes("Angel122"),
+                saltBytes, 100000,
+                System.Security.Cryptography.HashAlgorithmName.SHA256, 32);
+            var hash = $"{Convert.ToBase64String(saltBytes)}:{Convert.ToBase64String(hashBytes)}";
+            db.SuperAdmins.Add(new lumora_api.Models.SuperAdminUser
+            {
+                Id           = Guid.NewGuid().ToString(),
+                Email        = saEmail,
+                PasswordHash = hash,
+                CreatedAt    = DateTime.UtcNow,
+            });
+            await db.SaveChangesAsync();
+        }
+    }
+    catch { }
 }
 catch (Exception ex)
 {

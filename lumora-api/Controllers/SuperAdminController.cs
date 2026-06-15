@@ -1,20 +1,69 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using lumora_api.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace lumora_api.Controllers;
 
 [ApiController]
 [Route("api/superadmin")]
-[Authorize]
 public class SuperAdminController(LumoraDbContext db, IConfiguration config) : ControllerBase
 {
     private bool IsSuperAdmin =>
-        User.FindFirst("email")?.Value?.ToLower() ==
-        (config["SuperAdmin:Email"] ?? "").ToLower();
+        User.FindFirst("role")?.Value == "superadmin";
+
+    // ── Login ─────────────────────────────────────────────────────────────────
+    [HttpPost("login")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Login([FromBody] SuperAdminLoginRequest req)
+    {
+        var sa = await db.SuperAdmins.FirstOrDefaultAsync(s => s.Email == req.Email);
+        if (sa is null || !VerifyPassword(req.Password, sa.PasswordHash))
+            return Unauthorized(new { message = "Credenciales incorrectas" });
+
+        var secret = config["Jwt:Secret"] ?? "lumora-dev-secret-key-change-in-production-32chars";
+        var key    = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+        var creds  = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var claims = new[]
+        {
+            new Claim("user_id", sa.Id),
+            new Claim("email",   sa.Email),
+            new Claim("name",    "Super Admin"),
+            new Claim("role",    "superadmin"),
+        };
+        var token = new JwtSecurityToken(
+            issuer:   "lumora-api",
+            audience: "lumora-web",
+            claims:   claims,
+            expires:  DateTime.UtcNow.AddDays(7),
+            signingCredentials: creds);
+
+        return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
+    }
+
+    private static bool VerifyPassword(string password, string stored)
+    {
+        var parts = stored.Split(':');
+        if (parts.Length != 2) return false;
+        try
+        {
+            var salt   = Convert.FromBase64String(parts[0]);
+            var expect = Convert.FromBase64String(parts[1]);
+            var actual = Rfc2898DeriveBytes.Pbkdf2(
+                Encoding.UTF8.GetBytes(password), salt, 100000,
+                HashAlgorithmName.SHA256, 32);
+            return CryptographicOperations.FixedTimeEquals(actual, expect);
+        }
+        catch { return false; }
+    }
 
     // ── Overview ──────────────────────────────────────────────────────────────
+    [Authorize]
     [HttpGet("overview")]
     public async Task<IActionResult> GetOverview()
     {
@@ -68,6 +117,7 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
     }
 
     // ── Orgs ──────────────────────────────────────────────────────────────────
+    [Authorize]
     [HttpGet("orgs")]
     public async Task<IActionResult> GetOrgs()
     {
@@ -92,6 +142,7 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
     }
 
     // ── Users ─────────────────────────────────────────────────────────────────
+    [Authorize]
     [HttpGet("users")]
     public async Task<IActionResult> GetUsers()
     {
@@ -114,6 +165,7 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
     }
 
     // ── Events ────────────────────────────────────────────────────────────────
+    [Authorize]
     [HttpGet("events")]
     public async Task<IActionResult> GetEvents()
     {
@@ -135,6 +187,7 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
     }
 
     // ── Clients ───────────────────────────────────────────────────────────────
+    [Authorize]
     [HttpGet("clients")]
     public async Task<IActionResult> GetClients()
     {
@@ -165,3 +218,5 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
         "agencia" => 0, "negocio" => 1, "solo" => 2, _ => 3,
     };
 }
+
+public record SuperAdminLoginRequest(string Email, string Password);
