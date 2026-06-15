@@ -420,9 +420,11 @@
   .layout {
     flex: 1;
     min-height: 0;
+    flex-direction: column; /* override base row → column */
   }
   .tableWrap {
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     overflow-x: auto;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
