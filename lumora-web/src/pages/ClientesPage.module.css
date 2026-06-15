@@ -393,11 +393,20 @@
 }
 
 @media (max-width: 768px) {
-  .page { padding: 0; }
-  .header { flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+  /* Make .page a fixed-height column so only the table scrolls */
+  .page {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    /* 100svh - appBar(56px) - mainInner padding top(20px) + bottom(32px) */
+    height: calc(100vh - 108px);
+    height: calc(100svh - 108px);
+    overflow: hidden;
+  }
+  .header { flex-wrap: wrap; gap: 10px; margin-bottom: 16px; flex-shrink: 0; }
   .title { font-size: 20px; }
   .btnPrimary { padding: 9px 14px; font-size: 13px; }
-  .controls { gap: 8px; }
+  .controls { gap: 8px; flex-shrink: 0; }
   .searchWrap { max-width: 100%; }
   .etapaFilters {
     flex-wrap: nowrap;
@@ -407,12 +416,18 @@
   }
   .etapaFilters::-webkit-scrollbar { display: none; }
   .etapaBtn { flex-shrink: 0; }
+  /* layout fills remaining space, table scrolls inside */
+  .layout {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    flex-direction: column;
+  }
   .tableWrap {
+    height: 100%;
     overflow-x: auto;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    /* 56px AppBar + 20px mainInner padding-top + ~76px header + ~110px search+filters */
-    max-height: calc(100svh - 272px);
   }
   .table { min-width: 600px; }
   .drawer {
