@@ -738,24 +738,24 @@
   position: absolute;
   inset: 0;
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
   gap: 3px;
   padding: 0 2px;
 }
 
 .barItem {
   flex: 1;
-  height: 100%;
-  display: flex;
-  align-items: flex-end;
+  position: relative;
   min-width: 4px;
 }
 
 .barFill {
-  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   border-radius: 3px 3px 0 0;
   transition: height 0.3s ease;
-  min-height: 0;
 }
 
 .xRow {
