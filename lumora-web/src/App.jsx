@@ -30,7 +30,8 @@ import PagoExitosoPage from './pages/PagoExitosoPage'
 import LoginPage from './pages/LoginPage'
 import PaquetesPage from './pages/PaquetesPage'
 import ProductosPage from './pages/ProductosPage'
-import ConfigPage from './pages/ConfigPage'
+import ConfigPage        from './pages/ConfigPage'
+import TrabajadoresPage  from './pages/TrabajadoresPage'
 
 function LandingPage() {
   return (
@@ -107,6 +108,7 @@ export default function App() {
               <Route path="productos"     element={<ProductosPage />} />
               <Route path="pago-exitoso"    element={<PagoExitosoPage />} />
               <Route path="configuracion"   element={<ConfigPage />} />
+              <Route path="trabajadores"   element={<TrabajadoresPage />} />
             </Route>
 
             {/* Catch-all */}

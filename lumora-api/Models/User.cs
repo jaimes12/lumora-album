@@ -32,4 +32,7 @@ public class User
 
     [Column("profile_photo")]
     public string? ProfilePhoto { get; set; }
+
+    [Column("phone")]
+    public string? Phone { get; set; }
 }

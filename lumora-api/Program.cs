@@ -419,6 +419,7 @@ try
         "ALTER TABLE lead_messages ADD COLUMN media_url    varchar(500) NULL",
         "ALTER TABLE lead_messages ADD COLUMN media_type   varchar(100) NULL",
         "ALTER TABLE users ADD COLUMN profile_photo varchar(500) NULL",
+        "ALTER TABLE users ADD COLUMN phone varchar(50) NULL",
         "ALTER TABLE organizations ADD COLUMN stripe_customer_id varchar(255) NULL",
         "ALTER TABLE organizations ADD COLUMN stripe_subscription_id varchar(255) NULL",
 

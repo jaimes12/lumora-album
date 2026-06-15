@@ -59,7 +59,8 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
             user.OrgId,
             user.Name,
             user.Email,
-            "free"
+            "free",
+            user.Role
         );
     }
 
@@ -78,7 +79,8 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
             user.OrgId,
             user.Name,
             user.Email,
-            user.Organization?.Plan ?? "free"
+            user.Organization?.Plan ?? "free",
+            user.Role
         );
     }
 
@@ -95,7 +97,7 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
     {
         var user = await db.Users.Include(u => u.Organization).FirstOrDefaultAsync(u => u.Id == userId)
             ?? throw new InvalidOperationException("Usuario no encontrado");
-        return new UserProfileResponse(user.Id, user.Name, user.Email, user.ProfilePhoto, user.Organization?.Plan ?? "free");
+        return new UserProfileResponse(user.Id, user.Name, user.Email, user.ProfilePhoto, user.Organization?.Plan ?? "free", user.Role);
     }
 
     public async Task UpdateProfileAsync(string userId, UpdateProfileRequest req)
@@ -188,7 +190,8 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
             new Claim("user_id", user.Id),
             new Claim("org_id", user.OrgId),
             new Claim("email", user.Email),
-            new Claim("name", user.Name)
+            new Claim("name", user.Name),
+            new Claim("role", user.Role)
         };
 
         var token = new JwtSecurityToken(

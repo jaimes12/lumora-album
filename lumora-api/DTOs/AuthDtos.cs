@@ -20,7 +20,8 @@ public record AuthResponse(
     string OrgId,
     string Name,
     string Email,
-    string Plan
+    string Plan,
+    string Role
 );
 
 public record CheckEmailRequest([Required, EmailAddress] string Email);
@@ -30,4 +31,17 @@ public record UpdateProfileRequest([Required, MinLength(2), MaxLength(100)] stri
 public record UpdateEmailRequest([Required, EmailAddress] string NewEmail, [Required] string Password);
 public record UpdatePasswordRequest([Required] string OldPassword, [Required, MinLength(8)] string NewPassword);
 public record UpdatePhotoRequest([Required] string PhotoData); // base64
-public record UserProfileResponse(string UserId, string Name, string Email, string? PhotoUrl, string Plan);
+public record UserProfileResponse(string UserId, string Name, string Email, string? PhotoUrl, string Plan, string Role);
+
+public record CreateWorkerRequest(
+    [Required, MinLength(2), MaxLength(100)] string Name,
+    [Required, EmailAddress] string Email,
+    [Required, MinLength(6)] string Password,
+    string? Phone
+);
+
+public record UpdateWorkerRequest(
+    [Required, MinLength(2), MaxLength(100)] string Name,
+    string? Phone,
+    string? Password
+);

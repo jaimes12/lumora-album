@@ -1,0 +1,107 @@
+.page { max-width: 860px; margin: 0 auto; padding: 28px 24px; display: flex; flex-direction: column; gap: 20px; }
+
+.header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.title  { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; margin: 0; }
+.sub    { font-size: 13px; color: var(--text-muted); margin: 2px 0 0; }
+
+.btnPrimary {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 8px; padding: 8px 16px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  white-space: nowrap; transition: opacity .15s;
+}
+.btnPrimary:hover:not(:disabled) { opacity: .85; }
+.btnPrimary:disabled { opacity: .4; cursor: not-allowed; }
+
+.limitBanner {
+  display: flex; align-items: center; gap: 8px;
+  background: #fb923c18; border: 1px solid #fb923c40;
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 13px; color: #fb923c;
+}
+
+.list  { display: flex; flex-direction: column; gap: 10px; }
+.grid  { display: flex; flex-direction: column; gap: 10px; }
+
+.card {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 16px;
+}
+
+.cardAvatar {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff;
+}
+
+.cardInfo  { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cardName  { font-size: 14px; font-weight: 600; }
+.cardEmail { font-size: 12px; color: var(--text-muted); }
+.cardPhone { font-size: 12px; color: var(--text-muted); }
+
+.cardBadge {
+  font-size: 11px; font-weight: 600; padding: 3px 8px;
+  border-radius: 20px; background: var(--accent)18; color: var(--accent);
+  flex-shrink: 0;
+}
+
+.cardActions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+.actionBtn, .actionBtnDanger {
+  width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--card-bg); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); transition: all .15s;
+}
+.actionBtn:hover { color: var(--accent); border-color: var(--accent); }
+.actionBtnDanger:hover { color: #ef4444; border-color: #ef444440; }
+
+.delConfirm { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.delYes { background: #ef4444; color: #fff; border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 12px; font-weight: 600; }
+.delNo  { background: var(--border); color: var(--text); border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 12px; }
+
+.empty {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 60px 20px; color: var(--text-muted); text-align: center;
+}
+.empty p { margin: 0; font-size: 14px; }
+
+/* Modal */
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 16px;
+}
+.modal {
+  background: var(--card-bg); border-radius: 14px;
+  width: 100%; max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+.modalHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px 0;
+}
+.modalTitle { font-size: 16px; font-weight: 700; margin: 0; }
+.modalClose { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 16px; padding: 4px 8px; }
+.modalForm  { display: flex; flex-direction: column; gap: 14px; padding: 16px 20px 20px; }
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.field input {
+  background: var(--input-bg, var(--sidebar-bg));
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 9px 12px; font-size: 13px; color: var(--text);
+  outline: none; transition: border-color .15s;
+}
+.field input:focus { border-color: var(--accent); }
+
+.error { font-size: 12px; color: #ef4444; margin: 0; }
+
+.modalActions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
+.btnSecondary {
+  background: none; border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer;
+}
+.btnSecondary:hover { border-color: var(--text-muted); }
