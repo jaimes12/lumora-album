@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { ventasApi } from '../api/ventasApi'
 import { clientesApi } from '../api/clientesApi'
 import { eventosApi } from '../api/eventosApi'
+import { ventasStatsApi } from '../api/ventasStatsApi'
 import styles from './VentasPage.module.css'
 
 // ── NuevoDocModal ──────────────────────────────────────────────────────────
@@ -119,6 +120,178 @@ function NuevoDocModal({ type = 'quote', onClose, onCreated }) {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  )
+}
+
+// ── Chart helpers ──────────────────────────────────────────────────────────
+function niceMax(val) {
+  if (val <= 0) return 100
+  const mag = Math.pow(10, Math.floor(Math.log10(val)))
+  const f = val / mag
+  if (f <= 1) return mag
+  if (f <= 2) return 2 * mag
+  if (f <= 5) return 5 * mag
+  return 10 * mag
+}
+
+function fmtY(v) {
+  if (v === 0) return '0'
+  if (v >= 1000000) return `${(v / 1000000).toFixed(1)}M`
+  if (v >= 1000) return `${Math.round(v / 1000)}k`
+  return v.toString()
+}
+
+const PIE_COLORS = ['#c9a227', '#34d399', '#38bdf8', '#a78bfa', '#fb923c', '#f472b6']
+
+function BarChart({ data = [], color = 'var(--accent)', emptyText = 'Sin datos para este período' }) {
+  if (!data.length) return <div className={styles.chartEmpty}>{emptyText}</div>
+  const maxVal = Math.max(...data.map(d => d.value), 1)
+  const nMax   = niceMax(maxVal)
+
+  return (
+    <div className={styles.barChartWrap}>
+      <div className={styles.barChartRow}>
+        <div className={styles.yAxis}>
+          {[1, 0.75, 0.5, 0.25, 0].map(p => (
+            <span key={p}>{fmtY(Math.round(nMax * p))}</span>
+          ))}
+        </div>
+        <div className={styles.plotArea}>
+          {[0, 0.25, 0.5, 0.75, 1].map(p => (
+            <div key={p} className={styles.gridLine} style={{ bottom: `${p * 100}%` }} />
+          ))}
+          <div className={styles.barsRow}>
+            {data.map(d => (
+              <div key={d.label} className={styles.barItem}>
+                <div
+                  className={styles.barFill}
+                  style={{ height: `${Math.max(d.value / nMax * 100, d.value > 0 ? 2 : 0)}%`, background: color }}
+                  title={`$${Number(d.value).toLocaleString('es-MX')}`}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className={styles.xRow}>
+        <div className={styles.xSpacer} />
+        <div className={styles.xLabels}>
+          {data.map(d => <span key={d.label}>{d.label}</span>)}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PieChart({ data = [] }) {
+  const total = data.reduce((s, d) => s + Number(d.value), 0)
+  if (!data.length || total === 0)
+    return <div className={styles.chartEmpty}>Sin pagos registrados</div>
+
+  let cumDeg = -90
+  const slices = data.map((d, i) => {
+    const pct   = d.value / total
+    const start = cumDeg
+    cumDeg += pct * 360
+    return { ...d, pct, start, end: cumDeg, color: PIE_COLORS[i % PIE_COLORS.length] }
+  })
+
+  const arc = (start, end, r = 80) => {
+    const cx = 100, cy = 100
+    if (end - start >= 359.9) return `M${cx},${cy - r} A${r},${r},0,1,1,${cx - 0.01},${cy - r} Z`
+    const sR = (start * Math.PI) / 180
+    const eR = (end   * Math.PI) / 180
+    const x1 = cx + r * Math.cos(sR), y1 = cy + r * Math.sin(sR)
+    const x2 = cx + r * Math.cos(eR), y2 = cy + r * Math.sin(eR)
+    return `M${cx},${cy} L${x1},${y1} A${r},${r},0,${end - start > 180 ? 1 : 0},1,${x2},${y2} Z`
+  }
+
+  return (
+    <div className={styles.pieWrap}>
+      <svg viewBox="0 0 200 200" className={styles.pieSvg}>
+        {slices.map(s => <path key={s.method} d={arc(s.start, s.end)} fill={s.color} />)}
+      </svg>
+      <div className={styles.pieLegend}>
+        {slices.map(s => (
+          <div key={s.method} className={styles.legendItem}>
+            <div className={styles.legendDot} style={{ background: s.color }} />
+            <div className={styles.legendText}>
+              <span className={styles.legendLabel}>{s.label}</span>
+              <span className={styles.legendPct}>{(s.pct * 100).toFixed(1)}%</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function VentasStats({ stats, loading }) {
+  const f = v => '$' + Number(v ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  const cards = [
+    { label: 'Ventas de Hoy',          value: f(stats?.todaySales),    sub: 'eventos de hoy',        color: '#7c6af7' },
+    { label: 'Total Ventas (Eventos)',  value: f(stats?.totalSales),    sub: `${stats?.totalEvents ?? 0} eventos`, color: '#c9a227' },
+    { label: 'Total Pagos Recibidos',   value: f(stats?.totalPayments), sub: 'pagos registrados',      color: '#34d399' },
+    { label: 'Promedio Diario',         value: f(stats?.dailyAverage),  sub: 'Últimos 30 días',        color: '#38bdf8' },
+    { label: 'Eventos Totales',         value: String(stats?.totalEvents ?? 0), sub: 'en el período',  color: '#a78bfa' },
+  ]
+
+  return (
+    <div className={styles.statsPanel}>
+      <div className={styles.statsCardsRow}>
+        {cards.map(c => (
+          <div key={c.label} className={styles.statCard}>
+            <span className={styles.statCardLabel}>{c.label}</span>
+            <span className={styles.statCardValue} style={{ color: c.color }}>
+              {loading ? '—' : c.value}
+            </span>
+            <span className={styles.statCardSub}>{c.sub}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className={styles.chartsGrid}>
+        <div className={styles.chartCard}>
+          <div className={styles.chartCardHeader}>
+            <span className={styles.chartCardTitle}>Ventas por Mes</span>
+            <span className={styles.chartCardSub}>Presupuesto de eventos (MXN)</span>
+          </div>
+          {loading ? <div className={styles.chartSkeleton} /> : (
+            <BarChart data={stats?.byMonth ?? []} color="#c9a227" emptyText="Sin eventos en los últimos 12 meses" />
+          )}
+        </div>
+
+        <div className={styles.chartCard}>
+          <div className={styles.chartCardHeader}>
+            <span className={styles.chartCardTitle}>Ventas Diarias</span>
+            <span className={styles.chartCardSub}>Últimos 30 días</span>
+          </div>
+          {loading ? <div className={styles.chartSkeleton} /> : (
+            <BarChart data={stats?.byDay ?? []} color="#7c6af7" emptyText="Sin ventas en los últimos 30 días" />
+          )}
+        </div>
+
+        <div className={styles.chartCard}>
+          <div className={styles.chartCardHeader}>
+            <span className={styles.chartCardTitle}>Ventas Semanales</span>
+            <span className={styles.chartCardSub}>Últimas 12 semanas</span>
+          </div>
+          {loading ? <div className={styles.chartSkeleton} /> : (
+            <BarChart data={stats?.byWeek ?? []} color="#34d399" emptyText="Sin ventas en las últimas 12 semanas" />
+          )}
+        </div>
+
+        <div className={styles.chartCard}>
+          <div className={styles.chartCardHeader}>
+            <span className={styles.chartCardTitle}>Ventas por Método de Pago</span>
+            <span className={styles.chartCardSub}>Distribución de pagos</span>
+          </div>
+          {loading ? <div className={styles.chartSkeleton} /> : (
+            <PieChart data={stats?.byMethod ?? []} />
+          )}
+        </div>
       </div>
     </div>
   )
@@ -390,17 +563,31 @@ function VentaDetailModal({ item, onClose, onUpdated, onDeleted, onCreated }) {
 export default function VentasPage() {
   const [ventas,      setVentas]      = useState([])
   const [loading,     setLoading]     = useState(true)
-  const [tab,         setTab]         = useState('cotizaciones')
+  const [tab,         setTab]         = useState('estadisticas')
   const [search,      setSearch]      = useState('')
-  const [showCreate,  setShowCreate]  = useState(null)   // null | 'quote' | 'invoice'
+  const [showCreate,  setShowCreate]  = useState(null)
   const [detailItem,  setDetailItem]  = useState(null)
+
+  const [stats,        setStats]        = useState(null)
+  const [loadingStats, setLoadingStats] = useState(true)
+  const [mesFilter,    setMesFilter]    = useState('all')
+  const [mesesList,    setMesesList]    = useState([])
 
   useEffect(() => {
     ventasApi.getAll()
       .then(setVentas)
       .catch(() => setVentas([]))
       .finally(() => setLoading(false))
+    ventasStatsApi.getMeses().then(setMesesList).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    setLoadingStats(true)
+    ventasStatsApi.getStats(mesFilter === 'all' ? null : mesFilter)
+      .then(setStats)
+      .catch(() => setStats(null))
+      .finally(() => setLoadingStats(false))
+  }, [mesFilter])
 
   const cotizaciones = ventas.filter(v => v.tipo === 'quote')
   const facturas     = ventas.filter(v => v.tipo === 'invoice')
@@ -454,21 +641,62 @@ export default function VentasPage() {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Ventas</h1>
-          <p className={styles.sub}>Cotizaciones y facturación</p>
+          <p className={styles.sub}>
+            {tab === 'estadisticas' ? 'Análisis de ingresos por eventos' : 'Cotizaciones y facturación'}
+          </p>
         </div>
         <div className={styles.headerActions}>
-          <button className={styles.btnSecondaryHdr} onClick={() => setShowCreate('invoice')}>
-            Nueva factura
-          </button>
-          <button className={styles.btnPrimary} onClick={() => setShowCreate('quote')}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Nueva cotización
-          </button>
+          {tab === 'estadisticas' ? (
+            <select
+              className={styles.mesFilter}
+              value={mesFilter}
+              onChange={e => setMesFilter(e.target.value)}
+            >
+              <option value="all">Todos los meses</option>
+              {mesesList.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+            </select>
+          ) : (
+            <>
+              <button className={styles.btnSecondaryHdr} onClick={() => setShowCreate('invoice')}>
+                Nueva factura
+              </button>
+              <button className={styles.btnPrimary} onClick={() => setShowCreate('quote')}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Nueva cotización
+              </button>
+            </>
+          )}
         </div>
       </div>
 
+      {/* Main tabs */}
+      <div className={styles.mainTabsRow}>
+        <button
+          className={`${styles.mainTab} ${tab === 'estadisticas' ? styles.mainTabActive : ''}`}
+          onClick={() => setTab('estadisticas')}
+        >
+          Estadísticas
+        </button>
+        <button
+          className={`${styles.mainTab} ${tab === 'cotizaciones' ? styles.mainTabActive : ''}`}
+          onClick={() => { setTab('cotizaciones'); setSearch('') }}
+        >
+          Cotizaciones <span className={styles.tabCount}>{ventas.filter(v => v.tipo === 'quote').length}</span>
+        </button>
+        <button
+          className={`${styles.mainTab} ${tab === 'facturas' ? styles.mainTabActive : ''}`}
+          onClick={() => { setTab('facturas'); setSearch('') }}
+        >
+          Facturas <span className={styles.tabCount}>{ventas.filter(v => v.tipo === 'invoice').length}</span>
+        </button>
+      </div>
+
+      {tab === 'estadisticas' && <VentasStats stats={stats} loading={loadingStats} />}
+
+      {tab !== 'estadisticas' && (
+      <>
       {/* Summary cards */}
       <div className={styles.summaryRow}>
         <div className={styles.summaryCard}>
@@ -498,22 +726,9 @@ export default function VentasPage() {
         </div>
       </div>
 
-      {/* Tabs + Search */}
+      {/* Search */}
       <div className={styles.tabsRow}>
-        <div className={styles.tabs}>
-          <button
-            className={`${styles.tab} ${tab === 'cotizaciones' ? styles.tabActive : ''}`}
-            onClick={() => { setTab('cotizaciones'); setSearch('') }}
-          >
-            Cotizaciones <span className={styles.tabCount}>{cotizaciones.length}</span>
-          </button>
-          <button
-            className={`${styles.tab} ${tab === 'facturas' ? styles.tabActive : ''}`}
-            onClick={() => { setTab('facturas'); setSearch('') }}
-          >
-            Facturas <span className={styles.tabCount}>{facturas.length}</span>
-          </button>
-        </div>
+        <div />
         <div className={styles.searchBox}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -596,6 +811,8 @@ export default function VentasPage() {
           </div>
         )}
       </div>
+      </>
+      )}
     </div>
   )
 }
