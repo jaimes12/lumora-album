@@ -409,7 +409,10 @@
   .etapaBtn { flex-shrink: 0; }
   .tableWrap {
     overflow-x: auto;
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    /* 56px AppBar + 20px mainInner padding-top + ~76px header + ~110px search+filters */
+    max-height: calc(100svh - 272px);
   }
   .table { min-width: 600px; }
   .drawer {
