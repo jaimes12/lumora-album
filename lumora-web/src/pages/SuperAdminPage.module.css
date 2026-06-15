@@ -1,18 +1,21 @@
+/* All colors hardcoded — superadmin has no AppLayout so CSS vars aren't available */
+
 /* ── Layout ────────────────────────────────────────────────────────────── */
 .shell {
   display: flex;
   min-height: 100vh;
-  background: var(--bg, #0e0e12);
-  color: var(--text, #e8e8f0);
-  font-family: inherit;
+  background: #0d0d14;
+  color: #e6e6f0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
 }
 
 /* ── Sidebar ───────────────────────────────────────────────────────────── */
 .sidebar {
-  width: 200px;
+  width: 210px;
   flex-shrink: 0;
-  background: var(--sidebar-bg, #15151c);
-  border-right: 1px solid var(--border, #2a2a35);
+  background: #13131d;
+  border-right: 1px solid #252535;
   display: flex;
   flex-direction: column;
   position: sticky;
@@ -23,14 +26,14 @@
 
 .sidebarLogo {
   padding: 22px 20px 18px;
-  border-bottom: 1px solid var(--border, #2a2a35);
+  border-bottom: 1px solid #252535;
 }
 
 .logoText {
   font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.14em;
-  color: var(--accent, #7c6af7);
+  letter-spacing: 0.16em;
+  color: #7c6af7;
   text-transform: uppercase;
 }
 
@@ -50,22 +53,22 @@
   border-radius: 8px;
   padding: 9px 12px;
   font-size: 13px;
-  color: var(--text-muted, #8888a0);
+  color: #888899;
   cursor: pointer;
   transition: all .15s;
+  font-family: inherit;
 }
-
-.navItem:hover { background: var(--border, #2a2a35); color: var(--text, #e8e8f0); }
+.navItem:hover { background: #252535; color: #e6e6f0; }
 
 .navActive {
-  background: color-mix(in srgb, var(--accent, #7c6af7) 14%, transparent);
-  color: var(--accent, #7c6af7);
+  background: rgba(124, 106, 247, 0.15);
+  color: #7c6af7;
   font-weight: 600;
 }
 
 .sidebarFooter {
   padding: 14px 16px;
-  border-top: 1px solid var(--border, #2a2a35);
+  border-top: 1px solid #252535;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -74,7 +77,7 @@
 
 .sidebarUser {
   font-size: 11px;
-  color: var(--text-muted, #8888a0);
+  color: #888899;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -82,16 +85,17 @@
 
 .logoutBtn {
   background: none;
-  border: 1px solid var(--border, #2a2a35);
+  border: 1px solid #252535;
   border-radius: 6px;
   padding: 4px 10px;
   font-size: 11px;
-  color: var(--text-muted, #8888a0);
+  color: #888899;
   cursor: pointer;
   white-space: nowrap;
   transition: all .15s;
+  font-family: inherit;
 }
-.logoutBtn:hover { color: #ef4444; border-color: #ef444440; }
+.logoutBtn:hover { color: #ef4444; border-color: rgba(239, 68, 68, 0.4); }
 
 /* ── Main content ──────────────────────────────────────────────────────── */
 .main {
@@ -99,6 +103,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  background: #0d0d14;
 }
 
 .topbar {
@@ -106,8 +111,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 18px 28px;
-  border-bottom: 1px solid var(--border, #2a2a35);
-  background: var(--sidebar-bg, #15151c);
+  border-bottom: 1px solid #252535;
+  background: #13131d;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -118,6 +123,7 @@
   font-weight: 700;
   margin: 0;
   letter-spacing: -0.02em;
+  color: #e6e6f0;
 }
 
 .topbarBadge {
@@ -125,8 +131,8 @@
   font-weight: 600;
   padding: 3px 10px;
   border-radius: 20px;
-  background: color-mix(in srgb, var(--accent, #7c6af7) 14%, transparent);
-  color: var(--accent, #7c6af7);
+  background: rgba(124, 106, 247, 0.14);
+  color: #7c6af7;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -140,7 +146,7 @@
 
 .loadingMsg {
   font-size: 14px;
-  color: var(--text-muted, #8888a0);
+  color: #888899;
   padding: 40px;
   text-align: center;
 }
@@ -156,8 +162,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--card-bg, #1a1a24);
-  border: 1px solid var(--border, #2a2a35);
+  background: #181824;
+  border: 1px solid #252535;
   border-radius: 12px;
   padding: 14px 16px;
 }
@@ -181,7 +187,7 @@
 
 .statLabel {
   font-size: 11px;
-  color: var(--text-muted, #8888a0);
+  color: #888899;
   margin-top: 2px;
 }
 
@@ -191,37 +197,36 @@
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
-
 @media (max-width: 900px) { .chartsRow { grid-template-columns: 1fr; } }
 
 .chartCard {
-  background: var(--card-bg, #1a1a24);
-  border: 1px solid var(--border, #2a2a35);
+  background: #181824;
+  border: 1px solid #252535;
   border-radius: 12px;
   padding: 18px 20px;
 }
 
 .chartTitle {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  color: var(--text-muted, #8888a0);
+  color: #888899;
   margin: 0 0 16px;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
 }
 
 /* Donut */
-.donutWrap { display: flex; align-items: center; gap: 20px; }
+.donutWrap { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
 .donutSvg  { width: 140px; height: 140px; flex-shrink: 0; }
-.donutCenter    { font-size: 26px; font-weight: 800; fill: var(--text, #e8e8f0); }
-.donutCenterSub { font-size: 10px; fill: var(--text-muted, #8888a0); }
-.chartEmpty { font-size: 13px; color: var(--text-muted, #8888a0); padding: 20px 0; text-align: center; }
+.donutCenter    { font-size: 26px; font-weight: 800; fill: #e6e6f0; }
+.donutCenterSub { font-size: 10px; fill: #888899; }
+.chartEmpty { font-size: 13px; color: #888899; padding: 20px 0; text-align: center; }
 
 .donutLegend  { display: flex; flex-direction: column; gap: 8px; }
 .legendItem   { display: flex; align-items: center; gap: 8px; }
 .legendDot    { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.legendLabel  { font-size: 12px; color: var(--text-muted, #8888a0); flex: 1; }
-.legendCount  { font-size: 12px; font-weight: 700; color: var(--text, #e8e8f0); }
+.legendLabel  { font-size: 12px; color: #888899; flex: 1; }
+.legendCount  { font-size: 12px; font-weight: 700; color: #e6e6f0; }
 
 /* Mini bar */
 .miniBar {
@@ -230,7 +235,6 @@
   align-items: flex-end;
   gap: 4px;
 }
-
 .miniBarCol {
   flex: 1;
   display: flex;
@@ -240,24 +244,22 @@
   justify-content: flex-end;
   gap: 4px;
 }
-
 .miniBarFill {
   width: 100%;
   border-radius: 3px 3px 0 0;
   transition: height .3s ease;
   min-height: 0;
 }
-
 .miniBarLabel {
   font-size: 9px;
-  color: var(--text-muted, #8888a0);
+  color: #888899;
   text-align: center;
 }
 
 /* ── Recent card ───────────────────────────────────────────────────────── */
 .recentCard {
-  background: var(--card-bg, #1a1a24);
-  border: 1px solid var(--border, #2a2a35);
+  background: #181824;
+  border: 1px solid #252535;
   border-radius: 12px;
   padding: 18px 20px;
   overflow: hidden;
@@ -265,8 +267,8 @@
 
 /* ── Table ─────────────────────────────────────────────────────────────── */
 .tableWrap {
-  background: var(--card-bg, #1a1a24);
-  border: 1px solid var(--border, #2a2a35);
+  background: #181824;
+  border: 1px solid #252535;
   border-radius: 12px;
   overflow: hidden;
   display: flex;
@@ -278,29 +280,29 @@
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  border-bottom: 1px solid var(--border, #2a2a35);
-  color: var(--text-muted, #8888a0);
+  border-bottom: 1px solid #252535;
+  color: #888899;
 }
-
 .tableSearch input {
   flex: 1;
   background: none;
   border: none;
   outline: none;
   font-size: 13px;
-  color: var(--text, #e8e8f0);
+  color: #e6e6f0;
+  font-family: inherit;
 }
-
+.tableSearch input::placeholder { color: #555566; }
 .tableSearch button {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--text-muted, #8888a0);
+  color: #888899;
   font-size: 12px;
   padding: 0 4px;
   transition: color .15s;
 }
-.tableSearch button:hover { color: var(--text, #e8e8f0); }
+.tableSearch button:hover { color: #e6e6f0; }
 
 .tableScroll { overflow-x: auto; }
 
@@ -308,40 +310,39 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
+  color: #e6e6f0;
 }
-
 .table th {
   text-align: left;
   font-size: 11px;
   font-weight: 600;
-  color: var(--text-muted, #8888a0);
+  color: #888899;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   padding: 10px 14px;
-  border-bottom: 1px solid var(--border, #2a2a35);
+  border-bottom: 1px solid #252535;
   white-space: nowrap;
+  background: #181824;
 }
-
 .table td {
   padding: 10px 14px;
-  border-bottom: 1px solid color-mix(in srgb, var(--border, #2a2a35) 50%, transparent);
-  color: var(--text, #e8e8f0);
+  border-bottom: 1px solid rgba(37, 37, 53, 0.6);
+  color: #e6e6f0;
 }
-
 .table tbody tr:last-child td { border-bottom: none; }
-.table tbody tr:hover td { background: color-mix(in srgb, var(--accent, #7c6af7) 5%, transparent); }
+.table tbody tr:hover td { background: rgba(124, 106, 247, 0.05); }
 
 .tableEmpty {
   text-align: center;
   padding: 40px !important;
-  color: var(--text-muted, #8888a0);
+  color: #888899;
 }
-
 .tableCount {
   font-size: 11px;
-  color: var(--text-muted, #8888a0);
+  color: #888899;
   padding: 8px 14px;
-  border-top: 1px solid var(--border, #2a2a35);
+  border-top: 1px solid #252535;
+  background: #181824;
 }
 
 /* ── Badges ────────────────────────────────────────────────────────────── */
@@ -352,7 +353,6 @@
   padding: 3px 9px;
   border-radius: 20px;
 }
-
 .roleBadge {
   display: inline-block;
   font-size: 11px;
@@ -360,20 +360,17 @@
   padding: 3px 9px;
   border-radius: 20px;
 }
-
-.roleAdmin  { background: color-mix(in srgb, #7c6af7 14%, transparent); color: #7c6af7; }
-.roleMember { background: color-mix(in srgb, #38bdf8 14%, transparent); color: #38bdf8; }
-
+.roleAdmin  { background: rgba(124, 106, 247, 0.15); color: #7c6af7; }
+.roleMember { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
 .statusBadge {
   display: inline-block;
   font-size: 11px;
   padding: 3px 8px;
   border-radius: 6px;
-  background: var(--border, #2a2a35);
-  color: var(--text-muted, #8888a0);
+  background: #252535;
+  color: #888899;
 }
-
-.muted { color: var(--text-muted, #8888a0); }
+.muted { color: #888899; }
 
 /* ── Access denied ─────────────────────────────────────────────────────── */
 .denied {
@@ -383,56 +380,57 @@
   align-items: center;
   justify-content: center;
   gap: 16px;
-  background: var(--bg, #0e0e12);
-  color: var(--text, #e8e8f0);
+  background: #0d0d14;
+  color: #e6e6f0;
   padding: 24px;
   text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
-
 .deniedIcon { font-size: 48px; }
-.denied h2  { font-size: 18px; margin: 0; }
-
+.denied h2  { font-size: 18px; margin: 0; color: #e6e6f0; }
 .denied button {
   background: none;
-  border: 1px solid var(--border, #2a2a35);
+  border: 1px solid #252535;
   border-radius: 8px;
   padding: 8px 18px;
   font-size: 13px;
-  color: var(--text-muted, #8888a0);
+  color: #888899;
   cursor: pointer;
   transition: all .15s;
+  font-family: inherit;
 }
-.denied button:hover { color: var(--accent, #7c6af7); border-color: var(--accent, #7c6af7); }
+.denied button:hover { color: #7c6af7; border-color: #7c6af7; }
 
-/* ── Super admin login ─────────────────────────────────────────────────── */
+/* ── Login ─────────────────────────────────────────────────────────────── */
 .loginShell {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg, #0e0e12);
+  background: #0d0d14;
   padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .loginCard {
   width: 100%;
   max-width: 360px;
-  background: var(--card-bg, #1a1a24);
-  border: 1px solid var(--border, #2a2a35);
+  background: #181824;
+  border: 1px solid #252535;
   border-radius: 16px;
   padding: 32px 28px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
 }
 
 .loginLogo {
   font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.16em;
-  color: var(--accent, #7c6af7);
+  letter-spacing: 0.18em;
+  color: #7c6af7;
   text-transform: uppercase;
-  margin-bottom: 4px;
 }
 
 .loginTitle {
@@ -440,12 +438,13 @@
   font-weight: 700;
   letter-spacing: -0.02em;
   margin: 0;
-  color: var(--text, #e8e8f0);
+  color: #e6e6f0;
+  line-height: 1.2;
 }
 
 .loginSub {
   font-size: 13px;
-  color: var(--text-muted, #8888a0);
+  color: #888899;
   margin: -8px 0 4px;
 }
 
@@ -454,46 +453,51 @@
   flex-direction: column;
   gap: 6px;
 }
-
 .loginField label {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-muted, #8888a0);
+  color: #aaaabc;
+  display: block;
 }
-
 .loginField input {
-  background: var(--sidebar-bg, #15151c);
-  border: 1px solid var(--border, #2a2a35);
+  background: #0d0d14;
+  border: 1px solid #252535;
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 14px;
-  color: var(--text, #e8e8f0);
+  color: #e6e6f0;
   outline: none;
   transition: border-color .15s;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
 }
-.loginField input:focus { border-color: var(--accent, #7c6af7); }
-.loginField input::placeholder { color: var(--text-muted, #8888a0); }
+.loginField input:focus { border-color: #7c6af7; }
+.loginField input::placeholder { color: #444455; }
 
 .loginError {
   font-size: 12px;
   color: #ef4444;
   margin: 0;
   padding: 8px 12px;
-  background: #ef444410;
+  background: rgba(239, 68, 68, 0.08);
   border-radius: 6px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .loginBtn {
   margin-top: 4px;
-  background: var(--accent, #7c6af7);
+  background: #7c6af7;
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 11px;
+  padding: 12px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: opacity .15s;
+  width: 100%;
+  font-family: inherit;
 }
 .loginBtn:hover:not(:disabled) { opacity: .85; }
-.loginBtn:disabled { opacity: .5; cursor: not-allowed; }
+.loginBtn:disabled { opacity: .45; cursor: not-allowed; }
