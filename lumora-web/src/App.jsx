@@ -32,6 +32,7 @@ import PaquetesPage from './pages/PaquetesPage'
 import ProductosPage from './pages/ProductosPage'
 import ConfigPage        from './pages/ConfigPage'
 import TrabajadoresPage  from './pages/TrabajadoresPage'
+import SuperAdminPage    from './pages/SuperAdminPage'
 
 function LandingPage() {
   return (
@@ -110,6 +111,12 @@ export default function App() {
               <Route path="configuracion"   element={<ConfigPage />} />
               <Route path="trabajadores"   element={<TrabajadoresPage />} />
             </Route>
+
+            {/* Super admin — protected, own layout */}
+            <Route
+              path="/superadmin"
+              element={<PrivateRoute><SuperAdminPage /></PrivateRoute>}
+            />
 
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />
