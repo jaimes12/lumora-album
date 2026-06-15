@@ -113,7 +113,8 @@ export default function App() {
             </Route>
 
             {/* Super admin — own auth, independent of app session */}
-            <Route path="/superadmin" element={<SuperAdminPage />} />
+            <Route path="/superadmin"     element={<SuperAdminPage />} />
+            <Route path="/superadmin/:section" element={<SuperAdminPage />} />
 
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />

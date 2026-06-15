@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { superadminApi } from '../api/superadminApi'
 import styles from './SuperAdminPage.module.css'
 
@@ -614,25 +614,32 @@ function PromoCodesTab() {
 
 // ── Main ───────────────────────────────────────────────────────────────────
 const TABS = [
-  { key: 'resumen',       label: 'Resumen' },
-  { key: 'organizaciones',label: 'Organizaciones' },
-  { key: 'usuarios',      label: 'Usuarios' },
-  { key: 'eventos',       label: 'Eventos' },
-  { key: 'clientes',      label: 'Clientes' },
-  { key: 'planes',        label: 'Planes' },
-  { key: 'promos',        label: 'Códigos promo' },
+  { key: 'resumen',        path: 'resumen',        label: 'Resumen' },
+  { key: 'organizaciones', path: 'organizaciones', label: 'Organizaciones' },
+  { key: 'usuarios',       path: 'usuarios',       label: 'Usuarios' },
+  { key: 'eventos',        path: 'eventos',        label: 'Eventos' },
+  { key: 'clientes',       path: 'clientes',       label: 'Clientes' },
+  { key: 'planes',         path: 'planes',         label: 'Planes' },
+  { key: 'codigos',        path: 'codigos',        label: 'Códigos promo' },
 ]
 
 export default function SuperAdminPage() {
   const navigate = useNavigate()
+  const { section } = useParams()
+  const tab = TABS.find(t => t.path === section)?.key ?? 'resumen'
+
   const [authed,   setAuthed]   = useState(superadminApi.hasSession())
-  const [tab,      setTab]      = useState('resumen')
   const [overview, setOverview] = useState(null)
   const [orgs,     setOrgs]     = useState(null)
   const [users,    setUsers]    = useState(null)
   const [events,   setEvents]   = useState(null)
   const [clients,  setClients]  = useState(null)
   const [loading,  setLoading]  = useState(false)
+
+  // Redirect bare /superadmin to /superadmin/resumen
+  useEffect(() => {
+    if (!section) navigate('/superadmin/resumen', { replace: true })
+  }, [section]) // eslint-disable-line
 
   useEffect(() => {
     if (!authed) return
@@ -645,21 +652,24 @@ export default function SuperAdminPage() {
 
   useEffect(() => {
     if (!authed) return
-    if (tab === 'organizaciones' && !orgs)   superadminApi.getOrgs().then(setOrgs).catch(() => setOrgs([]))
-    if (tab === 'usuarios'       && !users)  superadminApi.getUsers().then(setUsers).catch(() => setUsers([]))
-    if (tab === 'eventos'        && !events) superadminApi.getEvents().then(setEvents).catch(() => setEvents([]))
-    if (tab === 'clientes'       && !clients)superadminApi.getClients().then(setClients).catch(() => setClients([]))
+    if (tab === 'organizaciones' && !orgs)    superadminApi.getOrgs().then(setOrgs).catch(() => setOrgs([]))
+    if (tab === 'usuarios'       && !users)   superadminApi.getUsers().then(setUsers).catch(() => setUsers([]))
+    if (tab === 'eventos'        && !events)  superadminApi.getEvents().then(setEvents).catch(() => setEvents([]))
+    if (tab === 'clientes'       && !clients) superadminApi.getClients().then(setClients).catch(() => setClients([]))
   }, [tab, authed]) // eslint-disable-line
 
   const fmt = n => '$' + Number(n ?? 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })
+
+  const goTo = (path) => navigate(`/superadmin/${path}`)
 
   const handleLogout = () => {
     superadminApi.logout()
     setAuthed(false)
     setOverview(null); setOrgs(null); setUsers(null); setEvents(null); setClients(null)
+    navigate('/superadmin/resumen', { replace: true })
   }
 
-  if (!authed) return <SuperAdminLogin onSuccess={() => setAuthed(true)} />
+  if (!authed) return <SuperAdminLogin onSuccess={() => { setAuthed(true); navigate('/superadmin/resumen') }} />
 
   return (
     <div className={styles.shell}>
@@ -673,7 +683,7 @@ export default function SuperAdminPage() {
             <button
               key={t.key}
               className={`${styles.navItem} ${tab === t.key ? styles.navActive : ''}`}
-              onClick={() => setTab(t.key)}
+              onClick={() => goTo(t.path)}
             >
               {t.label}
             </button>
@@ -828,7 +838,7 @@ export default function SuperAdminPage() {
           {tab === 'planes' && <PlansTab />}
 
           {/* ── PROMOS ── */}
-          {tab === 'promos' && <PromoCodesTab />}
+          {tab === 'codigos' && <PromoCodesTab />}
         </div>
       </main>
     </div>
