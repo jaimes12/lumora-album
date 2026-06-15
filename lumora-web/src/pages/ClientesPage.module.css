@@ -420,8 +420,6 @@
   .layout {
     flex: 1;
     min-height: 0;
-    overflow: hidden;
-    flex-direction: column;
   }
   .tableWrap {
     height: 100%;
