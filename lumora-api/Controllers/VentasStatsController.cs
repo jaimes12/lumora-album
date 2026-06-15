@@ -60,14 +60,18 @@ public class VentasStatsController(LumoraDbContext db) : ControllerBase
         var thirtyAgo    = now.Date.AddDays(-30);
         var dailyAverage = allPayments.Where(p => p.PaidAt >= thirtyAgo).Sum(p => p.Amount) / 30m;
 
-        // By month — last 12 months, always full history for context
-        var twelveAgo = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(-11);
-        var byMonth = allEvents
-            .Where(e => e.CreatedAt >= twelveAgo)
-            .GroupBy(e => new { e.CreatedAt.Year, e.CreatedAt.Month })
-            .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
-            .Select(g => new { label = $"{g.Key.Month:D2}/{g.Key.Year}", value = g.Sum(e => e.Budget) })
-            .ToList();
+        // By month — all 12 months of current year, zero-filled
+        var yearStart = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var yearEnd   = new DateTime(now.Year + 1, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var monthLabels = new[] { "Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic" };
+        var eventsByMonth = allEvents
+            .Where(e => e.CreatedAt >= yearStart && e.CreatedAt < yearEnd)
+            .GroupBy(e => e.CreatedAt.Month)
+            .ToDictionary(g => g.Key, g => g.Sum(e => e.Budget));
+        var byMonth = Enumerable.Range(1, 12).Select(m => new {
+            label = monthLabels[m - 1],
+            value = eventsByMonth.TryGetValue(m, out var v) ? v : 0m
+        }).ToList();
 
         // By day — last 30 days or filtered month
         var daySource = fStart.HasValue
