@@ -34,6 +34,7 @@ export const superadminApi = {
   hasSession: () => !!localStorage.getItem(SA_KEY),
 
   getOverview:   () => saRequest('/api/superadmin/overview'),
+  getVentas:     () => saRequest('/api/superadmin/ventas'),
   getOrgs:       () => saRequest('/api/superadmin/orgs'),
   getUsers:      () => saRequest('/api/superadmin/users'),
   getEvents:     () => saRequest('/api/superadmin/events'),

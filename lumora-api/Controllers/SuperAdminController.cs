@@ -70,11 +70,11 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
     {
         if (!IsSuperAdmin) return Forbid();
 
-        var orgs    = await db.Organizations.ToListAsync();
-        var users   = await db.Users.ToListAsync();
-        var events  = await db.Events.ToListAsync();
-        var clients = await db.Clients.ToListAsync();
-        var payments = await db.EventPayments.ToListAsync();
+        var orgs     = await db.Organizations.ToListAsync();
+        var users    = await db.Users.ToListAsync();
+        var events   = await db.Events.ToListAsync();
+        var clients  = await db.Clients.ToListAsync();
+        var planSales = await db.PlanHistories.ToListAsync();
 
         var byPlan = orgs
             .GroupBy(o => o.Plan)
@@ -110,7 +110,7 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
             totalWorkers  = users.Count(u => u.Role == "member"),
             totalEvents   = events.Count,
             totalClients  = clients.Count,
-            totalRevenue  = payments.Sum(p => p.Amount),
+            totalRevenue  = planSales.Where(p => p.Amount > 0).Sum(p => p.Amount),
             byPlan,
             orgsByMonth,
             recentOrgs,
@@ -206,6 +206,46 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
         }).ToList();
 
         return Ok(result);
+    }
+
+    // ── Ventas (plan revenue) ─────────────────────────────────────────────────
+    [Authorize]
+    [HttpGet("ventas")]
+    public async Task<IActionResult> GetVentas()
+    {
+        if (!IsSuperAdmin) return Forbid();
+
+        var orgs    = await db.Organizations.ToDictionaryAsync(o => o.Id, o => o.Name);
+        var history = await db.PlanHistories.OrderByDescending(h => h.ActivatedAt).ToListAsync();
+
+        var monthLabels = new[] { "Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic" };
+        var year = DateTime.UtcNow.Year;
+
+        // Revenue per month (current year, only paid)
+        var byMonthDict = history
+            .Where(h => h.Amount > 0 && h.ActivatedAt.Year == year)
+            .GroupBy(h => h.ActivatedAt.Month)
+            .ToDictionary(g => g.Key, g => g.Sum(h => h.Amount));
+
+        var byMonth = Enumerable.Range(1, 12)
+            .Select(m => new { label = monthLabels[m - 1], value = byMonthDict.GetValueOrDefault(m, 0m) })
+            .ToList();
+
+        var rows = history.Select(h => new {
+            h.Id, h.OrgId, h.PlanId, h.Method, h.PromoCode, h.Amount,
+            orgName     = orgs.GetValueOrDefault(h.OrgId, "—"),
+            planLabel   = PlanLabel(h.PlanId),
+            activatedAt = h.ActivatedAt.ToString("yyyy-MM-dd"),
+            month       = h.ActivatedAt.ToString("yyyy-MM"),
+            isPaid      = h.Amount > 0,
+        }).ToList();
+
+        var totalRevenue    = history.Where(h => h.Amount > 0).Sum(h => h.Amount);
+        var monthRevenue    = history.Where(h => h.Amount > 0 && h.ActivatedAt.Year == year && h.ActivatedAt.Month == DateTime.UtcNow.Month).Sum(h => h.Amount);
+        var paidCount       = history.Count(h => h.Amount > 0);
+        var freeCount       = history.Count(h => h.Amount == 0);
+
+        return Ok(new { totalRevenue, monthRevenue, paidCount, freeCount, byMonth, rows });
     }
 
     // ── Plans list ────────────────────────────────────────────────────────────

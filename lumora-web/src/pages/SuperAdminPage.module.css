@@ -708,3 +708,67 @@
 }
 
 .promoModalActions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+
+/* ── Ventas tab ────────────────────────────────────────────────────────── */
+.ventasBar {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 140px;
+  margin-top: 8px;
+}
+.ventasBarCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  gap: 4px;
+  justify-content: flex-end;
+}
+.ventasBarVal {
+  font-size: 8px;
+  color: #888899;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.ventasBarTrack {
+  width: 100%;
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+}
+.ventasBarFill {
+  width: 100%;
+  background: #7c6af7;
+  border-radius: 3px 3px 0 0;
+  transition: height .3s ease;
+  min-height: 0;
+}
+
+.ventasFilterRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #252535;
+  flex-wrap: wrap;
+}
+.ventasFilterLabel { font-size: 12px; color: #888899; }
+.ventasSelect {
+  background: #0d0d14;
+  border: 1px solid #252535;
+  border-radius: 7px;
+  color: #e6e6f0;
+  font-size: 13px;
+  padding: 5px 10px;
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+.ventasSelect option { background: #181824; }
+.ventasFilterTotal { font-size: 12px; color: #888899; margin-left: auto; }

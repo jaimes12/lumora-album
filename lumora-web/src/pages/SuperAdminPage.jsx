@@ -384,6 +384,153 @@ function PlansTab() {
   )
 }
 
+// ── Ventas tab ─────────────────────────────────────────────────────────────
+const METHOD_LABEL = { stripe: 'Stripe', promo: 'Código promo', superadmin: 'Superadmin', free: 'Gratis' }
+
+function VentasTab() {
+  const [data,      setData]      = useState(null)
+  const [monthFilter, setMonthFilter] = useState('todos')
+
+  useEffect(() => {
+    superadminApi.getVentas().then(setData).catch(() => setData({ totalRevenue: 0, monthRevenue: 0, paidCount: 0, freeCount: 0, byMonth: [], rows: [] }))
+  }, [])
+
+  if (!data) return <div className={styles.loadingMsg}>Cargando ventas…</div>
+
+  const fmt = n => '$' + Number(n ?? 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })
+
+  // Available months from data
+  const months = [...new Set(data.rows.map(r => r.month))].sort().reverse()
+
+  const rows = monthFilter === 'todos'
+    ? data.rows
+    : data.rows.filter(r => r.month === monthFilter)
+
+  const filteredRevenue = rows.filter(r => r.isPaid).reduce((s, r) => s + r.amount, 0)
+
+  const maxBar = Math.max(...data.byMonth.map(b => Number(b.value)), 1)
+
+  return (
+    <div className={styles.plansWrap}>
+      {/* Stats */}
+      <div className={styles.statsGrid}>
+        <div className={styles.statCard}>
+          <div className={styles.statIcon} style={{ background: '#34d39920', color: '#34d399' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div>
+            <div className={styles.statValue} style={{ color: '#34d399' }}>{fmt(data.totalRevenue)}</div>
+            <div className={styles.statLabel}>Ingresos totales</div>
+          </div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statIcon} style={{ background: '#7c6af720', color: '#7c6af7' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div>
+            <div className={styles.statValue} style={{ color: '#7c6af7' }}>{fmt(data.monthRevenue)}</div>
+            <div className={styles.statLabel}>Este mes</div>
+          </div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statIcon} style={{ background: '#c9a22720', color: '#c9a227' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div>
+            <div className={styles.statValue} style={{ color: '#c9a227' }}>{data.paidCount}</div>
+            <div className={styles.statLabel}>Activaciones de pago</div>
+          </div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statIcon} style={{ background: '#6b728020', color: '#6b7280' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          </div>
+          <div>
+            <div className={styles.statValue} style={{ color: '#6b7280' }}>{data.freeCount}</div>
+            <div className={styles.statLabel}>Activaciones gratis/promo</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bar chart */}
+      <div className={styles.chartCard}>
+        <div className={styles.chartTitle}>Ingresos por mes — {new Date().getFullYear()}</div>
+        <div className={styles.ventasBar}>
+          {data.byMonth.map(b => (
+            <div key={b.label} className={styles.ventasBarCol}>
+              <span className={styles.ventasBarVal}>{Number(b.value) > 0 ? fmt(b.value) : ''}</span>
+              <div className={styles.ventasBarTrack}>
+                <div
+                  className={styles.ventasBarFill}
+                  style={{ height: `${Math.max((Number(b.value) / maxBar) * 100, Number(b.value) > 0 ? 4 : 0)}%` }}
+                />
+              </div>
+              <span className={styles.miniBarLabel}>{b.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Filter + table */}
+      <div className={styles.tableWrap}>
+        <div className={styles.ventasFilterRow}>
+          <span className={styles.ventasFilterLabel}>Mes:</span>
+          <select
+            className={styles.ventasSelect}
+            value={monthFilter}
+            onChange={e => setMonthFilter(e.target.value)}
+          >
+            <option value="todos">Todos</option>
+            {months.map(m => {
+              const [y, mo] = m.split('-')
+              const name = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][Number(mo) - 1]
+              return <option key={m} value={m}>{name} {y}</option>
+            })}
+          </select>
+          <span className={styles.ventasFilterTotal}>
+            {rows.length} registros · <strong style={{ color: '#34d399' }}>{fmt(filteredRevenue)}</strong>
+          </span>
+        </div>
+        <div className={styles.tableScroll}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Organización</th>
+                <th>Plan</th>
+                <th>Método</th>
+                <th>Código promo</th>
+                <th>Monto</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.length === 0
+                ? <tr><td colSpan={6} className={styles.tableEmpty}>Sin registros para este periodo</td></tr>
+                : rows.map((r, i) => (
+                  <tr key={i}>
+                    <td><strong>{r.orgName}</strong></td>
+                    <td><span className={styles.planBadge} style={{ background: `${PLAN_COLORS[r.planId] ?? '#6b7280'}20`, color: PLAN_COLORS[r.planId] ?? '#6b7280' }}>{r.planLabel}</span></td>
+                    <td className={styles.muted}>{METHOD_LABEL[r.method] ?? r.method}</td>
+                    <td className={styles.muted}>{r.promoCode || '—'}</td>
+                    <td>
+                      {r.isPaid
+                        ? <strong style={{ color: '#34d399' }}>{fmt(r.amount)}</strong>
+                        : <span className={styles.muted}>Gratis</span>
+                      }
+                    </td>
+                    <td className={styles.muted}>{r.activatedAt}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+        <div className={styles.tableCount}>{rows.length} activaciones</div>
+      </div>
+    </div>
+  )
+}
+
 // ── Promo codes tab ────────────────────────────────────────────────────────
 const EMPTY_FORM = { code: '', planId: 'negocio', description: '', discountPct: 100, maxUses: -1, expiresAt: '' }
 
@@ -619,6 +766,7 @@ const TABS = [
   { key: 'usuarios',       path: 'usuarios',       label: 'Usuarios' },
   { key: 'eventos',        path: 'eventos',        label: 'Eventos' },
   { key: 'clientes',       path: 'clientes',       label: 'Clientes' },
+  { key: 'ventas',         path: 'ventas',         label: 'Ventas' },
   { key: 'planes',         path: 'planes',         label: 'Planes' },
   { key: 'codigos',        path: 'codigos',        label: 'Códigos promo' },
 ]
@@ -833,6 +981,9 @@ export default function SuperAdminPage() {
               ]}
             />
           )}
+
+          {/* ── VENTAS ── */}
+          {tab === 'ventas' && <VentasTab />}
 
           {/* ── PLANES ── */}
           {tab === 'planes' && <PlansTab />}
