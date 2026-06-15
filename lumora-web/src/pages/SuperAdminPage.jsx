@@ -1,8 +1,74 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { superadminApi } from '../api/superadminApi'
-import { useAuth } from '../context/AuthContext'
 import styles from './SuperAdminPage.module.css'
+
+// ── Super admin login ──────────────────────────────────────────────────────
+function SuperAdminLogin({ onSuccess }) {
+  const [email,    setEmail]    = useState('')
+  const [password, setPassword] = useState('')
+  const [error,    setError]    = useState('')
+  const [loading,  setLoading]  = useState(false)
+
+  const handleSubmit = async e => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      await superadminApi.login(email, password)
+      // Verify the logged-in account actually has superadmin access
+      await superadminApi.getOverview()
+      onSuccess()
+    } catch (err) {
+      superadminApi.logout()
+      setError(
+        err.status === 403 || err.status === 401
+          ? 'Credenciales incorrectas o sin acceso de super admin.'
+          : 'Error al conectar. Intenta de nuevo.'
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className={styles.loginShell}>
+      <form className={styles.loginCard} onSubmit={handleSubmit}>
+        <div className={styles.loginLogo}>SUPERADMIN</div>
+        <h2 className={styles.loginTitle}>Acceso restringido</h2>
+        <p className={styles.loginSub}>Solo para administradores del sistema</p>
+
+        <div className={styles.loginField}>
+          <label>Correo</label>
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="correo@ejemplo.com"
+            autoFocus
+            required
+          />
+        </div>
+        <div className={styles.loginField}>
+          <label>Contraseña</label>
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder="••••••••"
+            required
+          />
+        </div>
+
+        {error && <p className={styles.loginError}>{error}</p>}
+
+        <button className={styles.loginBtn} type="submit" disabled={loading}>
+          {loading ? 'Verificando…' : 'Entrar'}
+        </button>
+      </form>
+    </div>
+  )
+}
 
 const PLAN_COLORS = {
   free:    '#6b7280',
@@ -150,40 +216,42 @@ const TABS = [
 ]
 
 export default function SuperAdminPage() {
-  const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const [authed,   setAuthed]   = useState(superadminApi.hasSession())
   const [tab,      setTab]      = useState('resumen')
   const [overview, setOverview] = useState(null)
   const [orgs,     setOrgs]     = useState(null)
   const [users,    setUsers]    = useState(null)
   const [events,   setEvents]   = useState(null)
   const [clients,  setClients]  = useState(null)
-  const [error,    setError]    = useState('')
-  const [loading,  setLoading]  = useState(true)
+  const [loading,  setLoading]  = useState(false)
 
   useEffect(() => {
+    if (!authed) return
+    setLoading(true)
     superadminApi.getOverview()
       .then(setOverview)
-      .catch(err => setError(String(err?.message).includes('403') || String(err?.message).includes('Forbidden') ? 'Acceso denegado. Esta sección es solo para super admins.' : 'Error al cargar'))
+      .catch(() => { superadminApi.logout(); setAuthed(false) })
       .finally(() => setLoading(false))
-  }, [])
+  }, [authed])
 
   useEffect(() => {
-    if (tab === 'organizaciones' && !orgs)  superadminApi.getOrgs().then(setOrgs).catch(() => setOrgs([]))
+    if (!authed) return
+    if (tab === 'organizaciones' && !orgs)   superadminApi.getOrgs().then(setOrgs).catch(() => setOrgs([]))
     if (tab === 'usuarios'       && !users)  superadminApi.getUsers().then(setUsers).catch(() => setUsers([]))
     if (tab === 'eventos'        && !events) superadminApi.getEvents().then(setEvents).catch(() => setEvents([]))
     if (tab === 'clientes'       && !clients)superadminApi.getClients().then(setClients).catch(() => setClients([]))
-  }, [tab]) // eslint-disable-line
+  }, [tab, authed]) // eslint-disable-line
 
   const fmt = n => '$' + Number(n ?? 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })
 
-  if (error) return (
-    <div className={styles.denied}>
-      <div className={styles.deniedIcon}>🔒</div>
-      <h2>{error}</h2>
-      <button onClick={() => navigate('/app/dashboard')}>← Volver al dashboard</button>
-    </div>
-  )
+  const handleLogout = () => {
+    superadminApi.logout()
+    setAuthed(false)
+    setOverview(null); setOrgs(null); setUsers(null); setEvents(null); setClients(null)
+  }
+
+  if (!authed) return <SuperAdminLogin onSuccess={() => setAuthed(true)} />
 
   return (
     <div className={styles.shell}>
@@ -204,8 +272,8 @@ export default function SuperAdminPage() {
           ))}
         </nav>
         <div className={styles.sidebarFooter}>
-          <span className={styles.sidebarUser}>{user?.name}</span>
-          <button className={styles.logoutBtn} onClick={() => { logout(); navigate('/') }}>Salir</button>
+          <span className={styles.sidebarUser}>Super Admin</span>
+          <button className={styles.logoutBtn} onClick={handleLogout}>Salir</button>
         </div>
       </aside>
 

@@ -112,11 +112,8 @@ export default function App() {
               <Route path="trabajadores"   element={<TrabajadoresPage />} />
             </Route>
 
-            {/* Super admin — protected, own layout */}
-            <Route
-              path="/superadmin"
-              element={<PrivateRoute><SuperAdminPage /></PrivateRoute>}
-            />
+            {/* Super admin — own auth, independent of app session */}
+            <Route path="/superadmin" element={<SuperAdminPage />} />
 
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />
