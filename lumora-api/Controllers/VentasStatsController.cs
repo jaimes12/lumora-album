@@ -57,37 +57,38 @@ public class VentasStatsController(LumoraDbContext db) : ControllerBase
         var totalPayments = filtPayments.Sum(p => p.Amount);
         var totalEvents   = filtEvents.Count;
 
-        var thirtyAgo    = now.Date.AddDays(-30);
-        var dailyAverage = allPayments.Where(p => p.PaidAt >= thirtyAgo).Sum(p => p.Amount) / 30m;
+        var dailyAverage = allPayments
+            .Where(p => p.PaidAt.Year == now.Year && p.PaidAt.Month == now.Month)
+            .Sum(p => p.Amount) / (decimal)DateTime.DaysInMonth(now.Year, now.Month);
 
         // By month — all 12 months of current year, zero-filled
-        var yearStart = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        var yearEnd   = new DateTime(now.Year + 1, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        // Use .Year property comparison to avoid DateTimeKind mismatch with Pomelo
+        var currentYear = now.Year;
         var monthLabels = new[] { "Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic" };
-        var eventsByMonth = allEvents
-            .Where(e => e.CreatedAt >= yearStart && e.CreatedAt < yearEnd)
+        var byMonthDict = allEvents
+            .Where(e => e.CreatedAt.Year == currentYear)
             .GroupBy(e => e.CreatedAt.Month)
             .ToDictionary(g => g.Key, g => g.Sum(e => e.Budget));
         var byMonth = Enumerable.Range(1, 12).Select(m => new {
             label = monthLabels[m - 1],
-            value = eventsByMonth.TryGetValue(m, out var v) ? v : 0m
+            value = byMonthDict.TryGetValue(m, out var v) ? v : 0m
         }).ToList();
 
-        // By day — last 30 days or filtered month
+        // By day — last 30 days of current year, or filtered month
+        var thirtyAgoDate = now.Date.AddDays(-30);
         var daySource = fStart.HasValue
             ? filtEvents
-            : allEvents.Where(e => e.CreatedAt >= thirtyAgo).ToList();
+            : allEvents.Where(e => e.CreatedAt.Year == currentYear && e.CreatedAt.Date >= thirtyAgoDate).ToList();
         var byDay = daySource
             .GroupBy(e => e.CreatedAt.Date)
             .OrderBy(g => g.Key)
             .Select(g => new { label = g.Key.ToString("dd/MM"), value = g.Sum(e => e.Budget) })
             .ToList();
 
-        // By week — last 12 weeks or filtered month
-        var twelveWeeksAgo = now.Date.AddDays(-84);
+        // By week — current year or filtered month (same Year trick to avoid Kind issues)
         var weekSource = fStart.HasValue
             ? filtEvents
-            : allEvents.Where(e => e.CreatedAt >= twelveWeeksAgo).ToList();
+            : allEvents.Where(e => e.CreatedAt.Year == currentYear).ToList();
         var byWeek = weekSource
             .GroupBy(e => WeekStart(e.CreatedAt))
             .OrderBy(g => g.Key)
