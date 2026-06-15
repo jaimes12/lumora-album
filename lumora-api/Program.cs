@@ -91,6 +91,7 @@ else
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(opts =>
         {
+            opts.MapInboundClaims = false; // keep claim names as-is ("role", "email", etc.)
             opts.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,

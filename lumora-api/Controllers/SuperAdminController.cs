@@ -15,7 +15,8 @@ namespace lumora_api.Controllers;
 public class SuperAdminController(LumoraDbContext db, IConfiguration config) : ControllerBase
 {
     private bool IsSuperAdmin =>
-        User.FindFirst("role")?.Value == "superadmin";
+        (User.FindFirst("role")?.Value ??
+         User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value) == "superadmin";
 
     // ── Login ─────────────────────────────────────────────────────────────────
     [HttpPost("login")]
