@@ -9,30 +9,57 @@ import logoFull from '../assets/logo_elixe.jpeg'
 
 /* ─── Contract templates ──────────────────────────────────── */
 const TEMPLATES = [
-  {
-    id: 'boda',
-    emoji: '💍',
-    nombre: 'Boda',
-    desc: 'Contrato completo para servicios de organización de boda. Incluye cláusulas de cancelación, penalizaciones y pagos.',
-    color: '#f472b6',
-    serviciosDefault: ['Coordinación general del evento','Decoración floral y ambientación','Servicio de banquetes y catering','Fotografía y video','DJ y sonido profesional','Iluminación especial'],
-  },
-  {
-    id: 'corporativo',
-    emoji: '🏢',
-    nombre: 'Corporativo',
-    desc: 'Contrato para eventos empresariales, conferencias y lanzamientos de producto. Términos corporativos.',
-    color: '#38bdf8',
-    serviciosDefault: ['Logística y coordinación general','Montaje de escenario y equipo audiovisual','Servicio de coffee break y catering','Registro y acreditación de asistentes','Material impreso y señalética'],
-  },
-  {
-    id: 'xv',
-    emoji: '🌸',
-    nombre: 'XV Años',
-    desc: 'Contrato especializado para quinceañeras. Incluye cláusulas para vals, chambelanes y protocolo.',
-    color: '#a78bfa',
-    serviciosDefault: ['Coordinación integral del evento','Decoración temática personalizada','Servicio de banquete completo','Fotografía y video profesional','DJ y pista de baile','Pastel de quinceañera','Coordinación de vals y chambelanes'],
-  },
+  { id: 'boda',        emoji: '💍', nombre: 'Boda',                   color: '#f472b6',
+    desc: 'Contrato completo para bodas. Incluye cláusulas de cancelación y pagos.',
+    serviciosDefault: ['Coordinación general del evento','Decoración floral y ambientación','Servicio de banquetes y catering','Fotografía y video','DJ y sonido profesional','Iluminación especial'] },
+  { id: 'xv',          emoji: '🌸', nombre: 'XV Años',                 color: '#a78bfa',
+    desc: 'Contrato para quinceañeras. Incluye cláusulas de vals y chambelanes.',
+    serviciosDefault: ['Coordinación integral','Decoración temática personalizada','Banquete completo','Fotografía y video profesional','DJ y pista de baile','Pastel de quinceañera','Coordinación de vals y chambelanes'] },
+  { id: 'bautizo',     emoji: '💧', nombre: 'Bautizo',                 color: '#38bdf8',
+    desc: 'Contrato para organización de celebración de bautizo.',
+    serviciosDefault: ['Coordinación general','Decoración religiosa y floral','Servicio de banquete','Fotografía y video','Música ambiental'] },
+  { id: 'comunion',    emoji: '🕊️', nombre: 'Primera Comunión',        color: '#34d399',
+    desc: 'Contrato para celebración de Primera Comunión.',
+    serviciosDefault: ['Coordinación general','Decoración religiosa','Banquete o convivio','Fotografía y video','Música ambiental','Pastel personalizado'] },
+  { id: 'graduacion',  emoji: '🎓', nombre: 'Graduación',              color: '#fbbf24',
+    desc: 'Contrato para eventos de graduación y celebración académica.',
+    serviciosDefault: ['Coordinación del evento','Decoración con motivo académico','Banquete o catering','Fotografía y video','DJ y amenización','Diploma o recuerdo personalizado'] },
+  { id: 'cumpleanos',  emoji: '🎂', nombre: 'Cumpleaños',              color: '#fb923c',
+    desc: 'Contrato para organización de fiesta de cumpleaños.',
+    serviciosDefault: ['Coordinación general','Decoración temática','Pastel personalizado','Fotografía y video','DJ o animación','Catering o servicio de alimentos'] },
+  { id: 'babyshower',  emoji: '👶', nombre: 'Baby Shower',             color: '#93c5fd',
+    desc: 'Contrato para organización de Baby Shower.',
+    serviciosDefault: ['Coordinación del evento','Decoración temática','Mesa de dulces o candy bar','Fotografía','Catering o refrigerios','Actividades y juegos'] },
+  { id: 'revelacion',  emoji: '🎀', nombre: 'Revelación de Sexo',      color: '#f9a8d4',
+    desc: 'Contrato para organización de Gender Reveal.',
+    serviciosDefault: ['Coordinación general','Decoración azul y rosa','Mesa de dulces temática','Fotografía y video','Catering','Confeti o elemento sorpresa'] },
+  { id: 'aniversario', emoji: '❤️', nombre: 'Aniversario',             color: '#ef4444',
+    desc: 'Contrato para celebración de aniversario.',
+    serviciosDefault: ['Coordinación del evento','Decoración romántica','Cena o banquete especial','Fotografía y video','Música en vivo o DJ','Arreglos florales'] },
+  { id: 'despedida',   emoji: '🥂', nombre: 'Despedida de Soltera',    color: '#c084fc',
+    desc: 'Contrato para organización de despedida de soltera.',
+    serviciosDefault: ['Coordinación general','Decoración temática','Actividades y dinámicas','Fotografía','Catering y bebidas'] },
+  { id: 'corporativo', emoji: '🏢', nombre: 'Corporativo',             color: '#64748b',
+    desc: 'Contrato para eventos empresariales con términos corporativos.',
+    serviciosDefault: ['Logística y coordinación general','Montaje de escenario y audiovisual','Coffee break y catering','Registro de asistentes','Material impreso y señalética'] },
+  { id: 'conferencia', emoji: '🎤', nombre: 'Conferencia',             color: '#2B6FD4',
+    desc: 'Contrato para conferencias, seminarios y eventos académicos.',
+    serviciosDefault: ['Coordinación y logística','Montaje de escenario y audiovisual','Registro de asistentes','Coffee break','Señalética y material'] },
+  { id: 'lanzamiento', emoji: '🚀', nombre: 'Lanzamiento de Producto', color: '#06b6d4',
+    desc: 'Contrato para lanzamientos de productos o servicios.',
+    serviciosDefault: ['Producción del evento','Ambientación y branding','Equipo audiovisual','Catering o cóctel','Registro de asistentes','Fotografía y video'] },
+  { id: 'inauguracion',emoji: '🎊', nombre: 'Inauguración',            color: '#10b981',
+    desc: 'Contrato para eventos de inauguración de espacios o negocios.',
+    serviciosDefault: ['Coordinación general','Decoración institucional','Catering o cóctel de bienvenida','Fotografía y video','Protocolo y logística'] },
+  { id: 'empresarial', emoji: '💼', nombre: 'Empresarial',             color: '#475569',
+    desc: 'Contrato para eventos empresariales en general.',
+    serviciosDefault: ['Coordinación ejecutiva','Logística y montaje','Catering','Equipo audiovisual','Material impreso'] },
+  { id: 'reunion',     emoji: '🤝', nombre: 'Reunión',                 color: '#94a3b8',
+    desc: 'Contrato para organización de reuniones y juntas.',
+    serviciosDefault: ['Coordinación del espacio','Coffee break','Material de trabajo','Equipo audiovisual'] },
+  { id: 'otro',        emoji: '📋', nombre: 'Otro',                    color: '#6b7280',
+    desc: 'Contrato general para cualquier tipo de evento.',
+    serviciosDefault: ['Coordinación general del evento','Logística y montaje','Catering','Fotografía y video'] },
 ]
 
 /* ─── Saved contracts (mock) ──────────────────────────────── */
@@ -50,47 +77,114 @@ const ESTADO_COLOR = {
 
 /* ─── Contract renderer ───────────────────────────────────── */
 function buildContract(template, form, org = {}) {
-  const hoy    = new Date()
-  const fecha  = form.fechaFirma || hoy.toLocaleDateString('es-MX', { day:'numeric', month:'long', year:'numeric' })
   const ciudad  = org.city        || 'Ciudad de México'
   const empresa = org.companyName || 'Elixe Events S.A. de C.V.'
   const rfc     = org.rfc         || 'LES210601AB3'
+  const ev      = form.nombreEvento || '[NOMBRE DEL EVENTO]'
+  const fecha   = form.fechaEvento  || '[FECHA]'
+  const venue   = form.venue        || '[VENUE]'
+  const inv     = form.invitados    || '[N]'
+  const total   = form.total        || '[MONTO]'
+  const anticipo= form.anticipo     || '[ANTICIPO]'
+  const saldo   = form.liquidacion  || '[SALDO]'
+  const pct     = form.pctAnticipo  || '50'
+  const dias    = form.diasLiquidacion || '15'
+  const letras  = form.totalLetras  || 'MONTO EN LETRAS'
 
-  const clausulas = {
-    boda: [
-      { titulo: 'OBJETO DEL CONTRATO', texto: `El presente contrato tiene por objeto la prestación de servicios profesionales de organización y coordinación del evento de boda a celebrarse el día ${form.fechaEvento || '[FECHA DEL EVENTO]'}, en el inmueble denominado "${form.venue || '[VENUE]'}", con una asistencia estimada de ${form.invitados || '[N]'} personas.` },
-      { titulo: 'SERVICIOS INCLUIDOS', lista: form.servicios },
-      { titulo: 'MONTO Y FORMA DE PAGO', texto: `El monto total por los servicios contratados asciende a la cantidad de ${form.total || '[MONTO TOTAL]'} (${form.totalLetras || 'MONTO EN LETRAS'}) M.N., los cuales serán cubiertos de la siguiente manera:\n\n• Anticipo del ${form.pctAnticipo || '50'}% al momento de la firma del presente contrato: ${form.anticipo || '[ANTICIPO]'}\n• Liquidación del saldo restante a más tardar ${form.diasLiquidacion || '15'} días naturales antes de la fecha del evento: ${form.liquidacion || '[SALDO]'}\n\nEl pago podrá realizarse mediante transferencia bancaria, depósito o cheque certificado a nombre de ${empresa}.` },
-      { titulo: 'OBLIGACIONES DE EL PRESTADOR', lista: ['Asignar un coordinador de bodas certificado como responsable directo del evento','Coordinar a todos los proveedores contratados antes y durante el evento','Realizar un mínimo de tres reuniones de seguimiento previas al evento','Estar presente desde el montaje hasta la conclusión del evento','Entregar un cronograma detallado del evento con 30 días de anticipación','Gestionar permisos y logística necesaria para el desarrollo del evento'] },
-      { titulo: 'OBLIGACIONES DE EL CONTRATANTE', lista: ['Proporcionar la información necesaria para la planeación del evento en los tiempos acordados','Realizar los pagos conforme al calendario establecido en la cláusula tercera','Notificar cualquier cambio en la lista de invitados con al menos 30 días de anticipación','Respetar los tiempos y condiciones del venue acordadas','Designar un representante autorizado para la toma de decisiones'] },
-      { titulo: 'CANCELACIONES Y PENALIZACIONES', texto: `En caso de cancelación del evento por parte de EL CONTRATANTE, se aplicarán los siguientes cargos:\n\n• Cancelación con más de 90 días de anticipación: retención del 20% del anticipo\n• Cancelación entre 60 y 90 días antes del evento: retención del 50% del anticipo\n• Cancelación entre 30 y 60 días antes del evento: retención del 75% del anticipo\n• Cancelación con menos de 30 días de anticipación: pérdida total del anticipo\n\nEn caso de cancelación por causas imputables a EL PRESTADOR, se devolverá el 100% de los pagos realizados más un 10% adicional como penalización.` },
-      { titulo: 'CASO FORTUITO O FUERZA MAYOR', texto: 'Ninguna de las partes será responsable por incumplimiento de sus obligaciones cuando dicho incumplimiento sea consecuencia directa de caso fortuito o fuerza mayor, incluyendo pero no limitado a: desastres naturales, actos de autoridad, pandemias declaradas oficialmente o cualquier otro evento fuera del control razonable de las partes. En tales casos, las partes acordarán de buena fe una nueva fecha para la celebración del evento.' },
-      { titulo: 'CONFIDENCIALIDAD', texto: 'Las partes se obligan a guardar la más estricta confidencialidad respecto de la información que intercambien en virtud del presente contrato, incluyendo datos personales, información financiera y detalles del evento, de conformidad con la Ley Federal de Protección de Datos Personales en Posesión de los Particulares.' },
-      { titulo: 'JURISDICCIÓN Y LEGISLACIÓN APLICABLE', texto: `Para la interpretación y cumplimiento del presente contrato, las partes se someten expresamente a la jurisdicción de los Tribunales competentes de ${ciudad}, renunciando al fuero que pudiera corresponderles por razón de su domicilio presente o futuro, siendo aplicable la legislación del Estado correspondiente.` },
-    ],
-    corporativo: [
-      { titulo: 'OBJETO DEL CONTRATO', texto: `El presente contrato regula la prestación de servicios profesionales de organización para el evento corporativo denominado "${form.nombreEvento || '[NOMBRE DEL EVENTO]'}", a realizarse el ${form.fechaEvento || '[FECHA]'} en "${form.venue || '[VENUE]'}", con capacidad para ${form.invitados || '[N]'} asistentes.` },
-      { titulo: 'SERVICIOS CONTRATADOS', lista: form.servicios },
-      { titulo: 'INVERSIÓN Y CONDICIONES DE PAGO', texto: `La inversión total para la realización del evento es de ${form.total || '[MONTO]'} M.N., con las siguientes condiciones:\n\n• 40% de anticipo a la firma del contrato: ${form.anticipo || '[ANTICIPO]'}\n• 40% a 30 días del evento\n• 20% al cierre del evento con conformidad del cliente\n\nLa empresa emisora de factura es ${empresa}, RFC ${rfc}.` },
-      { titulo: 'COORDINACIÓN Y COMUNICACIÓN', lista: ['Se asignará un Project Manager exclusivo para el evento','Reportes de avance semanales vía correo electrónico','Disponibilidad telefónica 24/7 durante los 3 días previos al evento','Reunión de briefing final 72 horas antes del evento'] },
-      { titulo: 'PROPIEDAD INTELECTUAL Y USO DE IMAGEN', texto: `${empresa} podrá utilizar imágenes y material audiovisual del evento con fines de portafolio y marketing, salvo indicación expresa en contrario por parte de EL CONTRATANTE, quien deberá notificarlo por escrito antes de la firma del presente documento.` },
-      { titulo: 'CANCELACIONES', texto: `Cancelación con más de 60 días: cargo del 25% del total. Entre 30 y 60 días: 50% del total. Menos de 30 días: 75% del total. En caso de suspensión por causa gubernamental o de fuerza mayor debidamente acreditada, se reprogramará sin costo adicional.` },
-      { titulo: 'PROTECCIÓN DE DATOS', texto: `Conforme a la LFPDPPP, ${empresa} se compromete al tratamiento confidencial de los datos personales proporcionados por EL CONTRATANTE, utilizándolos únicamente para la prestación de los servicios objeto de este contrato.` },
-      { titulo: 'LEGISLACIÓN APLICABLE', texto: `Las partes se someten a los tribunales competentes de ${ciudad} para cualquier controversia derivada del presente instrumento.` },
-    ],
-    xv: [
-      { titulo: 'OBJETO DEL CONTRATO', texto: `El presente contrato tiene por objeto la organización y coordinación integral de la celebración de Quinceañera de la señorita ${form.nombreFestejada || '[NOMBRE DE LA FESTEJADA]'}, a celebrarse el ${form.fechaEvento || '[FECHA]'} en "${form.venue || '[VENUE]'}", con una asistencia de ${form.invitados || '[N]'} invitados.` },
-      { titulo: 'PAQUETE DE SERVICIOS', lista: form.servicios },
-      { titulo: 'COSTO TOTAL Y PAGOS', texto: `El costo total del paquete de servicios es de ${form.total || '[MONTO]'} M.N., distribuido de la siguiente forma:\n\n• Anticipo de reservación (${form.pctAnticipo || '30'}%): ${form.anticipo || '[ANTICIPO]'} — a la firma del contrato\n• Segundo pago (40%): a 60 días naturales del evento\n• Liquidación (${100 - parseInt(form.pctAnticipo || 30) - 40}%): a 15 días del evento` },
-      { titulo: 'COORDINACIÓN DE VALS Y CHAMBELANES', texto: `El servicio incluye hasta ${form.chambelanes || '14'} chambelanes coordinados por nuestro equipo. Se realizarán dos ensayos previos al evento en fechas a coordinar. La música para el vals deberá ser seleccionada con al menos 45 días de anticipación para su preparación técnica.` },
-      { titulo: 'PERSONALIZACIÓN DEL EVENTO', lista: ['Reunión de diseño de concepto y temática sin costo','Moodboard y presentación de propuesta visual','Acompañamiento en selección de vestido y accesorios (consultoría)','Coordinación con la iglesia o lugar de ceremonia religiosa','Mesa de dulces o candy bar personalizada según temática'] },
-      { titulo: 'CANCELACIONES Y REEMBOLSOS', texto: `Por tratarse de un evento de carácter especial y único, las políticas de cancelación son las siguientes:\n\n• Más de 180 días: reembolso del 80% del anticipo\n• Entre 90 y 180 días: reembolso del 50%\n• Entre 30 y 90 días: reembolso del 25%\n• Menos de 30 días: sin reembolso\n\nCambios de fecha están sujetos a disponibilidad y sin costo adicional con 60 días de anticipación.` },
-      { titulo: 'FOTOGRAFÍA Y VIDEO', texto: 'El servicio de fotografía incluye sesión previa (trash the dress o sesión de compromiso) y cobertura completa del evento. La entrega digital se realizará en un plazo máximo de 45 días naturales posteriores al evento mediante galería en línea privada.' },
-      { titulo: 'LEGISLACIÓN Y JURISDICCIÓN', texto: `Ambas partes acuerdan someterse a los tribunales de ${ciudad} para cualquier controversia, aplicándose la legislación civil vigente.` },
-    ],
+  // Shared last 3 clauses (fuerza mayor, confidencialidad, jurisdicción)
+  const clausulasFin = [
+    { titulo: 'CASO FORTUITO O FUERZA MAYOR', texto: 'Ninguna de las partes será responsable por incumplimiento cuando sea consecuencia directa de caso fortuito o fuerza mayor, incluyendo desastres naturales, actos de autoridad o pandemias oficialmente declaradas. Las partes acordarán de buena fe una nueva fecha.' },
+    { titulo: 'CONFIDENCIALIDAD Y DATOS PERSONALES', texto: `Las partes guardarán estricta confidencialidad sobre la información intercambiada. ${empresa} se compromete al tratamiento confidencial de los datos personales conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares.` },
+    { titulo: 'JURISDICCIÓN Y LEGISLACIÓN APLICABLE', texto: `Para la interpretación y cumplimiento del presente contrato, las partes se someten a los Tribunales competentes de ${ciudad}, renunciando al fuero que pudiera corresponderles por razón de su domicilio.` },
+  ]
+
+  // Helper: social/celebration event
+  const makeSocial = (tipoNombre) => [
+    { titulo: 'OBJETO DEL CONTRATO', texto: `El presente contrato tiene por objeto la prestación de servicios profesionales de organización y coordinación del evento "${ev}" (${tipoNombre}), a celebrarse el ${fecha} en "${venue}", con una asistencia estimada de ${inv} personas.` },
+    { titulo: 'SERVICIOS INCLUIDOS', lista: form.servicios },
+    { titulo: 'MONTO Y FORMA DE PAGO', texto: `El monto total asciende a ${total} (${letras}) M.N., cubiertos de la siguiente manera:\n\n• Anticipo del ${pct}% a la firma: ${anticipo}\n• Liquidación a más tardar ${dias} días naturales antes del evento: ${saldo}\n\nMediante transferencia, depósito o cheque a nombre de ${empresa}.` },
+    { titulo: 'OBLIGACIONES DE EL PRESTADOR', lista: ['Asignar un coordinador responsable del evento','Coordinar a los proveedores contratados antes y durante el evento','Realizar reuniones de seguimiento previas al evento','Estar presente desde el montaje hasta la conclusión','Entregar cronograma detallado con anticipación'] },
+    { titulo: 'OBLIGACIONES DE EL CONTRATANTE', lista: ['Proporcionar información necesaria en los tiempos acordados','Realizar pagos conforme al calendario establecido','Notificar cambios con al menos 15 días de anticipación','Designar un representante autorizado para toma de decisiones'] },
+    { titulo: 'CANCELACIONES Y PENALIZACIONES', texto: `En caso de cancelación por parte de EL CONTRATANTE:\n\n• Más de 60 días de anticipación: retención del 20% del anticipo\n• Entre 30 y 60 días: retención del 50% del anticipo\n• Menos de 30 días: pérdida total del anticipo\n\nCancelación por causas imputables a EL PRESTADOR: devolución del 100% más 10% de penalización.` },
+    ...clausulasFin,
+  ]
+
+  // Helper: corporate/business event
+  const makeCorp = (tipoNombre) => [
+    { titulo: 'OBJETO DEL CONTRATO', texto: `El presente contrato regula la prestación de servicios de organización para "${ev}" (${tipoNombre}), a realizarse el ${fecha} en "${venue}", con capacidad para ${inv} asistentes.` },
+    { titulo: 'SERVICIOS CONTRATADOS', lista: form.servicios },
+    { titulo: 'INVERSIÓN Y CONDICIONES DE PAGO', texto: `La inversión total es de ${total} M.N.:\n\n• 40% de anticipo a la firma: ${anticipo}\n• 60% restante según calendario acordado\n\nFactura emitida por ${empresa}, RFC ${rfc}.` },
+    { titulo: 'COORDINACIÓN Y COMUNICACIÓN', lista: ['Project Manager exclusivo asignado al evento','Reportes de avance según frecuencia acordada','Disponibilidad los días del evento y previos','Reunión de briefing 72 horas antes del evento'] },
+    { titulo: 'USO DE IMAGEN', texto: `${empresa} podrá utilizar imágenes del evento con fines de portafolio, salvo indicación escrita en contrario antes de la firma.` },
+    { titulo: 'CANCELACIONES', texto: `Más de 60 días: 25% del total. Entre 30-60 días: 50%. Menos de 30 días: 75%. Por causa gubernamental o fuerza mayor acreditada: reprogramación sin costo.` },
+    ...clausulasFin,
+  ]
+
+  // Helper: religious event
+  const makeReligioso = (tipoNombre) => [
+    { titulo: 'OBJETO DEL CONTRATO', texto: `El presente contrato tiene por objeto la organización y coordinación del evento religioso y social denominado "${ev}" (${tipoNombre}), a celebrarse el ${fecha} en "${venue}", con una asistencia estimada de ${inv} personas.` },
+    { titulo: 'SERVICIOS INCLUIDOS', lista: form.servicios },
+    { titulo: 'MONTO Y FORMA DE PAGO', texto: `El monto total es de ${total} (${letras}) M.N.:\n\n• Anticipo del ${pct}% a la firma: ${anticipo}\n• Liquidación ${dias} días antes del evento: ${saldo}` },
+    { titulo: 'COORDINACIÓN CON PARROQUIA O IGLESIA', texto: 'EL PRESTADOR coordinará la logística entre el lugar de la ceremonia religiosa y el salón de celebración, velando por el cumplimiento de los horarios establecidos y el traslado de los invitados de ser necesario.' },
+    { titulo: 'OBLIGACIONES DE EL PRESTADOR', lista: ['Coordinación de proveedores y logística general','Supervisión desde el montaje hasta el cierre del evento','Coordinación con el celebrante religioso en caso necesario','Cumplimiento del programa y cronograma acordados'] },
+    { titulo: 'CANCELACIONES', texto: `Más de 60 días: retención del 20%. Entre 30-60 días: 50%. Menos de 30 días: pérdida del anticipo. Causas de fuerza mayor: reprogramación sin costo.` },
+    ...clausulasFin,
+  ]
+
+  switch (template.id) {
+    case 'boda':
+      return [
+        { titulo: 'OBJETO DEL CONTRATO', texto: `El presente contrato tiene por objeto la prestación de servicios de organización y coordinación del evento de boda a celebrarse el ${fecha}, en "${venue}", con asistencia estimada de ${inv} personas.` },
+        { titulo: 'SERVICIOS INCLUIDOS', lista: form.servicios },
+        { titulo: 'MONTO Y FORMA DE PAGO', texto: `El monto total asciende a ${total} (${letras}) M.N.:\n\n• Anticipo del ${pct}% a la firma: ${anticipo}\n• Liquidación a más tardar ${dias} días naturales antes del evento: ${saldo}\n\nMediante transferencia bancaria, depósito o cheque a nombre de ${empresa}.` },
+        { titulo: 'OBLIGACIONES DE EL PRESTADOR', lista: ['Asignar coordinador de bodas certificado','Coordinar a todos los proveedores','Mínimo tres reuniones de seguimiento previas','Presencia desde montaje hasta conclusión del evento','Cronograma detallado con 30 días de anticipación','Gestión de permisos y logística'] },
+        { titulo: 'OBLIGACIONES DE EL CONTRATANTE', lista: ['Proporcionar información en los tiempos acordados','Pagos conforme al calendario','Notificar cambios en lista de invitados con 30 días de anticipación','Designar representante autorizado'] },
+        { titulo: 'CANCELACIONES Y PENALIZACIONES', texto: `• Más de 90 días: retención del 20% del anticipo\n• Entre 60-90 días: 50%\n• Entre 30-60 días: 75%\n• Menos de 30 días: pérdida total del anticipo\n\nCancelación por causas del PRESTADOR: devolución del 100% + 10% de penalización.` },
+        ...clausulasFin,
+      ]
+
+    case 'xv':
+      return [
+        { titulo: 'OBJETO DEL CONTRATO', texto: `El presente contrato tiene por objeto la organización integral de la Quinceañera de ${form.nombreFestejada || '[NOMBRE]'}, a celebrarse el ${fecha} en "${venue}", con asistencia de ${inv} invitados.` },
+        { titulo: 'PAQUETE DE SERVICIOS', lista: form.servicios },
+        { titulo: 'COSTO TOTAL Y PAGOS', texto: `El costo total es de ${total} M.N.:\n\n• Anticipo (${pct}%) a la firma: ${anticipo}\n• Segundo pago (40%) a 60 días del evento\n• Liquidación a 15 días del evento: ${saldo}` },
+        { titulo: 'COORDINACIÓN DE VALS Y CHAMBELANES', texto: `El servicio incluye hasta ${form.chambelanes || '14'} chambelanes. Se realizarán dos ensayos previos. La música del vals deberá seleccionarse con 45 días de anticipación.` },
+        { titulo: 'PERSONALIZACIÓN', lista: ['Reunión de diseño y temática sin costo','Moodboard y propuesta visual','Consultoría en selección de vestido','Coordinación con la iglesia o lugar de ceremonia','Mesa de dulces personalizada'] },
+        { titulo: 'CANCELACIONES', texto: `• Más de 180 días: reembolso del 80%\n• Entre 90-180 días: 50%\n• Entre 30-90 días: 25%\n• Menos de 30 días: sin reembolso\n\nCambios de fecha sujetos a disponibilidad, sin costo con 60 días de anticipación.` },
+        { titulo: 'FOTOGRAFÍA Y VIDEO', texto: 'Incluye sesión previa y cobertura completa del evento. Entrega digital en máximo 45 días posteriores.' },
+        ...clausulasFin,
+      ]
+
+    case 'corporativo': return makeCorp('Evento Corporativo')
+    case 'conferencia': return makeCorp('Conferencia')
+    case 'lanzamiento': return makeCorp('Lanzamiento de Producto')
+    case 'inauguracion': return makeCorp('Inauguración')
+    case 'empresarial': return makeCorp('Evento Empresarial')
+    case 'reunion': return makeCorp('Reunión')
+
+    case 'bautizo': return makeReligioso('Bautizo')
+    case 'comunion': return makeReligioso('Primera Comunión')
+
+    case 'graduacion':
+      return [
+        { titulo: 'OBJETO DEL CONTRATO', texto: `El presente contrato tiene por objeto la organización del evento de Graduación "${ev}", a celebrarse el ${fecha} en "${venue}", con asistencia estimada de ${inv} personas.` },
+        { titulo: 'SERVICIOS INCLUIDOS', lista: form.servicios },
+        { titulo: 'MONTO Y FORMA DE PAGO', texto: `El monto total es de ${total} (${letras}) M.N.:\n\n• Anticipo del ${pct}% a la firma: ${anticipo}\n• Liquidación ${dias} días antes del evento: ${saldo}` },
+        { titulo: 'COORDINACIÓN DEL EVENTO ACADÉMICO', texto: 'EL PRESTADOR coordinará el protocolo de entrega de diplomas o reconocimientos en coordinación con la institución académica correspondiente. Se respetarán los tiempos y el orden de la ceremonia establecido por la institución.' },
+        { titulo: 'OBLIGACIONES DE LAS PARTES', lista: ['Proporcionar lista de graduandos con anticipación','Coordinar con la institución el protocolo oficial','Cumplir con los horarios del evento','Realizar los pagos conforme al calendario'] },
+        { titulo: 'CANCELACIONES', texto: `Más de 60 días: 20%. Entre 30-60 días: 50%. Menos de 30 días: pérdida del anticipo.` },
+        ...clausulasFin,
+      ]
+
+    case 'cumpleanos':   return makeSocial('Cumpleaños')
+    case 'babyshower':   return makeSocial('Baby Shower')
+    case 'revelacion':   return makeSocial('Revelación de Sexo')
+    case 'aniversario':  return makeSocial('Aniversario')
+    case 'despedida':    return makeSocial('Despedida de Soltera')
+    case 'otro':         return makeSocial('Evento Especial')
+
+    default: return makeSocial('Evento')
   }
-
-  return clausulas[template.id] || clausulas.boda
 }
 
 /* ─── Contract preview component ─────────────────────────── */
@@ -211,14 +305,23 @@ function ContractPreview({ template, form, contratoRef, org = {}, clausasEdit = 
 }
 
 const TIPO_TO_TEMPLATE_ID = {
-  'Boda': 'boda',
-  'XV Años': 'xv',
-  'Corporativo': 'corporativo',
-  'Conferencia': 'corporativo',
-  'Lanzamiento de Producto': 'corporativo',
-  'Inauguración': 'corporativo',
-  'Empresarial': 'corporativo',
-  'Reunión': 'corporativo',
+  'Boda':                    'boda',
+  'XV Años':                 'xv',
+  'Bautizo':                 'bautizo',
+  'Primera Comunión':        'comunion',
+  'Graduación':              'graduacion',
+  'Cumpleaños':              'cumpleanos',
+  'Baby Shower':             'babyshower',
+  'Revelación de Sexo':      'revelacion',
+  'Aniversario':             'aniversario',
+  'Despedida de Soltera':    'despedida',
+  'Corporativo':             'corporativo',
+  'Conferencia':             'conferencia',
+  'Lanzamiento de Producto': 'lanzamiento',
+  'Inauguración':            'inauguracion',
+  'Empresarial':             'empresarial',
+  'Reunión':                 'reunion',
+  'Otro':                    'otro',
 }
 
 /* ─── Main page ───────────────────────────────────────────── */
