@@ -9,6 +9,7 @@ const ROLES = [
   'Fotógrafos',
   'DJs y músicos',
   'Coordinadores de eventos',
+  'Bufetes y banqueteros',
 ]
 
 const STATS = [
