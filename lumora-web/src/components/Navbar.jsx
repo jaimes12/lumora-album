@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSettings } from '../context/SettingsContext'
 import styles from './Navbar.module.css'
-import logoFull  from '../assets/elixe-logo.png'
-import logoWhite from '../assets/elixe-logo-white.png'
+import logoFull  from '../assets/logo_elixe.jpeg'
+import logoWhite from '../assets/logo_white_elixe.jpeg'
 import RegisterModal from './RegisterModal'
 
 const SunIcon = () => (

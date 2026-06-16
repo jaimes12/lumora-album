@@ -5,7 +5,7 @@ import { contratosApi } from '../api/contratosApi'
 import { clientesApi } from '../api/clientesApi'
 import { eventosApi } from '../api/eventosApi'
 import { orgSettingsApi } from '../api/orgSettingsApi'
-import logoFull from '../assets/elixe-logo.png'
+import logoFull from '../assets/logo_elixe.jpeg'
 
 /* ─── Contract templates ──────────────────────────────────── */
 const TEMPLATES = [

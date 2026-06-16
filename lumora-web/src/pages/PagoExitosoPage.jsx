@@ -4,8 +4,8 @@ import { useAuth } from '../context/AuthContext'
 import { paymentsApi } from '../api/paymentsApi'
 import { useSettings } from '../context/SettingsContext'
 import styles from './PagoExitosoPage.module.css'
-import logoFull  from '../assets/elixe-logo.png'
-import logoWhite from '../assets/elixe-logo-white.png'
+import logoFull  from '../assets/logo_elixe.jpeg'
+import logoWhite from '../assets/logo_white_elixe.jpeg'
 
 const PLAN_NAMES = { solo: 'Solo', negocio: 'Negocio', agencia: 'Agencia' }
 

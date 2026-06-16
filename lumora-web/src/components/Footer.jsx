@@ -1,5 +1,5 @@
 import styles from './Footer.module.css'
-import logoFull from '../assets/elixe-logo.png'
+import logoFull from '../assets/logo_elixe.jpeg'
 
 export default function Footer() {
   return (
