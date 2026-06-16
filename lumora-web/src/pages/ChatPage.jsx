@@ -292,7 +292,12 @@ function QuickReplyManager({ onClose }) {
 }
 
 // ─── Nuevo Lead Modal ────────────────────────────────────────────────────────
-const TIPOS_EVENTO = ['Boda', 'XV Años', 'Corporativo', 'Graduación', 'Bautizo', 'Cumpleaños', 'Otro']
+const TIPOS_EVENTO = [
+  'Boda', 'XV Años', 'Bautizo', 'Primera Comunión', 'Graduación',
+  'Cumpleaños', 'Baby Shower', 'Revelación de Sexo', 'Aniversario',
+  'Despedida de Soltera', 'Corporativo', 'Conferencia',
+  'Lanzamiento de Producto', 'Inauguración', 'Empresarial', 'Reunión', 'Otro',
+]
 
 function NuevoLeadModal({ onClose, onCreated, leads }) {
   const [saving,  setSaving]  = useState(false)
@@ -381,7 +386,12 @@ function NuevoLeadModal({ onClose, onCreated, leads }) {
 }
 
 // ─── Contact Info Panel ──────────────────────────────────────────────────────
-const TIPOS_EVENTO_LIST = ['Boda', 'XV Años', 'Corporativo', 'Graduación', 'Bautizo', 'Cumpleaños', 'Otro']
+const TIPOS_EVENTO_LIST = [
+  'Boda', 'XV Años', 'Bautizo', 'Primera Comunión', 'Graduación',
+  'Cumpleaños', 'Baby Shower', 'Revelación de Sexo', 'Aniversario',
+  'Despedida de Soltera', 'Corporativo', 'Conferencia',
+  'Lanzamiento de Producto', 'Inauguración', 'Empresarial', 'Reunión', 'Otro',
+]
 
 function ContactInfoPanel({ lead, onUpdate }) {
   const navigate = useNavigate()

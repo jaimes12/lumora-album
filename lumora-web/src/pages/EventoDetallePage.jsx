@@ -4,7 +4,8 @@ import styles from './EventoDetallePage.module.css'
 import { eventosApi } from '../api/eventosApi'
 import { clientesApi } from '../api/clientesApi'
 import { proveedoresApi } from '../api/proveedoresApi'
-import { ESTADO_META, TIPO_EMOJI, CAT_COLOR, fmt } from '../data/eventosData'
+import { ESTADO_META, CAT_COLOR, fmt } from '../data/eventosData'
+import EventoTipoIcon from '../components/EventoTipoIcon'
 import { findOrCreateLeadByPhone } from '../api/leadsApi'
 import { ChatModal, DEFAULT_STAGES } from './ChatPage'
 import EventProductsSection from '../components/EventProductsSection'
@@ -28,7 +29,12 @@ function StarRating({ val }) {
   )
 }
 
-const TIPOS = ['Boda', 'XV Años', 'Corporativo', 'Graduación', 'Bautizo', 'Cumpleaños', 'Reunión', 'Otro']
+const TIPOS = [
+  'Boda', 'XV Años', 'Bautizo', 'Primera Comunión', 'Graduación',
+  'Cumpleaños', 'Baby Shower', 'Revelación de Sexo', 'Aniversario',
+  'Despedida de Soltera', 'Corporativo', 'Conferencia',
+  'Lanzamiento de Producto', 'Inauguración', 'Empresarial', 'Reunión', 'Otro',
+]
 
 /* ─── Edit modal ─────────────────────────────────────────── */
 function EditEventModal({ evento, onSave, onClose }) {
@@ -340,7 +346,7 @@ export default function EventoDetallePage() {
 
       {/* ── Hero ── */}
       <div className={styles.hero}>
-        <span className={styles.heroEmoji}>{TIPO_EMOJI[evento.tipo] || '📅'}</span>
+        <EventoTipoIcon tipo={evento.tipo} size={28} />
         <div className={styles.heroInfo}>
           <h1 className={styles.heroTitle}>{evento.nombre}</h1>
           <div className={styles.heroMeta}>

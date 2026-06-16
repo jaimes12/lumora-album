@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { eventosApi } from '../api/eventosApi'
-import { ESTADO_META, TIPO_EMOJI, fmt } from '../data/eventosData'
+import { ESTADO_META, fmt } from '../data/eventosData'
+import EventoTipoIcon from '../components/EventoTipoIcon'
 import styles from './CalendarioPage.module.css'
 
 const MONTHS_ES = [
@@ -24,7 +25,7 @@ function EventModal({ ev, onClose, onDetalle }) {
       <div className={styles.modal}>
         <div className={styles.modalHeader}>
           <div className={styles.modalTitleRow}>
-            <span className={styles.modalEmoji}>{TIPO_EMOJI[ev.tipo] || '📅'}</span>
+            <EventoTipoIcon tipo={ev.tipo} size={18} />
             <div>
               <h2 className={styles.modalTitle}>{ev.nombre}</h2>
               <span className={styles.modalTipo}>{ev.tipo}</span>

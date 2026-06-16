@@ -2,14 +2,20 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { eventosApi } from '../api/eventosApi'
 import { clientesApi } from '../api/clientesApi'
-import { ESTADO_META, TIPO_EMOJI } from '../data/eventosData'
+import { ESTADO_META } from '../data/eventosData'
+import EventoTipoIcon from '../components/EventoTipoIcon'
 import { useAuth } from '../context/AuthContext'
 import { PlanGateModal } from '../components/PlanGate'
 import { underLimit } from '../config/planConfig'
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll'
 import styles from './EventosPage.module.css'
 
-const TIPOS = ['Boda', 'XV Años', 'Corporativo', 'Graduación', 'Bautizo', 'Cumpleaños', 'Reunión', 'Otro']
+const TIPOS = [
+  'Boda', 'XV Años', 'Bautizo', 'Primera Comunión', 'Graduación',
+  'Cumpleaños', 'Baby Shower', 'Revelación de Sexo', 'Aniversario',
+  'Despedida de Soltera', 'Corporativo', 'Conferencia',
+  'Lanzamiento de Producto', 'Inauguración', 'Empresarial', 'Reunión', 'Otro',
+]
 
 function NuevoEventoModal({ onClose, onCreated }) {
   const [step,        setStep]        = useState(1) // 1 = cliente, 2 = evento
@@ -402,7 +408,7 @@ export default function EventosPage() {
               return (
                 <div key={ev.id} className={styles.card} onClick={() => navigate(`/app/eventos/${ev.id}`)}>
                   <div className={styles.cardTop}>
-                    <span className={styles.tipoEmoji}>{TIPO_EMOJI[ev.tipo] || '📅'}</span>
+                    <EventoTipoIcon tipo={ev.tipo} size={18} />
                     <span className={styles.estadoBadge} style={{ color: meta.color, background: meta.bg }}>
                       {meta.label}
                     </span>

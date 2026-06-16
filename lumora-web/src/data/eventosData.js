@@ -163,10 +163,6 @@ export const ESTADO_META = {
   cancelled: { label: 'Cancelado',  color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
 }
 
-export const TIPO_EMOJI = {
-  Boda: '💍', 'XV Años': '🌸', Corporativo: '🏢',
-  Graduación: '🎓', Bautizo: '✝️', Cumpleaños: '🎂',
-}
 
 export const CAT_COLOR = {
   Fotografía: '#a78bfa', Catering: '#fb923c', Decoración: '#f472b6',
