@@ -22,7 +22,7 @@ public record SubscriptionInfo(bool IsStripe, string? NextBillingDate, string? S
 
 public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeService
 {
-    private static readonly Dictionary<string, (string Name, long Centavos)> Plans = new()
+    private static readonly Dictionary<string, (string Name, long Centavos)> PlansFallback = new()
     {
         ["solo"]    = ("Plan Solo",    39900),
         ["negocio"] = ("Plan Negocio", 79900),
@@ -38,8 +38,14 @@ public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeS
     {
         Configure();
 
-        if (!Plans.TryGetValue(planId, out var plan))
+        var planConfig = await db.PlanConfigs.FirstOrDefaultAsync(p => p.PlanId == planId);
+        if (planConfig is null && !PlansFallback.ContainsKey(planId))
             throw new ArgumentException($"Plan inválido: {planId}");
+
+        var planName = planConfig?.Name ?? PlansFallback.GetValueOrDefault(planId).Name ?? planId;
+        var centavos = planConfig is not null
+            ? (long)(planConfig.Price * 100)
+            : PlansFallback[planId].Centavos;
 
         var options = new SessionCreateOptions
         {
@@ -50,13 +56,13 @@ public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeS
                 {
                     PriceData = new SessionLineItemPriceDataOptions
                     {
-                        Currency  = "mxn",
-                        UnitAmount = plan.Centavos,
-                        Recurring = new SessionLineItemPriceDataRecurringOptions { Interval = "month" },
+                        Currency   = "mxn",
+                        UnitAmount = centavos,
+                        Recurring  = new SessionLineItemPriceDataRecurringOptions { Interval = "month" },
                         ProductData = new SessionLineItemPriceDataProductDataOptions
                         {
-                            Name        = $"{plan.Name} — Elixe",
-                            Description = $"Suscripción mensual al {plan.Name} de Elixe",
+                            Name        = $"{planName} — Elixe",
+                            Description = $"Suscripción mensual al {planName} de Elixe",
                         },
                     },
                     Quantity = 1,
