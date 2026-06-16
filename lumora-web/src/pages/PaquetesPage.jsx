@@ -1,73 +1,44 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { paymentsApi } from '../api/paymentsApi'
+import { getPublicPlans } from '../api/plansApi'
 import styles from './PaquetesPage.module.css'
 
-const PLANS = [
+const PLANS_FALLBACK = [
   {
-    id: 'solo',
-    name: 'Solo',
-    price: 399,
-    period: 'MXN/mes',
+    id: 'solo', name: 'Solo', price: 399, period: 'MXN/mes',
     desc: 'Para fotógrafos, DJs, decoradores y coordinadores independientes',
     color: '#2B6FD4',
-    features: [
-      '1 usuario',
-      '20 eventos activos',
-      '200 clientes',
-      'Calendario y tareas',
-      'Catálogo de productos',
-      'Cotizaciones (hasta 15/mes)',
-      'Contratos básicos',
-      'Historial de pagos',
-      '2 GB almacenamiento',
-      'Soporte por correo',
-    ],
+    features: ['1 usuario','20 eventos activos','200 clientes','Calendario y tareas','Catálogo de productos','Cotizaciones (hasta 15/mes)','Contratos básicos','Historial de pagos','2 GB almacenamiento','Soporte por correo'],
   },
   {
-    id: 'negocio',
-    name: 'Negocio',
-    price: 799,
-    period: 'MXN/mes',
+    id: 'negocio', name: 'Negocio', price: 799, period: 'MXN/mes',
     desc: 'Para negocios con equipo: wedding planners, salones de eventos',
-    color: '#C9A255',
-    popular: true,
-    features: [
-      'Hasta 3 usuarios',
-      'Eventos y clientes ilimitados',
-      'Todo lo del plan Solo',
-      'WhatsApp CRM',
-      'Cotizaciones ilimitadas + PDF',
-      'Contratos con firma digital',
-      'Pipeline de ventas (Kanban)',
-      'Reportes e ingresos',
-      'Exportar Excel / PDF',
-      '10 GB almacenamiento',
-      'Soporte prioritario (24h)',
-    ],
+    color: '#C9A255', popular: true,
+    features: ['Hasta 3 usuarios','Eventos y clientes ilimitados','Todo lo del plan Solo','WhatsApp CRM','Cotizaciones ilimitadas + PDF','Contratos con firma digital','Pipeline de ventas (Kanban)','Reportes e ingresos','Exportar Excel / PDF','10 GB almacenamiento','Soporte prioritario (24h)'],
   },
   {
-    id: 'agencia',
-    name: 'Agencia',
-    price: 1499,
-    period: 'MXN/mes',
+    id: 'agencia', name: 'Agencia', price: 1499, period: 'MXN/mes',
     desc: 'Para agencias y salones grandes con operaciones a escala',
     color: '#7c6af7',
-    features: [
-      'Hasta 10 usuarios',
-      'Todo ilimitado',
-      'Todo lo del plan Negocio',
-      'Roles y permisos por usuario',
-      'Reportes avanzados',
-      'Importación masiva (CSV)',
-      'API de integración',
-      'Plantillas personalizadas',
-      '50 GB almacenamiento',
-      'Onboarding dedicado',
-      'Soporte 24/7 por WhatsApp',
-    ],
+    features: ['Hasta 10 usuarios','Todo ilimitado','Todo lo del plan Negocio','Roles y permisos por usuario','Reportes avanzados','Importación masiva (CSV)','API de integración','Plantillas personalizadas','50 GB almacenamiento','Onboarding dedicado','Soporte 24/7 por WhatsApp'],
   },
 ]
+
+function adaptPlan(p) {
+  return {
+    id:      p.planId ?? p.id,
+    name:    p.name,
+    price:   p.price,
+    period:  'MXN/mes',
+    desc:    p.description ?? p.desc ?? '',
+    color:   p.color ?? '#2B6FD4',
+    popular: p.popular ?? false,
+    features: (p.features ?? []).map(f =>
+      typeof f === 'string' ? f : (f.text ?? f.Text ?? '')
+    ).filter(Boolean),
+  }
+}
 
 
 const CheckIcon = () => (
@@ -78,18 +49,25 @@ const CheckIcon = () => (
 
 export default function PaquetesPage() {
   const { user, updatePlan } = useAuth()
+  const [plans,          setPlans]          = useState(PLANS_FALLBACK)
   const [loading,        setLoading]        = useState(null)
   const [showChangePlan, setShowChangePlan] = useState(false)
   const [promoCode,      setPromoCode]      = useState('')
   const [promoLoading,   setPromoLoading]   = useState(false)
-  const [promoMsg,       setPromoMsg]       = useState(null) // { type: 'ok'|'err', text }
+  const [promoMsg,       setPromoMsg]       = useState(null)
   const [historial,      setHistorial]      = useState([])
   const [histLoading,    setHistLoading]    = useState(false)
   const [subInfo,        setSubInfo]        = useState(null)
   const [subLoading,     setSubLoading]     = useState(false)
 
+  useEffect(() => {
+    getPublicPlans()
+      .then(data => { if (data?.length) setPlans(data.map(adaptPlan)) })
+      .catch(() => {})
+  }, [])
+
   const currentPlan = user?.plan ?? 'free'
-  const activePlan  = PLANS.find(p => p.id === currentPlan)
+  const activePlan  = plans.find(p => p.id === currentPlan)
 
   useEffect(() => {
     if (currentPlan === 'free') return
@@ -126,7 +104,7 @@ export default function PaquetesPage() {
     try {
       const res = await paymentsApi.applyPromo(promoCode.trim())
       await updatePlan(res.plan)
-      const planName = PLANS.find(p => p.id === res.plan)?.name ?? res.plan
+      const planName = plans.find(p => p.id === res.plan)?.name ?? res.plan
       setPromoMsg({ type: 'ok', text: `¡Código aplicado! Plan ${planName} activado.` })
       setPromoCode('')
       setShowChangePlan(false)
@@ -205,7 +183,7 @@ export default function PaquetesPage() {
             {currentPlan === 'free' ? 'Elige tu plan' : 'Cambiar plan'}
           </h2>
           <div className={styles.plansGrid}>
-            {PLANS.map(plan => {
+            {plans.map(plan => {
               const isActive  = currentPlan === plan.id
               const isLoading = loading === plan.id
               return (
