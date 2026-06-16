@@ -94,8 +94,13 @@ function buildContract(template, form, org = {}) {
 }
 
 /* ─── Contract preview component ─────────────────────────── */
-function ContractPreview({ template, form, contratoRef, org = {} }) {
-  const clausulas = buildContract(template, form, org)
+function ContractPreview({ template, form, contratoRef, org = {}, clausasEdit = {} }) {
+  const clausulasBase = buildContract(template, form, org)
+  const clausulas = clausulasBase.map((c, i) => {
+    if (clausasEdit[i] === undefined) return c
+    if (c.texto !== undefined) return { ...c, texto: clausasEdit[i] }
+    return { ...c, lista: clausasEdit[i].split('\n').filter(s => s.trim()) }
+  })
   const hoy = new Date()
   const fechaFormato = hoy.toLocaleDateString('es-MX', { day:'numeric', month:'long', year:'numeric' })
   const numContrato = `LM-${new Date().getFullYear()}-${String(Math.floor(Math.random()*9000)+1000)}`
@@ -159,13 +164,7 @@ function ContractPreview({ template, form, contratoRef, org = {} }) {
               CLÁUSULA {['PRIMERA','SEGUNDA','TERCERA','CUARTA','QUINTA','SEXTA','SÉPTIMA','OCTAVA','NOVENA','DÉCIMA'][i] || `${i+1}ª`}.— {c.titulo}
             </div>
             {c.texto && (
-              <div
-                className={styles.clauseText}
-                contentEditable
-                suppressContentEditableWarning
-              >
-                {c.texto}
-              </div>
+              <div className={styles.clauseText}>{c.texto}</div>
             )}
             {c.lista && (
               <ul className={styles.clauseList}>
@@ -230,6 +229,8 @@ export default function ContratosPage() {
   const [search,      setSearch]      = useState('')
   const [showExtras,  setShowExtras]  = useState(false)
   const [autoFilled,  setAutoFilled]  = useState(false)
+  const [clausasEdit, setClausasEdit] = useState({})
+  const [showClausas, setShowClausas] = useState(false)
   const contratoRef = useRef(null)
 
   const [clientesList,  setClientesList]  = useState([])
@@ -252,6 +253,9 @@ export default function ContratosPage() {
     diasLiquidacion: '15', totalLetras: '',
     servicios: [], notas: '',
   })
+
+  // Reset clause edits when template changes
+  useEffect(() => { setClausasEdit({}); setShowClausas(false) }, [template?.id])
 
   // Auto-compute anticipo and liquidacion whenever total or % changes
   useEffect(() => {
@@ -442,7 +446,7 @@ export default function ContratosPage() {
                 <span className={styles.stepNum}>1</span>
                 ¿Para qué evento?
               </div>
-              <div className={styles.formGrid}>
+              <div className={styles.formStack}>
                 <div className={styles.formField}>
                   <label>Filtrar por cliente</label>
                   <select value={form.clienteId} onChange={e => handleClienteChange(e.target.value)}>
@@ -626,13 +630,71 @@ export default function ContratosPage() {
                 rows={3}
               />
             </div>
+
+            {/* Step 7: Editar cláusulas */}
+            {template && (
+              <div className={styles.configSection}>
+                <button
+                  className={styles.clausasToggleBtn}
+                  onClick={() => setShowClausas(s => !s)}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  {showClausas ? 'Ocultar editor de cláusulas' : 'Editar cláusulas del contrato'}
+                  {Object.keys(clausasEdit).length > 0 && (
+                    <span className={styles.clausasEditedBadge}>{Object.keys(clausasEdit).length} editadas</span>
+                  )}
+                </button>
+                {showClausas && (() => {
+                  const clausulas = buildContract(template, form, orgSettings)
+                  const ORDINALS = ['PRIMERA','SEGUNDA','TERCERA','CUARTA','QUINTA','SEXTA','SÉPTIMA','OCTAVA','NOVENA','DÉCIMA']
+                  return (
+                    <div className={styles.clausasEditor}>
+                      <p className={styles.clausasEditorHint}>
+                        Edita el texto de cada cláusula. Los cambios se reflejan al instante en la vista previa.
+                      </p>
+                      {clausulas.map((c, i) => (
+                        <div key={i} className={styles.clausaEditItem}>
+                          <div className={styles.clausaEditHeader}>
+                            <span className={styles.clausaEditNum}>CLÁUSULA {ORDINALS[i] || `${i+1}ª`}</span>
+                            <span className={styles.clausaEditTitulo}>{c.titulo}</span>
+                            {clausasEdit[i] !== undefined && (
+                              <button
+                                className={styles.clausaResetBtn}
+                                onClick={() => setClausasEdit(prev => { const n = { ...prev }; delete n[i]; return n })}
+                                title="Restaurar texto original"
+                              >↺ Restaurar</button>
+                            )}
+                          </div>
+                          <textarea
+                            className={styles.clausaEditArea}
+                            rows={c.texto ? 6 : 4}
+                            value={clausasEdit[i] ?? (c.texto || (c.lista || []).join('\n'))}
+                            onChange={e => setClausasEdit(prev => ({ ...prev, [i]: e.target.value }))}
+                          />
+                        </div>
+                      ))}
+                      {Object.keys(clausasEdit).length > 0 && (
+                        <button
+                          className={styles.clausasResetAllBtn}
+                          onClick={() => setClausasEdit({})}
+                        >
+                          ↺ Restaurar todo al original
+                        </button>
+                      )}
+                    </div>
+                  )
+                })()}
+              </div>
+            )}
           </div>
 
           {/* Preview panel */}
           <div className={styles.previewPanel}>
             <div className={styles.previewToolbar}>
               <span className={styles.previewLabel}>Vista previa del contrato</span>
-              <span className={styles.previewHint}>Los textos son editables directamente</span>
+              <span className={styles.previewHint}>Edita las cláusulas en el panel izquierdo</span>
             </div>
 
             {!template ? (
@@ -648,7 +710,7 @@ export default function ContratosPage() {
               </div>
             ) : (
               <div className={styles.previewScroll}>
-                <ContractPreview template={template} form={form} contratoRef={contratoRef} org={orgSettings} />
+                <ContractPreview template={template} form={form} contratoRef={contratoRef} org={orgSettings} clausasEdit={clausasEdit} />
               </div>
             )}
           </div>
