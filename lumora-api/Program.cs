@@ -128,7 +128,9 @@ builder.Services.AddCors(opts =>
                 // Allow any Railway subdomain and localhost
                 return uri.Host.EndsWith(".up.railway.app", StringComparison.OrdinalIgnoreCase)
                     || uri.Host == "localhost"
-                    || uri.Host == "127.0.0.1";
+                    || uri.Host == "127.0.0.1"
+                    || uri.Host == "elixe.mx"
+                    || uri.Host == "www.elixe.mx";
             })
             .AllowAnyHeader()
             .AllowAnyMethod()
