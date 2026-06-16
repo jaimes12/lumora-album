@@ -239,8 +239,13 @@ function PlanConfigEditor() {
   const [msg,      setMsg]      = useState('')
 
   useEffect(() => {
+    const PLAN_IDS = ['solo', 'negocio', 'agencia']
+    const merge = (data) => {
+      const byId = Object.fromEntries((data || []).map(p => [p.planId, p]))
+      return PLAN_IDS.map(id => byId[id] ?? PLAN_DEFAULTS.find(p => p.planId === id))
+    }
     superadminApi.getPlanConfigs()
-      .then(data => setConfigs(data?.length ? data : PLAN_DEFAULTS))
+      .then(data => setConfigs(merge(data)))
       .catch(() => setConfigs(PLAN_DEFAULTS))
   }, [])
 

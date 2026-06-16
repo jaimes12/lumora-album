@@ -542,19 +542,21 @@ try
             '[{""text"":""1 usuario"",""ok"":true},{""text"":""20 eventos activos"",""ok"":true},{""text"":""200 clientes"",""ok"":true},{""text"":""Calendario y tareas"",""ok"":true},{""text"":""Catálogo de productos"",""ok"":true},{""text"":""Directorio de proveedores"",""ok"":true},{""text"":""Cotizaciones (hasta 15/mes)"",""ok"":true},{""text"":""Contratos básicos"",""ok"":true},{""text"":""Historial de pagos"",""ok"":true},{""text"":""2 GB almacenamiento"",""ok"":true},{""text"":""WhatsApp CRM"",""ok"":false},{""text"":""Pipeline de ventas"",""ok"":false},{""text"":""Reportes y estadísticas"",""ok"":false}]',
             1, NOW())",
 
-        @"INSERT IGNORE INTO `plan_configs` (`id`,`plan_id`,`name`,`price`,`description`,`color`,`popular`,`features`,`sort_order`,`updated_at`) VALUES (
+        @"INSERT INTO `plan_configs` (`id`,`plan_id`,`name`,`price`,`description`,`color`,`popular`,`features`,`sort_order`,`updated_at`) VALUES (
             'plan_negocio','negocio','Negocio',799,
             'Para negocios establecidos: wedding planners, salones y coordinadoras con equipo.',
             '#C9A255',1,
             '[{""text"":""Hasta 3 usuarios"",""ok"":true},{""text"":""Eventos ilimitados"",""ok"":true},{""text"":""Clientes ilimitados"",""ok"":true},{""text"":""Todo lo del plan Solo"",""ok"":true},{""text"":""WhatsApp CRM"",""ok"":true},{""text"":""Cotizaciones ilimitadas + PDF"",""ok"":true},{""text"":""Contratos con firma digital"",""ok"":true},{""text"":""Pipeline de ventas (Kanban)"",""ok"":true},{""text"":""Reportes e ingresos"",""ok"":true},{""text"":""Exportar datos Excel/PDF"",""ok"":true},{""text"":""10 GB almacenamiento"",""ok"":true},{""text"":""Soporte prioritario (24h)"",""ok"":true}]',
-            2, NOW())",
+            2, NOW())
+            ON DUPLICATE KEY UPDATE `sort_order` = 2",
 
-        @"INSERT IGNORE INTO `plan_configs` (`id`,`plan_id`,`name`,`price`,`description`,`color`,`popular`,`features`,`sort_order`,`updated_at`) VALUES (
+        @"INSERT INTO `plan_configs` (`id`,`plan_id`,`name`,`price`,`description`,`color`,`popular`,`features`,`sort_order`,`updated_at`) VALUES (
             'plan_agencia','agencia','Agencia',1499,
             'Para agencias de eventos, salones grandes y equipos de 5 o más personas.',
             '#7c6af7',0,
             '[{""text"":""Hasta 10 usuarios"",""ok"":true},{""text"":""Todo ilimitado"",""ok"":true},{""text"":""Todo lo del plan Negocio"",""ok"":true},{""text"":""Roles y permisos por usuario"",""ok"":true},{""text"":""Reportes avanzados"",""ok"":true},{""text"":""Importación masiva (CSV)"",""ok"":true},{""text"":""API de integración"",""ok"":true},{""text"":""Plantillas personalizadas"",""ok"":true},{""text"":""50 GB almacenamiento"",""ok"":true},{""text"":""Onboarding dedicado"",""ok"":true},{""text"":""Soporte 24/7 por WhatsApp"",""ok"":true}]',
-            3, NOW())",
+            3, NOW())
+            ON DUPLICATE KEY UPDATE `sort_order` = 3",
 
         // Superadmin table
         @"CREATE TABLE IF NOT EXISTS `superadmins` (
