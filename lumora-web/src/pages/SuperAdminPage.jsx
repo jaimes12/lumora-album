@@ -326,6 +326,14 @@ function PlanConfigEditor() {
   )
 }
 
+function PaquetesTab() {
+  return (
+    <div className={styles.tabContent}>
+      <PlanConfigEditor />
+    </div>
+  )
+}
+
 function PlansTab() {
   const [rows,       setRows]       = useState(null)
   const [expanded,   setExpanded]   = useState(null)
@@ -366,8 +374,6 @@ function PlansTab() {
 
   return (
     <div className={styles.plansWrap}>
-      <PlanConfigEditor />
-
       {/* Stats */}
       <div className={styles.planStats}>
         {byPlan.map(p => (
@@ -886,6 +892,7 @@ const TABS = [
   { key: 'clientes',       path: 'clientes',       label: 'Clientes' },
   { key: 'ventas',         path: 'ventas',         label: 'Ventas' },
   { key: 'planes',         path: 'planes',         label: 'Planes' },
+  { key: 'paquetes',       path: 'paquetes',       label: 'Paquetes' },
   { key: 'codigos',        path: 'codigos',        label: 'Códigos promo' },
 ]
 
@@ -1105,6 +1112,7 @@ export default function SuperAdminPage() {
 
           {/* ── PLANES ── */}
           {tab === 'planes' && <PlansTab />}
+          {tab === 'paquetes' && <PaquetesTab />}
 
           {/* ── PROMOS ── */}
           {tab === 'codigos' && <PromoCodesTab />}
