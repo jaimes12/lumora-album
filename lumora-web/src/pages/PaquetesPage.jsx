@@ -61,8 +61,13 @@ export default function PaquetesPage() {
   const [subLoading,     setSubLoading]     = useState(false)
 
   useEffect(() => {
+    const PLAN_IDS = ['solo', 'negocio', 'agencia']
     getPublicPlans()
-      .then(data => { if (data?.length) setPlans(data.map(adaptPlan)) })
+      .then(data => {
+        if (!data?.length) return
+        const byId = Object.fromEntries(data.map(p => [p.planId ?? p.id, adaptPlan(p)]))
+        setPlans(PLAN_IDS.map(id => byId[id] ?? PLANS_FALLBACK.find(p => p.id === id)))
+      })
       .catch(() => {})
   }, [])
 

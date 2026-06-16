@@ -89,14 +89,16 @@ export default function Pricing() {
   const [plans, setPlans] = useState(PLANS_FALLBACK)
 
   useEffect(() => {
+    const PLAN_IDS = ['solo', 'negocio', 'agencia']
     getPublicPlans()
       .then(data => {
-        if (data?.length) {
-          setPlans(data.map(p => ({
-            id: p.id, name: p.name, price: p.price, desc: p.desc,
-            color: p.color, popular: p.popular, features: p.features,
-          })))
-        }
+        if (!data?.length) return
+        const byId = Object.fromEntries(data.map(p => [p.planId ?? p.id, {
+          id: p.planId ?? p.id, name: p.name, price: p.price,
+          desc: p.description ?? p.desc ?? '',
+          color: p.color, popular: p.popular ?? false, features: p.features ?? [],
+        }]))
+        setPlans(PLAN_IDS.map(id => byId[id] ?? PLANS_FALLBACK.find(p => p.id === id)))
       })
       .catch(() => {})
   }, [])
