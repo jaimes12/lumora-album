@@ -425,14 +425,25 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
     {
         if (!IsSuperAdmin) return Forbid();
         var plan = await db.PlanConfigs.FirstOrDefaultAsync(p => p.PlanId == planId);
-        if (plan is null) return NotFound();
 
-        plan.Price       = req.Price;
-        plan.Description = req.Description ?? plan.Description;
-        plan.Color       = req.Color ?? plan.Color;
-        plan.Popular     = req.Popular;
+        if (plan is null)
+        {
+            plan = new lumora_api.Models.PlanConfig
+            {
+                Id          = $"plan_{planId}",
+                PlanId      = planId,
+                Name        = char.ToUpper(planId[0]) + planId[1..],
+                SortOrder   = planId == "solo" ? 1 : planId == "negocio" ? 2 : 3,
+            };
+            db.PlanConfigs.Add(plan);
+        }
+
+        plan.Price        = req.Price;
+        plan.Description  = req.Description ?? plan.Description;
+        plan.Color        = req.Color ?? plan.Color;
+        plan.Popular      = req.Popular;
         plan.FeaturesJson = System.Text.Json.JsonSerializer.Serialize(req.Features);
-        plan.UpdatedAt   = DateTime.UtcNow;
+        plan.UpdatedAt    = DateTime.UtcNow;
         await db.SaveChangesAsync();
 
         return Ok(new {

@@ -210,6 +210,27 @@ function DataTable({ columns, rows, empty = 'Sin registros' }) {
 const PLAN_LABELS = { free: 'Sin plan', solo: 'Solo', negocio: 'Negocio', agencia: 'Agencia' }
 const ALL_PLANS   = ['free', 'solo', 'negocio', 'agencia']
 
+const PLAN_DEFAULTS = [
+  { planId: 'solo', name: 'Solo', price: 399, description: 'Para fotógrafos, DJs, decoradores y coordinadores que trabajan solos.', color: '#2B6FD4', popular: false, features: [
+    { text: '1 usuario', ok: true }, { text: '20 eventos activos', ok: true }, { text: '200 clientes', ok: true },
+    { text: 'Calendario y tareas', ok: true }, { text: 'Catálogo de productos', ok: true }, { text: 'Directorio de proveedores', ok: true },
+    { text: 'Cotizaciones (hasta 15/mes)', ok: true }, { text: 'Contratos básicos', ok: true }, { text: 'Historial de pagos', ok: true },
+    { text: '2 GB almacenamiento', ok: true }, { text: 'WhatsApp CRM', ok: false }, { text: 'Pipeline de ventas', ok: false }, { text: 'Reportes y estadísticas', ok: false },
+  ], sortOrder: 1 },
+  { planId: 'negocio', name: 'Negocio', price: 799, description: 'Para negocios establecidos: wedding planners, salones y coordinadoras con equipo.', color: '#C9A255', popular: true, features: [
+    { text: 'Hasta 3 usuarios', ok: true }, { text: 'Eventos ilimitados', ok: true }, { text: 'Clientes ilimitados', ok: true },
+    { text: 'Todo lo del plan Solo', ok: true }, { text: 'WhatsApp CRM', ok: true }, { text: 'Cotizaciones ilimitadas + PDF', ok: true },
+    { text: 'Contratos con firma digital', ok: true }, { text: 'Pipeline de ventas (Kanban)', ok: true }, { text: 'Reportes e ingresos', ok: true },
+    { text: 'Exportar datos Excel/PDF', ok: true }, { text: '10 GB almacenamiento', ok: true }, { text: 'Soporte prioritario (24h)', ok: true },
+  ], sortOrder: 2 },
+  { planId: 'agencia', name: 'Agencia', price: 1499, description: 'Para agencias de eventos, salones grandes y equipos de 5 o más personas.', color: '#7c6af7', popular: false, features: [
+    { text: 'Hasta 10 usuarios', ok: true }, { text: 'Todo ilimitado', ok: true }, { text: 'Todo lo del plan Negocio', ok: true },
+    { text: 'Roles y permisos por usuario', ok: true }, { text: 'Reportes avanzados', ok: true }, { text: 'Importación masiva (CSV)', ok: true },
+    { text: 'API de integración', ok: true }, { text: 'Plantillas personalizadas', ok: true }, { text: '50 GB almacenamiento', ok: true },
+    { text: 'Onboarding dedicado', ok: true }, { text: 'Soporte 24/7 por WhatsApp', ok: true },
+  ], sortOrder: 3 },
+]
+
 function PlanConfigEditor() {
   const [configs,  setConfigs]  = useState(null)
   const [editId,   setEditId]   = useState(null)
@@ -218,7 +239,9 @@ function PlanConfigEditor() {
   const [msg,      setMsg]      = useState('')
 
   useEffect(() => {
-    superadminApi.getPlanConfigs().then(setConfigs).catch(() => setConfigs([]))
+    superadminApi.getPlanConfigs()
+      .then(data => setConfigs(data?.length ? data : PLAN_DEFAULTS))
+      .catch(() => setConfigs(PLAN_DEFAULTS))
   }, [])
 
   const startEdit = (plan) => {
