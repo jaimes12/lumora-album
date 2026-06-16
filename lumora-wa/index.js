@@ -50,6 +50,30 @@ function destroyInBackground(client) {
   client.destroy().catch(() => {}).finally(() => clearTimeout(t));
 }
 
+// ── App-sent message dedup ────────────────────────────────────────────────────
+// When Elixe sends via /api/whatsapp/send, message_create fires too.
+// We track those sends here (chatId → Set<body>) with a 10-second TTL
+// so the outbound webhook is skipped for app-sent messages — only phone-sent
+// messages trigger the webhook and appear as "sent from phone" in Elixe.
+const appSentCache = new Map();
+
+function trackAppSend(chatId, body) {
+  if (!appSentCache.has(chatId)) appSentCache.set(chatId, new Map());
+  const bodyMap = appSentCache.get(chatId);
+  bodyMap.set(body, (bodyMap.get(body) ?? 0) + 1);
+  setTimeout(() => {
+    const m = appSentCache.get(chatId);
+    if (!m) return;
+    const count = m.get(body);
+    if (count <= 1) m.delete(body); else m.set(body, count - 1);
+    if (m.size === 0) appSentCache.delete(chatId);
+  }, 10_000);
+}
+
+function isAppSent(chatId, body) {
+  return (appSentCache.get(chatId)?.get(body) ?? 0) > 0;
+}
+
 // ── Webhook ───────────────────────────────────────────────────────────────────
 function postWebhook(data) {
   if (!LUMORA_WEBHOOK_URL) return;
@@ -262,12 +286,21 @@ function connectClient(name) {
     if (msg.to === 'status@broadcast' || msg.to === msg.from) return;
 
     const phoneDigits = msg.to.replace(/@\S+/, '');
+    const chatId = msg.to;
+    const body   = msg.body || '';
+
+    // Skip if this message was sent by the Elixe app (already saved in DB)
+    if (isAppSent(chatId, body)) {
+      log(name, `↑ ${phoneDigits} [app-sent, skip webhook]`);
+      return;
+    }
+
     let pushname = '';
     try { const c = await msg.getContact(); pushname = c.pushname || c.name || ''; } catch {}
     const media = await getMedia(msg);
 
-    log(name, `↑ ${phoneDigits} "${(msg.body || '[media]').slice(0, 40)}"`);
-    postWebhook({ clientName: name, from: msg.to, number: phoneDigits, pushname, body: msg.body || '', timestamp: msg.timestamp, direction: 'outbound', ...media });
+    log(name, `↑ ${phoneDigits} [from phone] "${body.slice(0, 40)}"`);
+    postWebhook({ clientName: name, from: chatId, number: phoneDigits, pushname, body, timestamp: msg.timestamp, direction: 'outbound', ...media });
   });
 
   waClient.initialize();
@@ -334,6 +367,9 @@ app.post('/api/whatsapp/send', async (req, res) => {
   const digits   = String(phone ?? '').replace(/\D/g, '');
   const normalized = digits.length >= 11 ? digits : (country === 'us' ? `1${digits}` : `521${digits}`);
   const chatId   = `${normalized}@c.us`;
+
+  // Mark this body as app-sent so message_create skips the outbound webhook
+  trackAppSend(chatId, message ?? '');
 
   res.json({ ok: true });
 
