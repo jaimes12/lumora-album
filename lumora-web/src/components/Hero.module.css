@@ -93,6 +93,25 @@
   background-clip: text;
 }
 
+.roleWrap {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  font-size: 16px;
+  margin-bottom: 4px;
+  gap: 0;
+}
+.rolePrefix {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+.roleWord {
+  color: #7c6af7;
+  font-weight: 700;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  display: inline-block;
+}
+
 .sub {
   font-size: 17.5px;
   color: var(--text-muted);

@@ -1,6 +1,15 @@
 import styles from './Hero.module.css'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import RegisterModal from './RegisterModal'
+
+const ROLES = [
+  'Wedding Planners',
+  'Dueños de salones',
+  'Decoradores',
+  'Fotógrafos',
+  'DJs y músicos',
+  'Coordinadores de eventos',
+]
 
 const STATS = [
   { value: '2,400+', label: 'Eventos gestionados' },
@@ -141,6 +150,19 @@ function EventDetailMock() {
 
 export default function Hero() {
   const [showRegister, setShowRegister] = useState(false)
+  const [roleIdx, setRoleIdx]   = useState(0)
+  const [visible, setVisible]   = useState(true)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVisible(false)
+      setTimeout(() => {
+        setRoleIdx(i => (i + 1) % ROLES.length)
+        setVisible(true)
+      }, 350)
+    }, 2500)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
     <>
@@ -162,6 +184,16 @@ export default function Hero() {
             Gestiona tus eventos<br />
             <span className={styles.grad}>como un profesional.</span>
           </h1>
+
+          <div className={styles.roleWrap}>
+            <span className={styles.rolePrefix}>Esta plataforma es para&nbsp;</span>
+            <span
+              className={styles.roleWord}
+              style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(8px)' }}
+            >
+              {ROLES[roleIdx]}.
+            </span>
+          </div>
 
           <p className={styles.sub}>
             CRM de clientes, proveedores, WhatsApp, calendario, tareas y cotizaciones
