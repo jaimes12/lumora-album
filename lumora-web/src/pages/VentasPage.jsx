@@ -168,8 +168,14 @@ function BarChart({ data = [], color = 'var(--accent)', emptyText = 'Sin datos p
                 <div
                   className={styles.barFill}
                   style={{ height: `${Math.max(d.value / nMax * 160, d.value > 0 ? 3 : 0)}px`, background: color }}
-                  title={`$${Number(d.value).toLocaleString('es-MX')}`}
-                />
+                >
+                  {d.value > 0 && (
+                    <div className={styles.barTooltip}>
+                      <span className={styles.barTooltipLabel}>{d.label}</span>
+                      <span className={styles.barTooltipValue}>${Number(d.value).toLocaleString('es-MX')}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
