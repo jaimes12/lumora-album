@@ -178,6 +178,23 @@ public class StripeService(IConfiguration config, LumoraDbContext db) : IStripeS
                         org.StripeCustomerId = session.CustomerId;
                     if (!string.IsNullOrEmpty(session.SubscriptionId))
                         org.StripeSubscriptionId = session.SubscriptionId;
+
+                    // Record payment in history (use session id to avoid duplicates)
+                    var histId = $"stripe_{session.Id}";
+                    var exists = await db.PlanHistories.AnyAsync(h => h.Id == histId);
+                    if (!exists && session.AmountTotal.HasValue && session.AmountTotal > 0)
+                    {
+                        db.PlanHistories.Add(new lumora_api.Models.PlanHistory
+                        {
+                            Id          = histId,
+                            OrgId       = orgId,
+                            PlanId      = planId,
+                            Method      = "stripe",
+                            Amount      = session.AmountTotal.Value / 100m,
+                            ActivatedAt = DateTime.UtcNow,
+                        });
+                    }
+
                     await db.SaveChangesAsync();
                 }
             }

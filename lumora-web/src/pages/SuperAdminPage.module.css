@@ -66,6 +66,37 @@
   font-weight: 600;
 }
 
+.sidebarStats {
+  margin: 0 12px 8px;
+  padding: 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid #252535;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebarStatItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebarStatLabel {
+  font-size: 10px;
+  color: #666677;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.sidebarStatValue {
+  font-size: 17px;
+  font-weight: 700;
+  color: #e0e0f0;
+  letter-spacing: -0.03em;
+}
+
 .sidebarFooter {
   padding: 14px 16px;
   border-top: 1px solid #252535;

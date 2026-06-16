@@ -112,6 +112,7 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
             totalEvents   = events.Count,
             totalClients  = clients.Count,
             totalRevenue  = planSales.Where(p => p.Amount > 0).Sum(p => p.Amount),
+            paidCount     = planSales.Count(p => p.Amount > 0),
             byPlan,
             orgsByMonth,
             recentOrgs,

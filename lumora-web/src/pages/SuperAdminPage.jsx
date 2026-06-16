@@ -993,6 +993,28 @@ export default function SuperAdminPage() {
             </button>
           ))}
         </nav>
+
+        {overview && (
+          <div className={styles.sidebarStats}>
+            <div className={styles.sidebarStatItem}>
+              <span className={styles.sidebarStatLabel}>Ingresos totales</span>
+              <span className={styles.sidebarStatValue} style={{ color: '#34d399' }}>
+                {fmt(overview.totalRevenue)}
+              </span>
+            </div>
+            <div className={styles.sidebarStatItem}>
+              <span className={styles.sidebarStatLabel}>Paquetes vendidos</span>
+              <span className={styles.sidebarStatValue} style={{ color: '#7c6af7' }}>
+                {overview.paidCount ?? 0}
+              </span>
+            </div>
+            <div className={styles.sidebarStatItem}>
+              <span className={styles.sidebarStatLabel}>Orgs activas</span>
+              <span className={styles.sidebarStatValue}>{overview.totalOrgs}</span>
+            </div>
+          </div>
+        )}
+
         <div className={styles.sidebarFooter}>
           <span className={styles.sidebarUser}>Super Admin</span>
           <button className={styles.logoutBtn} onClick={handleLogout}>Salir</button>
