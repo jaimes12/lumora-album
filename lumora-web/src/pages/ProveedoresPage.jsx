@@ -7,10 +7,15 @@ import styles from './ProveedoresPage.module.css'
 const CATEGORIAS_BASE = ['Todas','Decoración','Música','Catering','Fotografía','Iluminación','Transporte','Pastelería','Venue','Entretenimiento']
 const CATS_FORM = CATEGORIAS_BASE.slice(1)
 
-function NuevoProveedorModal({ onClose, onCreated }) {
+function ProveedorModal({ onClose, onSaved, initial }) {
+  const editing = !!initial
   const [saving, setSaving] = useState(false)
   const [error,  setError]  = useState('')
-  const [form, setForm] = useState({ nombre: '', categoria: 'Catering', telefono: '', email: '', descripcion: '' })
+  const [form, setForm] = useState(
+    initial
+      ? { nombre: initial.nombre, categoria: initial.categoria, telefono: initial.telefono, email: initial.email, descripcion: initial.descripcion }
+      : { nombre: '', categoria: 'Catering', telefono: '', email: '', descripcion: '' }
+  )
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
 
   const handleSubmit = async e => {
@@ -18,9 +23,12 @@ function NuevoProveedorModal({ onClose, onCreated }) {
     if (!form.nombre) { setError('El nombre es obligatorio'); return }
     setSaving(true); setError('')
     try {
-      const nuevo = await proveedoresApi.create({ name: form.nombre, category: form.categoria, phone: form.telefono || null, email: form.email || null, notes: form.descripcion || null })
-      onCreated(nuevo); onClose()
-    } catch (err) { setError(err.message || 'Error al crear proveedor') }
+      const payload = { name: form.nombre, category: form.categoria, phone: form.telefono || null, email: form.email || null, notes: form.descripcion || null }
+      const saved = editing
+        ? await proveedoresApi.update(initial.id, payload)
+        : await proveedoresApi.create(payload)
+      onSaved(saved); onClose()
+    } catch (err) { setError(err.message || 'Error al guardar') }
     finally { setSaving(false) }
   }
 
@@ -28,7 +36,7 @@ function NuevoProveedorModal({ onClose, onCreated }) {
     <div className={styles.createOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
       <div className={styles.createModal}>
         <div className={styles.createHeader}>
-          <h2 className={styles.createTitle}>Nuevo proveedor</h2>
+          <h2 className={styles.createTitle}>{editing ? 'Editar proveedor' : 'Nuevo proveedor'}</h2>
           <button className={styles.createClose} onClick={onClose}>✕</button>
         </div>
         <form className={styles.createForm} onSubmit={handleSubmit}>
@@ -59,7 +67,9 @@ function NuevoProveedorModal({ onClose, onCreated }) {
           {error && <p className={styles.createError}>{error}</p>}
           <div className={styles.createActions}>
             <button type="button" className={styles.createBtnSecondary} onClick={onClose}>Cancelar</button>
-            <button type="submit" className={styles.createBtnPrimary} disabled={saving}>{saving ? 'Guardando…' : 'Crear proveedor →'}</button>
+            <button type="submit" className={styles.createBtnPrimary} disabled={saving}>
+              {saving ? 'Guardando…' : editing ? 'Guardar cambios' : 'Crear proveedor →'}
+            </button>
           </div>
         </form>
       </div>
@@ -93,8 +103,10 @@ export default function ProveedoresPage() {
   const [loading,      setLoading]      = useState(true)
   const [catActiva,    setCatActiva]    = useState('Todas')
   const [chatLead,     setChatLead]     = useState(null)
-  const [openingChat,  setOpeningChat]  = useState(null) // id del proveedor abriendo
+  const [openingChat,  setOpeningChat]  = useState(null)
   const [showCreate,   setShowCreate]   = useState(false)
+  const [editing,      setEditing]      = useState(null) // proveedor a editar
+  const [delConfirm,   setDelConfirm]   = useState(null)
 
   const abrirChat = async (p) => {
     if (!p.telefono) return alert('Este proveedor no tiene teléfono registrado')
@@ -118,12 +130,23 @@ export default function ProveedoresPage() {
   // Build categories from loaded data
   const categorias = ['Todas', ...new Set(proveedores.map(p => p.categoria).filter(Boolean))]
 
+  const handleDelete = async (id) => {
+    await proveedoresApi.delete(id).catch(() => {})
+    setProveedores(prev => prev.filter(p => p.id !== id))
+    setDelConfirm(null)
+  }
+
   return (
     <div className={styles.page}>
-      {showCreate && (
-        <NuevoProveedorModal
-          onClose={() => setShowCreate(false)}
-          onCreated={p => setProveedores(prev => [p, ...prev])}
+      {(showCreate || editing) && (
+        <ProveedorModal
+          initial={editing}
+          onClose={() => { setShowCreate(false); setEditing(null) }}
+          onSaved={p => {
+            if (editing) setProveedores(prev => prev.map(v => v.id === p.id ? p : v))
+            else setProveedores(prev => [p, ...prev])
+            setEditing(null); setShowCreate(false)
+          }}
         />
       )}
       {chatLead && <ChatModal lead={chatLead} stages={DEFAULT_STAGES} onClose={() => setChatLead(null)} />}
@@ -167,11 +190,30 @@ export default function ProveedoresPage() {
                     <h3 className={styles.cardName}>{p.nombre}</h3>
                     <span className={styles.catTag} style={{ color, background: color+'18' }}>{p.categoria}</span>
                   </div>
-                  <button className={styles.chatBtn} onClick={() => abrirChat(p)} title="Enviar mensaje" disabled={openingChat === p.id}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                    </svg>
-                  </button>
+                  <div className={styles.cardActions}>
+                    <button className={styles.chatBtn} onClick={() => abrirChat(p)} title="Enviar mensaje" disabled={openingChat === p.id}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                      </svg>
+                    </button>
+                    <button className={styles.editBtn} onClick={() => setEditing(p)} title="Editar">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                    {delConfirm === p.id
+                      ? <span className={styles.delConfirm}>
+                          <button className={styles.delYes} onClick={() => handleDelete(p.id)}>Sí</button>
+                          <button className={styles.delNo} onClick={() => setDelConfirm(null)}>No</button>
+                        </span>
+                      : <button className={styles.deleteBtn} onClick={() => setDelConfirm(p.id)} title="Eliminar">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                          </svg>
+                        </button>
+                    }
+                  </div>
                 </div>
                 <p className={styles.cardDesc}>{p.descripcion || p.notes || ''}</p>
                 <div className={styles.cardFooter}>

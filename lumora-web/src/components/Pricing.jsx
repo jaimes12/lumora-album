@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import styles from './Pricing.module.css'
 import RegisterModal from './RegisterModal'
+import { getPublicPlans } from '../api/plansApi'
 
 const CheckIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -14,7 +15,7 @@ const LockIcon = () => (
   </svg>
 )
 
-const PLANS = [
+const PLANS_FALLBACK = [
   {
     id: 'solo',
     name: 'Solo',
@@ -85,6 +86,20 @@ const PLANS = [
 
 export default function Pricing() {
   const [showRegister, setShowRegister] = useState(false)
+  const [plans, setPlans] = useState(PLANS_FALLBACK)
+
+  useEffect(() => {
+    getPublicPlans()
+      .then(data => {
+        if (data?.length) {
+          setPlans(data.map(p => ({
+            id: p.id, name: p.name, price: p.price, desc: p.desc,
+            color: p.color, popular: p.popular, features: p.features,
+          })))
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   return (
     <>
@@ -101,7 +116,7 @@ export default function Pricing() {
           </div>
 
           <div className={styles.grid}>
-            {PLANS.map(plan => (
+            {plans.map(plan => (
               <div
                 key={plan.id}
                 className={`${styles.card} ${plan.popular ? styles.cardPopular : ''}`}
@@ -122,7 +137,7 @@ export default function Pricing() {
                 </div>
 
                 <ul className={styles.features}>
-                  {plan.features.map(f => (
+                  {(plan.features || []).map(f => (
                     <li key={f.text} className={`${styles.feature} ${!f.ok ? styles.featureLocked : ''}`}>
                       <span className={styles.featureIcon} style={f.ok ? { color: plan.color } : {}}>
                         {f.ok ? <CheckIcon /> : <LockIcon />}

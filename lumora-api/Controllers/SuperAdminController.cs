@@ -404,6 +404,44 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
         return NoContent();
     }
 
+    // ── Plan Configs ──────────────────────────────────────────────────────────
+
+    [Authorize]
+    [HttpGet("plan-configs")]
+    public async Task<IActionResult> GetPlanConfigs()
+    {
+        if (!IsSuperAdmin) return Forbid();
+        var plans = await db.PlanConfigs.OrderBy(p => p.SortOrder).ToListAsync();
+        return Ok(plans.Select(p => new {
+            p.Id, p.PlanId, p.Name, p.Price, p.Description, p.Color, p.Popular,
+            features = System.Text.Json.JsonSerializer.Deserialize<object>(p.FeaturesJson),
+            p.SortOrder, updatedAt = p.UpdatedAt.ToString("yyyy-MM-dd HH:mm")
+        }));
+    }
+
+    [Authorize]
+    [HttpPut("plan-configs/{planId}")]
+    public async Task<IActionResult> UpdatePlanConfig(string planId, [FromBody] PlanConfigRequest req)
+    {
+        if (!IsSuperAdmin) return Forbid();
+        var plan = await db.PlanConfigs.FirstOrDefaultAsync(p => p.PlanId == planId);
+        if (plan is null) return NotFound();
+
+        plan.Price       = req.Price;
+        plan.Description = req.Description ?? plan.Description;
+        plan.Color       = req.Color ?? plan.Color;
+        plan.Popular     = req.Popular;
+        plan.FeaturesJson = System.Text.Json.JsonSerializer.Serialize(req.Features);
+        plan.UpdatedAt   = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        return Ok(new {
+            plan.Id, plan.PlanId, plan.Name, plan.Price, plan.Description, plan.Color, plan.Popular,
+            features = System.Text.Json.JsonSerializer.Deserialize<object>(plan.FeaturesJson),
+            updatedAt = plan.UpdatedAt.ToString("yyyy-MM-dd HH:mm")
+        });
+    }
+
     private static string PlanLabel(string plan) => plan switch {
         "solo"    => "Solo",
         "negocio" => "Negocio",
@@ -418,6 +456,14 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
 
 public record SuperAdminLoginRequest(string Email, string Password);
 public record ChangePlanRequest(string Plan);
+public record PlanConfigRequest(
+    int Price,
+    string? Description,
+    string? Color,
+    bool Popular,
+    List<PlanFeatureItem> Features
+);
+public record PlanFeatureItem(string Text, bool Ok);
 public record PromoCodeRequest(
     string Code,
     string PlanId,

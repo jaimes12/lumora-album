@@ -513,6 +513,44 @@ try
         "INSERT IGNORE INTO `promo_codes` (`id`,`code`,`plan_id`,`description`,`max_uses`,`used_count`,`active`,`created_at`) VALUES ('promo_elixe2026','ELIXE2026','negocio','Acceso gratis Plan Negocio',-1,0,1,NOW())",
         "INSERT IGNORE INTO `promo_codes` (`id`,`code`,`plan_id`,`description`,`max_uses`,`used_count`,`active`,`created_at`) VALUES ('promo_agencia','AGENCIA2026','agencia','Acceso gratis Plan Agencia',-1,0,1,NOW())",
 
+        // Plan configs table
+        @"CREATE TABLE IF NOT EXISTS `plan_configs` (
+            `id`          varchar(255) NOT NULL,
+            `plan_id`     varchar(50)  NOT NULL,
+            `name`        varchar(100) NOT NULL,
+            `price`       int          NOT NULL DEFAULT 0,
+            `description` varchar(500) NOT NULL DEFAULT '',
+            `color`       varchar(20)  NOT NULL DEFAULT '#7c6af7',
+            `popular`     tinyint(1)   NOT NULL DEFAULT 0,
+            `features`    json         NOT NULL,
+            `sort_order`  int          NOT NULL DEFAULT 0,
+            `updated_at`  datetime(6)  NOT NULL,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `uq_plan_config_plan_id` (`plan_id`)
+        ) CHARACTER SET utf8mb4",
+
+        // Seed the 3 plans (INSERT IGNORE = no-op if already exists)
+        @"INSERT IGNORE INTO `plan_configs` (`id`,`plan_id`,`name`,`price`,`description`,`color`,`popular`,`features`,`sort_order`,`updated_at`) VALUES (
+            'plan_solo','solo','Solo',399,
+            'Para fotógrafos, DJs, decoradores y coordinadores que trabajan solos.',
+            '#2B6FD4',0,
+            '[{""text"":""1 usuario"",""ok"":true},{""text"":""20 eventos activos"",""ok"":true},{""text"":""200 clientes"",""ok"":true},{""text"":""Calendario y tareas"",""ok"":true},{""text"":""Catálogo de productos"",""ok"":true},{""text"":""Directorio de proveedores"",""ok"":true},{""text"":""Cotizaciones (hasta 15/mes)"",""ok"":true},{""text"":""Contratos básicos"",""ok"":true},{""text"":""Historial de pagos"",""ok"":true},{""text"":""2 GB almacenamiento"",""ok"":true},{""text"":""WhatsApp CRM"",""ok"":false},{""text"":""Pipeline de ventas"",""ok"":false},{""text"":""Reportes y estadísticas"",""ok"":false}]',
+            1, NOW())",
+
+        @"INSERT IGNORE INTO `plan_configs` (`id`,`plan_id`,`name`,`price`,`description`,`color`,`popular`,`features`,`sort_order`,`updated_at`) VALUES (
+            'plan_negocio','negocio','Negocio',799,
+            'Para negocios establecidos: wedding planners, salones y coordinadoras con equipo.',
+            '#C9A255',1,
+            '[{""text"":""Hasta 3 usuarios"",""ok"":true},{""text"":""Eventos ilimitados"",""ok"":true},{""text"":""Clientes ilimitados"",""ok"":true},{""text"":""Todo lo del plan Solo"",""ok"":true},{""text"":""WhatsApp CRM"",""ok"":true},{""text"":""Cotizaciones ilimitadas + PDF"",""ok"":true},{""text"":""Contratos con firma digital"",""ok"":true},{""text"":""Pipeline de ventas (Kanban)"",""ok"":true},{""text"":""Reportes e ingresos"",""ok"":true},{""text"":""Exportar datos Excel/PDF"",""ok"":true},{""text"":""10 GB almacenamiento"",""ok"":true},{""text"":""Soporte prioritario (24h)"",""ok"":true}]',
+            2, NOW())",
+
+        @"INSERT IGNORE INTO `plan_configs` (`id`,`plan_id`,`name`,`price`,`description`,`color`,`popular`,`features`,`sort_order`,`updated_at`) VALUES (
+            'plan_agencia','agencia','Agencia',1499,
+            'Para agencias de eventos, salones grandes y equipos de 5 o más personas.',
+            '#7c6af7',0,
+            '[{""text"":""Hasta 10 usuarios"",""ok"":true},{""text"":""Todo ilimitado"",""ok"":true},{""text"":""Todo lo del plan Negocio"",""ok"":true},{""text"":""Roles y permisos por usuario"",""ok"":true},{""text"":""Reportes avanzados"",""ok"":true},{""text"":""Importación masiva (CSV)"",""ok"":true},{""text"":""API de integración"",""ok"":true},{""text"":""Plantillas personalizadas"",""ok"":true},{""text"":""50 GB almacenamiento"",""ok"":true},{""text"":""Onboarding dedicado"",""ok"":true},{""text"":""Soporte 24/7 por WhatsApp"",""ok"":true}]',
+            3, NOW())",
+
         // Superadmin table
         @"CREATE TABLE IF NOT EXISTS `superadmins` (
             `id`            varchar(255) NOT NULL,

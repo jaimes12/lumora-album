@@ -8,10 +8,15 @@ import { underLimit } from '../config/planConfig'
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll'
 import styles from './ClientesPage.module.css'
 
-function NuevoClienteModal({ onClose, onCreated }) {
+function ClienteModal({ onClose, onSaved, initial }) {
+  const editing = !!initial
   const [saving, setSaving] = useState(false)
   const [error,  setError]  = useState('')
-  const [form, setForm] = useState({ nombre: '', email: '', telefono: '', empresa: '', notas: '' })
+  const [form, setForm] = useState(
+    initial
+      ? { nombre: initial.nombre, email: initial.email || '', telefono: initial.telefono || '', empresa: initial.empresa || '', notas: initial.notas || '' }
+      : { nombre: '', email: '', telefono: '', empresa: '', notas: '' }
+  )
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
 
   const handleSubmit = async e => {
@@ -19,9 +24,12 @@ function NuevoClienteModal({ onClose, onCreated }) {
     if (!form.nombre) { setError('El nombre es obligatorio'); return }
     setSaving(true); setError('')
     try {
-      const nuevo = await clientesApi.create({ name: form.nombre, email: form.email || null, phone: form.telefono || null, company: form.empresa || null, notes: form.notas || null })
-      onCreated(nuevo); onClose()
-    } catch (err) { setError(err.message || 'Error al crear cliente') }
+      const payload = { name: form.nombre, email: form.email || null, phone: form.telefono || null, company: form.empresa || null, notes: form.notas || null }
+      const saved = editing
+        ? await clientesApi.update(initial.id, payload)
+        : await clientesApi.create(payload)
+      onSaved(saved); onClose()
+    } catch (err) { setError(err.message || 'Error al guardar') }
     finally { setSaving(false) }
   }
 
@@ -29,7 +37,7 @@ function NuevoClienteModal({ onClose, onCreated }) {
     <div className={styles.modalOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
       <div className={styles.modal}>
         <div className={styles.modalHeader}>
-          <h2 className={styles.modalTitle}>Nuevo cliente</h2>
+          <h2 className={styles.modalTitle}>{editing ? 'Editar cliente' : 'Nuevo cliente'}</h2>
           <button className={styles.modalClose} onClick={onClose}>✕</button>
         </div>
         <form className={styles.modalForm} onSubmit={handleSubmit}>
@@ -58,7 +66,9 @@ function NuevoClienteModal({ onClose, onCreated }) {
           {error && <p className={styles.modalError}>{error}</p>}
           <div className={styles.modalActions}>
             <button type="button" className={styles.modalBtnSecondary} onClick={onClose}>Cancelar</button>
-            <button type="submit" className={styles.modalBtnPrimary} disabled={saving}>{saving ? 'Guardando…' : 'Crear cliente →'}</button>
+            <button type="submit" className={styles.modalBtnPrimary} disabled={saving}>
+              {saving ? 'Guardando…' : editing ? 'Guardar cambios' : 'Crear cliente →'}
+            </button>
           </div>
         </form>
       </div>
@@ -82,8 +92,18 @@ export default function ClientesPage() {
   const [selected,     setSelected]     = useState(null)
   const [filterEtapa,  setFilterEtapa]  = useState('todos')
   const [showCreate,   setShowCreate]   = useState(false)
+  const [editing,      setEditing]      = useState(null)
+  const [delConfirm,   setDelConfirm]   = useState(false)
   const [showGate,     setShowGate]     = useState(false)
   const [openingChat,  setOpeningChat]  = useState(false)
+
+  const handleDelete = async () => {
+    if (!selected) return
+    await clientesApi.delete(selected.id).catch(() => {})
+    setClientes(prev => prev.filter(c => c.id !== selected.id))
+    setSelected(null)
+    setDelConfirm(false)
+  }
 
   const handleNewCliente = () => {
     if (!underLimit(user?.plan, 'clientes', clientes.length)) {
@@ -130,10 +150,19 @@ export default function ClientesPage() {
 
   return (
     <div className={styles.page}>
-      {showCreate && (
-        <NuevoClienteModal
-          onClose={() => setShowCreate(false)}
-          onCreated={c => setClientes(prev => [c, ...prev])}
+      {(showCreate || editing) && (
+        <ClienteModal
+          initial={editing}
+          onClose={() => { setShowCreate(false); setEditing(null) }}
+          onSaved={c => {
+            if (editing) {
+              setClientes(prev => prev.map(v => v.id === c.id ? c : v))
+              setSelected(c)
+            } else {
+              setClientes(prev => [c, ...prev])
+            }
+            setEditing(null); setShowCreate(false)
+          }}
         />
       )}
       {showGate && (
@@ -288,13 +317,26 @@ export default function ClientesPage() {
                   </svg>
                   {openingChat ? 'Abriendo…' : 'Enviar mensaje'}
                 </button>
-                <button className={styles.btnSecondary}>
+                <button className={styles.btnSecondary} onClick={() => setEditing(selected)}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                   </svg>
                   Editar
                 </button>
+                {delConfirm
+                  ? <span className={styles.delConfirmRow}>
+                      <span className={styles.delConfirmText}>¿Eliminar?</span>
+                      <button className={styles.delYes} onClick={handleDelete}>Sí</button>
+                      <button className={styles.delNo} onClick={() => setDelConfirm(false)}>No</button>
+                    </span>
+                  : <button className={styles.btnDanger} onClick={() => setDelConfirm(true)}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                      </svg>
+                      Eliminar
+                    </button>
+                }
               </div>
             </div>
           </div>

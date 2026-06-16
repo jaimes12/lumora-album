@@ -45,6 +45,9 @@ export const superadminApi = {
     body: JSON.stringify({ plan }),
   }),
 
+  getPlanConfigs:   ()           => saRequest('/api/superadmin/plan-configs'),
+  updatePlanConfig: (planId, d) => saRequest(`/api/superadmin/plan-configs/${planId}`, { method: 'PUT', body: JSON.stringify(d) }),
+
   getPromoCodes:    ()       => saRequest('/api/superadmin/promo-codes'),
   createPromoCode:  (data)   => saRequest('/api/superadmin/promo-codes', { method: 'POST', body: JSON.stringify(data) }),
   updatePromoCode:  (id, d)  => saRequest(`/api/superadmin/promo-codes/${id}`, { method: 'PUT', body: JSON.stringify(d) }),

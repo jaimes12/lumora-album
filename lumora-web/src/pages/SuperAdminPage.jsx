@@ -210,6 +210,122 @@ function DataTable({ columns, rows, empty = 'Sin registros' }) {
 const PLAN_LABELS = { free: 'Sin plan', solo: 'Solo', negocio: 'Negocio', agencia: 'Agencia' }
 const ALL_PLANS   = ['free', 'solo', 'negocio', 'agencia']
 
+function PlanConfigEditor() {
+  const [configs,  setConfigs]  = useState(null)
+  const [editId,   setEditId]   = useState(null)
+  const [form,     setForm]     = useState(null)
+  const [saving,   setSaving]   = useState(false)
+  const [msg,      setMsg]      = useState('')
+
+  useEffect(() => {
+    superadminApi.getPlanConfigs().then(setConfigs).catch(() => setConfigs([]))
+  }, [])
+
+  const startEdit = (plan) => {
+    setEditId(plan.planId)
+    setForm({ price: plan.price, description: plan.description, color: plan.color, popular: plan.popular, features: plan.features.map(f => ({ ...f })) })
+    setMsg('')
+  }
+  const cancelEdit = () => { setEditId(null); setForm(null) }
+
+  const setFeatureText = (i, val) => setForm(f => ({ ...f, features: f.features.map((ft, idx) => idx === i ? { ...ft, text: val } : ft) }))
+  const setFeatureOk   = (i, val) => setForm(f => ({ ...f, features: f.features.map((ft, idx) => idx === i ? { ...ft, ok: val } : ft) }))
+  const addFeature     = ()       => setForm(f => ({ ...f, features: [...f.features, { text: '', ok: true }] }))
+  const removeFeature  = (i)      => setForm(f => ({ ...f, features: f.features.filter((_, idx) => idx !== i) }))
+
+  const save = async () => {
+    setSaving(true); setMsg('')
+    try {
+      const updated = await superadminApi.updatePlanConfig(editId, form)
+      setConfigs(prev => prev.map(c => c.planId === editId ? { ...c, ...updated } : c))
+      setMsg('Guardado ✓')
+      setEditId(null); setForm(null)
+    } catch { setMsg('Error al guardar') }
+    finally { setSaving(false) }
+  }
+
+  if (!configs) return <div className={styles.loadingMsg}>Cargando paquetes…</div>
+
+  return (
+    <div className={styles.pcWrap}>
+      <div className={styles.pcHeader}>
+        <h3 className={styles.pcTitle}>Paquetes / Precios</h3>
+        {msg && <span className={styles.pcMsg}>{msg}</span>}
+      </div>
+      <div className={styles.pcGrid}>
+        {configs.map(plan => (
+          <div key={plan.planId} className={styles.pcCard} style={{ borderTopColor: plan.color }}>
+            <div className={styles.pcCardHead}>
+              <span className={styles.pcPlanName} style={{ color: plan.color }}>{plan.name}</span>
+              {editId !== plan.planId && (
+                <button className={styles.pcEditBtn} onClick={() => startEdit(plan)}>Editar</button>
+              )}
+            </div>
+
+            {editId === plan.planId && form ? (
+              <div className={styles.pcForm}>
+                <div className={styles.pcField}>
+                  <label>Precio (MXN$/mes)</label>
+                  <input type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: Number(e.target.value) }))} />
+                </div>
+                <div className={styles.pcField}>
+                  <label>Descripción</label>
+                  <textarea rows={2} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+                </div>
+                <div className={styles.pcField}>
+                  <label>Color</label>
+                  <div className={styles.pcColorRow}>
+                    <input type="color" value={form.color} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} />
+                    <input type="text" value={form.color} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} maxLength={7} />
+                  </div>
+                </div>
+                <label className={styles.pcCheckRow}>
+                  <input type="checkbox" checked={form.popular} onChange={e => setForm(f => ({ ...f, popular: e.target.checked }))} />
+                  <span>Más popular</span>
+                </label>
+                <div className={styles.pcField}>
+                  <label>Características</label>
+                  {form.features.map((f, i) => (
+                    <div key={i} className={styles.pcFeatureRow}>
+                      <button
+                        className={`${styles.pcFeatureOk} ${f.ok ? styles.pcFeatureOkOn : ''}`}
+                        onClick={() => setFeatureOk(i, !f.ok)}
+                        title={f.ok ? 'Incluido' : 'No incluido'}
+                      >
+                        {f.ok ? '✓' : '✗'}
+                      </button>
+                      <input value={f.text} onChange={e => setFeatureText(i, e.target.value)} placeholder="Característica…" />
+                      <button className={styles.pcFeatureDel} onClick={() => removeFeature(i)}>✕</button>
+                    </div>
+                  ))}
+                  <button className={styles.pcAddFeature} onClick={addFeature}>+ Agregar</button>
+                </div>
+                <div className={styles.pcActions}>
+                  <button className={styles.btnCancel} onClick={cancelEdit}>Cancelar</button>
+                  <button className={styles.btnSave} onClick={save} disabled={saving}>{saving ? 'Guardando…' : 'Guardar'}</button>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.pcPreview}>
+                <div className={styles.pcPreviewPrice}>MXN$ <strong>{plan.price.toLocaleString('es-MX')}</strong><span>/mes</span></div>
+                <p className={styles.pcPreviewDesc}>{plan.description}</p>
+                <ul className={styles.pcFeatureList}>
+                  {(plan.features || []).map((f, i) => (
+                    <li key={i} className={f.ok ? '' : styles.pcFeatureLocked}>
+                      <span style={{ color: f.ok ? plan.color : '#555' }}>{f.ok ? '✓' : '✗'}</span>
+                      {f.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function PlansTab() {
   const [rows,       setRows]       = useState(null)
   const [expanded,   setExpanded]   = useState(null)
@@ -250,6 +366,8 @@ function PlansTab() {
 
   return (
     <div className={styles.plansWrap}>
+      <PlanConfigEditor />
+
       {/* Stats */}
       <div className={styles.planStats}>
         {byPlan.map(p => (

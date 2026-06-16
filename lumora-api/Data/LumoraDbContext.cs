@@ -33,6 +33,7 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
     public DbSet<OrgProduct> OrgProducts => Set<OrgProduct>();
     public DbSet<EventProduct> EventProducts => Set<EventProduct>();
     public DbSet<PromoCode> PromoCodes => Set<PromoCode>();
+    public DbSet<PlanConfig> PlanConfigs => Set<PlanConfig>();
     public DbSet<PlanHistory> PlanHistories => Set<PlanHistory>();
     public DbSet<PipelineStage> PipelineStages => Set<PipelineStage>();
     public DbSet<QuickReply> QuickReplies => Set<QuickReply>();
