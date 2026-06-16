@@ -531,6 +531,9 @@ try
             UNIQUE KEY `uq_plan_config_plan_id` (`plan_id`)
         ) CHARACTER SET utf8mb4",
 
+        // Fix corrupted features (PascalCase keys from a serialization bug — safe to run each boot)
+        @"UPDATE `plan_configs` SET `features` = '[{""text"":""1 usuario"",""ok"":true},{""text"":""20 eventos activos"",""ok"":true},{""text"":""200 clientes"",""ok"":true},{""text"":""Calendario y tareas"",""ok"":true},{""text"":""Catálogo de productos"",""ok"":true},{""text"":""Directorio de proveedores"",""ok"":true},{""text"":""Cotizaciones (hasta 15/mes)"",""ok"":true},{""text"":""Contratos básicos"",""ok"":true},{""text"":""Historial de pagos"",""ok"":true},{""text"":""2 GB almacenamiento"",""ok"":true},{""text"":""WhatsApp CRM"",""ok"":false},{""text"":""Pipeline de ventas"",""ok"":false},{""text"":""Reportes y estadísticas"",""ok"":false}]' WHERE `plan_id` = 'solo' AND `features` LIKE '%""Text""%'",
+
         // Seed the 3 plans (INSERT IGNORE = no-op if already exists)
         @"INSERT IGNORE INTO `plan_configs` (`id`,`plan_id`,`name`,`price`,`description`,`color`,`popular`,`features`,`sort_order`,`updated_at`) VALUES (
             'plan_solo','solo','Solo',399,

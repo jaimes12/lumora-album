@@ -244,9 +244,12 @@ function PlanConfigEditor() {
       .catch(() => setConfigs(PLAN_DEFAULTS))
   }, [])
 
+  const normalizeFeatures = (features) =>
+    (features || []).map(f => ({ text: f.text ?? f.Text ?? '', ok: f.ok ?? f.Ok ?? true }))
+
   const startEdit = (plan) => {
     setEditId(plan.planId)
-    setForm({ price: plan.price, description: plan.description, color: plan.color, popular: plan.popular, features: plan.features.map(f => ({ ...f })) })
+    setForm({ price: plan.price, description: plan.description, color: plan.color, popular: plan.popular, features: normalizeFeatures(plan.features) })
     setMsg('')
   }
   const cancelEdit = () => { setEditId(null); setForm(null) }
@@ -333,7 +336,7 @@ function PlanConfigEditor() {
                 <div className={styles.pcPreviewPrice}>MXN$ <strong>{plan.price.toLocaleString('es-MX')}</strong><span>/mes</span></div>
                 <p className={styles.pcPreviewDesc}>{plan.description}</p>
                 <ul className={styles.pcFeatureList}>
-                  {(plan.features || []).map((f, i) => (
+                  {normalizeFeatures(plan.features).map((f, i) => (
                     <li key={i} className={f.ok ? '' : styles.pcFeatureLocked}>
                       <span style={{ color: f.ok ? plan.color : '#555' }}>{f.ok ? '✓' : '✗'}</span>
                       {f.text}

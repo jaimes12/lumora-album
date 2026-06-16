@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using lumora_api.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -442,7 +443,7 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
         plan.Description  = req.Description ?? plan.Description;
         plan.Color        = req.Color ?? plan.Color;
         plan.Popular      = req.Popular;
-        plan.FeaturesJson = System.Text.Json.JsonSerializer.Serialize(req.Features);
+        plan.FeaturesJson = JsonSerializer.Serialize(req.Features, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         plan.UpdatedAt    = DateTime.UtcNow;
         await db.SaveChangesAsync();
 
