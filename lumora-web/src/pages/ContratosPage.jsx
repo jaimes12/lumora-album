@@ -211,13 +211,25 @@ function ContractPreview({ template, form, contratoRef, org = {} }) {
   )
 }
 
+const TIPO_TO_TEMPLATE_ID = {
+  'Boda': 'boda',
+  'XV Años': 'xv',
+  'Corporativo': 'corporativo',
+  'Conferencia': 'corporativo',
+  'Lanzamiento de Producto': 'corporativo',
+  'Inauguración': 'corporativo',
+  'Empresarial': 'corporativo',
+  'Reunión': 'corporativo',
+}
+
 /* ─── Main page ───────────────────────────────────────────── */
 export default function ContratosPage() {
-  const [vista,       setVista]       = useState('lista')   // lista | nuevo
+  const [vista,       setVista]       = useState('lista')
   const [template,    setTemplate]    = useState(null)
   const [contratos,   setContratos]   = useState([])
   const [search,      setSearch]      = useState('')
-  const [contratoActivo, setContratoActivo] = useState(null)
+  const [showExtras,  setShowExtras]  = useState(false)
+  const [autoFilled,  setAutoFilled]  = useState(false)
   const contratoRef = useRef(null)
 
   const [clientesList,  setClientesList]  = useState([])
@@ -241,25 +253,56 @@ export default function ContratosPage() {
     servicios: [], notas: '',
   })
 
+  // Auto-compute anticipo and liquidacion whenever total or % changes
+  useEffect(() => {
+    const totalNum = parseFloat((form.total || '').replace(/[^0-9.]/g, '')) || 0
+    if (totalNum <= 0) return
+    const pct = Math.max(0, Math.min(100, parseFloat(form.pctAnticipo) || 50))
+    const anticipo   = Math.round(totalNum * pct / 100)
+    const liquidacion = totalNum - anticipo
+    setForm(f => ({
+      ...f,
+      anticipo:    `$${anticipo.toLocaleString('es-MX')}`,
+      liquidacion: `$${liquidacion.toLocaleString('es-MX')}`,
+    }))
+  }, [form.total, form.pctAnticipo])
+
   const eventosFiltrados = form.clienteId
     ? eventosList.filter(e => e.clienteId === form.clienteId)
     : eventosList
 
   const handleClienteChange = (clienteId) => {
     const c = clientesList.find(x => x.id === clienteId)
-    setForm(f => ({ ...f, clienteId, clienteNombre: c?.nombre || '' }))
+    setForm(f => ({ ...f, clienteId, clienteNombre: c?.nombre || '', eventoId: '' }))
+    setAutoFilled(false)
   }
 
   const handleEventoChange = (eventoId) => {
-    const ev = eventosList.find(e => e.id === eventoId)
+    if (!eventoId) {
+      setForm(f => ({ ...f, eventoId: '', nombreEvento: '', fechaEvento: '', venue: '', invitados: '', total: '' }))
+      setAutoFilled(false)
+      return
+    }
+    const ev     = eventosList.find(e => e.id === eventoId)
+    const tmplId = TIPO_TO_TEMPLATE_ID[ev?.tipo] || 'boda'
+    const tmpl   = TEMPLATES.find(t => t.id === tmplId) || TEMPLATES[0]
+    setTemplate(tmpl)
+
+    const cliente = clientesList.find(c => c.id === ev?.clienteId)
     setForm(f => ({
-      ...f, eventoId,
-      nombreEvento: ev?.nombre || '',
-      fechaEvento:  ev?.fecha || '',
-      venue:        ev?.venue || '',
-      invitados:    String(ev?.invitados || ''),
-      total:        ev ? fmt(ev.presupuestoTotal) : '',
+      ...f,
+      eventoId,
+      nombreEvento:   ev?.nombre       || '',
+      fechaEvento:    ev?.fecha        || '',
+      venue:          ev?.venue        || '',
+      invitados:      String(ev?.invitados || ''),
+      total:          fmt(ev?.presupuestoTotal || 0),
+      clienteId:      ev?.clienteId    || f.clienteId,
+      clienteNombre:  cliente?.nombre  || f.clienteNombre,
+      servicios:      tmpl.serviciosDefault,
+      ...(tmplId === 'xv' ? { nombreFestejada: ev?.nombre || '' } : {}),
     }))
+    setAutoFilled(true)
   }
 
   const selectTemplate = (t) => {
@@ -331,7 +374,11 @@ export default function ContratosPage() {
     setTimeout(() => { win.focus(); win.print() }, 600)
   }
 
-  const resetForm = () => setForm({ clienteId:'', clienteNombre:'', clienteRFC:'', domicilioCliente:'', eventoId:'', nombreEvento:'', fechaEvento:'', fechaFirma:'', venue:'', invitados:'', ciudad:'Ciudad de México', nombreFestejada:'', chambelanes:'14', total:'', anticipo:'', liquidacion:'', pctAnticipo:'50', diasLiquidacion:'15', totalLetras:'', servicios:[], notas:'' })
+  const resetForm = () => {
+    setForm({ clienteId:'', clienteNombre:'', clienteRFC:'', domicilioCliente:'', eventoId:'', nombreEvento:'', fechaEvento:'', fechaFirma:'', venue:'', invitados:'', ciudad:'Ciudad de México', nombreFestejada:'', chambelanes:'14', total:'', anticipo:'', liquidacion:'', pctAnticipo:'50', diasLiquidacion:'15', totalLetras:'', servicios:[], notas:'' })
+    setAutoFilled(false)
+    setShowExtras(false)
+  }
 
   const guardarContrato = async () => {
     const totalNum = parseFloat((form.total || '0').replace(/[$,]/g, '')) || 0
@@ -389,154 +436,196 @@ export default function ContratosPage() {
           {/* Config panel */}
           <div className={styles.configPanel}>
 
-            {/* Step 1: Template */}
-            <div className={styles.configSection}>
+            {/* Step 1: Evento — acción principal */}
+            <div className={`${styles.configSection} ${styles.configSectionHighlight}`}>
               <div className={styles.configSectionTitle}>
                 <span className={styles.stepNum}>1</span>
-                Tipo de contrato
+                ¿Para qué evento?
               </div>
-              <div className={styles.templateCards}>
+              <div className={styles.formGrid}>
+                <div className={styles.formField}>
+                  <label>Filtrar por cliente</label>
+                  <select value={form.clienteId} onChange={e => handleClienteChange(e.target.value)}>
+                    <option value="">— Todos los clientes —</option>
+                    {clientesList.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                  </select>
+                </div>
+                <div className={styles.formField}>
+                  <label>Evento</label>
+                  <select value={form.eventoId} onChange={e => handleEventoChange(e.target.value)}>
+                    <option value="">— Seleccionar evento —</option>
+                    {eventosFiltrados.map(e => <option key={e.id} value={e.id}>{e.nombre}</option>)}
+                  </select>
+                </div>
+              </div>
+              {autoFilled && (
+                <div className={styles.autoFilledBanner}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Datos cargados automáticamente del evento
+                </div>
+              )}
+              {!form.eventoId && (
+                <p className={styles.stepHint}>Selecciona el evento y el contrato se llena solo</p>
+              )}
+            </div>
+
+            {/* Step 2: Tipo — auto-detectado, editable */}
+            <div className={styles.configSection}>
+              <div className={styles.configSectionTitle}>
+                <span className={styles.stepNum}>2</span>
+                Tipo de contrato
+                {autoFilled && template && (
+                  <span className={styles.autoTag}>auto-detectado</span>
+                )}
+              </div>
+              <div className={styles.templatePills}>
                 {TEMPLATES.map(t => (
                   <button
                     key={t.id}
-                    className={`${styles.templateCard} ${template?.id === t.id ? styles.templateCardActive : ''}`}
+                    className={`${styles.templatePill} ${template?.id === t.id ? styles.templatePillActive : ''}`}
                     onClick={() => selectTemplate(t)}
-                    style={template?.id === t.id ? { borderColor: t.color, background: t.color+'10' } : {}}
+                    style={template?.id === t.id ? { borderColor: t.color, background: t.color + '18', color: t.color } : {}}
                   >
-                    <span className={styles.templateEmoji}>{t.emoji}</span>
-                    <div className={styles.templateInfo}>
-                      <span className={styles.templateName}>{t.nombre}</span>
-                      <span className={styles.templateDesc}>{t.desc}</span>
-                    </div>
-                    {template?.id === t.id && <span className={styles.templateCheck} style={{ color: t.color }}>✓</span>}
+                    {t.emoji} {t.nombre}
                   </button>
                 ))}
               </div>
             </div>
 
+            {/* Step 3: Datos del evento + cliente */}
+            <div className={styles.configSection}>
+              <div className={styles.configSectionTitle}>
+                <span className={styles.stepNum}>3</span>
+                Datos del contrato
+              </div>
+              <div className={styles.formGrid}>
+                <div className={styles.formField}>
+                  <label>Nombre del cliente</label>
+                  <input placeholder="Nombre completo" value={form.clienteNombre}
+                    onChange={e => setForm(f => ({ ...f, clienteNombre: e.target.value }))} />
+                </div>
+                <div className={styles.formField}>
+                  <label>Fecha del evento</label>
+                  <input placeholder="14 de junio de 2026" value={form.fechaEvento}
+                    onChange={e => setForm(f => ({ ...f, fechaEvento: e.target.value }))} />
+                </div>
+                <div className={styles.formField}>
+                  <label>Venue</label>
+                  <input placeholder="Nombre del lugar" value={form.venue}
+                    onChange={e => setForm(f => ({ ...f, venue: e.target.value }))} />
+                </div>
+                <div className={styles.formField}>
+                  <label>Invitados</label>
+                  <input type="number" placeholder="200" value={form.invitados}
+                    onChange={e => setForm(f => ({ ...f, invitados: e.target.value }))} />
+                </div>
+                {template?.id === 'xv' && (
+                  <div className={`${styles.formField} ${styles.formFieldFull}`}>
+                    <label>Nombre de la festejada</label>
+                    <input placeholder="Nombre completo" value={form.nombreFestejada}
+                      onChange={e => setForm(f => ({ ...f, nombreFestejada: e.target.value }))} />
+                  </div>
+                )}
+              </div>
+              <button className={styles.extraToggle} onClick={() => setShowExtras(s => !s)}>
+                {showExtras ? '▲ Ocultar' : '▼ Datos adicionales'} (RFC, domicilio)
+              </button>
+              {showExtras && (
+                <div className={styles.formGrid}>
+                  <div className={styles.formField}>
+                    <label>RFC del cliente</label>
+                    <input placeholder="XAXX010101000" value={form.clienteRFC}
+                      onChange={e => setForm(f => ({ ...f, clienteRFC: e.target.value }))} />
+                  </div>
+                  <div className={`${styles.formField} ${styles.formFieldFull}`}>
+                    <label>Domicilio del cliente</label>
+                    <input placeholder="Calle, colonia, ciudad" value={form.domicilioCliente}
+                      onChange={e => setForm(f => ({ ...f, domicilioCliente: e.target.value }))} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Step 4: Financiero con cálculo automático */}
+            <div className={styles.configSection}>
+              <div className={styles.configSectionTitle}>
+                <span className={styles.stepNum}>4</span>
+                Financiero
+              </div>
+              <div className={styles.formGrid}>
+                <div className={styles.formField}>
+                  <label>Monto total</label>
+                  <input placeholder="$85,000" value={form.total}
+                    onChange={e => setForm(f => ({ ...f, total: e.target.value }))} />
+                </div>
+                <div className={styles.formField}>
+                  <label>% de anticipo</label>
+                  <input type="number" placeholder="50" min="5" max="100" value={form.pctAnticipo}
+                    onChange={e => setForm(f => ({ ...f, pctAnticipo: e.target.value }))} />
+                </div>
+              </div>
+              {form.anticipo && (
+                <div className={styles.anticoCalc}>
+                  <div className={styles.anticoItem}>
+                    <span className={styles.anticoLabel}>Anticipo ({form.pctAnticipo}%)</span>
+                    <span className={styles.anticoValue}>{form.anticipo}</span>
+                  </div>
+                  <div className={styles.anticoSep} />
+                  <div className={styles.anticoItem}>
+                    <span className={styles.anticoLabel}>Liquidación</span>
+                    <span className={styles.anticoValue}>{form.liquidacion}</span>
+                  </div>
+                </div>
+              )}
+              <div className={styles.formField}>
+                <label>Total en letra (opcional)</label>
+                <input placeholder="Ochenta y cinco mil pesos 00/100 M.N." value={form.totalLetras}
+                  onChange={e => setForm(f => ({ ...f, totalLetras: e.target.value }))} />
+              </div>
+            </div>
+
+            {/* Step 5: Servicios */}
             {template && (
-              <>
-                {/* Step 2: Client + Event */}
-                <div className={styles.configSection}>
-                  <div className={styles.configSectionTitle}>
-                    <span className={styles.stepNum}>2</span>
-                    Cliente y evento
-                  </div>
-                  <div className={styles.formGrid}>
-                    <div className={styles.formField}>
-                      <label>Cliente</label>
-                      <select value={form.clienteId} onChange={e => handleClienteChange(e.target.value)}>
-                        <option value="">— Seleccionar cliente —</option>
-                        {clientesList.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-
-                      </select>
-                    </div>
-                    <div className={styles.formField}>
-                      <label>Evento</label>
-                      <select value={form.eventoId} onChange={e => handleEventoChange(e.target.value)}>
-                        <option value="">— Seleccionar evento —</option>
-                        {eventosFiltrados.map(e => <option key={e.id} value={e.id}>{e.nombre}</option>)}
-                      </select>
-                    </div>
-                    {template.id === 'xv' && (
-                      <div className={`${styles.formField} ${styles.formFieldFull}`}>
-                        <label>Nombre de la festejada</label>
-                        <input placeholder="Nombre completo" value={form.nombreFestejada} onChange={e => setForm(f => ({ ...f, nombreFestejada: e.target.value }))} />
-                      </div>
-                    )}
-                    <div className={styles.formField}>
-                      <label>Fecha del evento</label>
-                      <input placeholder="Ej. 14 de junio de 2026" value={form.fechaEvento} onChange={e => setForm(f => ({ ...f, fechaEvento: e.target.value }))} />
-                    </div>
-                    <div className={styles.formField}>
-                      <label>Venue</label>
-                      <input placeholder="Nombre del lugar" value={form.venue} onChange={e => setForm(f => ({ ...f, venue: e.target.value }))} />
-                    </div>
-                    <div className={styles.formField}>
-                      <label>Invitados</label>
-                      <input type="number" placeholder="200" value={form.invitados} onChange={e => setForm(f => ({ ...f, invitados: e.target.value }))} />
-                    </div>
-                    <div className={styles.formField}>
-                      <label>RFC del cliente</label>
-                      <input placeholder="XAXX010101000" value={form.clienteRFC} onChange={e => setForm(f => ({ ...f, clienteRFC: e.target.value }))} />
-                    </div>
-                    <div className={`${styles.formField} ${styles.formFieldFull}`}>
-                      <label>Domicilio del cliente</label>
-                      <input placeholder="Calle, colonia, ciudad" value={form.domicilioCliente} onChange={e => setForm(f => ({ ...f, domicilioCliente: e.target.value }))} />
-                    </div>
-                  </div>
+              <div className={styles.configSection}>
+                <div className={styles.configSectionTitle}>
+                  <span className={styles.stepNum}>5</span>
+                  Servicios incluidos
                 </div>
-
-                {/* Step 3: Financials */}
-                <div className={styles.configSection}>
-                  <div className={styles.configSectionTitle}>
-                    <span className={styles.stepNum}>3</span>
-                    Datos financieros
-                  </div>
-                  <div className={styles.formGrid}>
-                    <div className={styles.formField}>
-                      <label>Monto total</label>
-                      <input placeholder="$85,000" value={form.total} onChange={e => setForm(f => ({ ...f, total: e.target.value }))} />
-                    </div>
-                    <div className={styles.formField}>
-                      <label>% de anticipo</label>
-                      <input type="number" placeholder="50" min="10" max="100" value={form.pctAnticipo} onChange={e => setForm(f => ({ ...f, pctAnticipo: e.target.value }))} />
-                    </div>
-                    <div className={styles.formField}>
-                      <label>Monto anticipo</label>
-                      <input placeholder="$42,500" value={form.anticipo} onChange={e => setForm(f => ({ ...f, anticipo: e.target.value }))} />
-                    </div>
-                    <div className={styles.formField}>
-                      <label>Días para liquidar</label>
-                      <input type="number" placeholder="15" value={form.diasLiquidacion} onChange={e => setForm(f => ({ ...f, diasLiquidacion: e.target.value }))} />
-                    </div>
-                    <div className={`${styles.formField} ${styles.formFieldFull}`}>
-                      <label>Total en letra</label>
-                      <input placeholder="Ochenta y cinco mil pesos 00/100 M.N." value={form.totalLetras} onChange={e => setForm(f => ({ ...f, totalLetras: e.target.value }))} />
-                    </div>
-                  </div>
+                <div className={styles.serviciosList}>
+                  {template.serviciosDefault.map(s => (
+                    <label key={s} className={styles.servicioCheck}>
+                      <input type="checkbox" checked={form.servicios.includes(s)} onChange={() => toggleServicio(s)} />
+                      <span>{s}</span>
+                    </label>
+                  ))}
                 </div>
-
-                {/* Step 4: Services */}
-                <div className={styles.configSection}>
-                  <div className={styles.configSectionTitle}>
-                    <span className={styles.stepNum}>4</span>
-                    Servicios incluidos
-                  </div>
-                  <div className={styles.serviciosList}>
-                    {template.serviciosDefault.map(s => (
-                      <label key={s} className={styles.servicioCheck}>
-                        <input type="checkbox" checked={form.servicios.includes(s)} onChange={() => toggleServicio(s)} />
-                        <span>{s}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <div className={styles.addServicio}>
-                    <input
-                      className={styles.addServicioInput}
-                      placeholder="Agregar servicio personalizado..."
-                      onKeyDown={e => { if (e.key === 'Enter') { addServicio(e.target.value); e.target.value = '' }}}
-                    />
-                    <span className={styles.addServicioHint}>↵ Enter para agregar</span>
-                  </div>
-                </div>
-
-                {/* Step 5: Notes */}
-                <div className={styles.configSection}>
-                  <div className={styles.configSectionTitle}>
-                    <span className={styles.stepNum}>5</span>
-                    Notas y condiciones especiales
-                  </div>
-                  <textarea
-                    className={styles.notasInput}
-                    placeholder="Acuerdos adicionales, condiciones especiales, restricciones del venue..."
-                    value={form.notas}
-                    onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
-                    rows={4}
+                <div className={styles.addServicio}>
+                  <input
+                    className={styles.addServicioInput}
+                    placeholder="Agregar servicio personalizado..."
+                    onKeyDown={e => { if (e.key === 'Enter') { addServicio(e.target.value); e.target.value = '' }}}
                   />
+                  <span className={styles.addServicioHint}>↵ Enter para agregar</span>
                 </div>
-              </>
+              </div>
             )}
+
+            {/* Step 6: Notas */}
+            <div className={styles.configSection}>
+              <div className={styles.configSectionTitle}>
+                <span className={styles.stepNum}>{template ? '6' : '5'}</span>
+                Notas especiales (opcional)
+              </div>
+              <textarea
+                className={styles.notasInput}
+                placeholder="Acuerdos adicionales, condiciones especiales del venue..."
+                value={form.notas}
+                onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
+                rows={3}
+              />
+            </div>
           </div>
 
           {/* Preview panel */}
@@ -548,8 +637,14 @@ export default function ContratosPage() {
 
             {!template ? (
               <div className={styles.previewEmpty}>
-                <span className={styles.previewEmptyIcon}>📄</span>
-                <p>Selecciona un tipo de contrato para ver la vista previa</p>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.25 }}>
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10 9 9 9 8 9"/>
+                </svg>
+                <p>Selecciona un evento arriba<br/>para generar el contrato</p>
+                <span className={styles.previewEmptyHint}>o elige el tipo de contrato manualmente</span>
               </div>
             ) : (
               <div className={styles.previewScroll}>
