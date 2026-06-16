@@ -81,34 +81,35 @@
 
 .title {
   font-size: clamp(40px, 4.2vw, 66px);
-  font-weight: 800;
+  font-weight: 900;
   line-height: 1.06;
   letter-spacing: -0.045em;
+  color: #0A1628;
 }
 
 .grad {
-  background: linear-gradient(135deg, var(--accent) 0%, #7c6af7 45%, #38bdf8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #2B6FD4;
+  -webkit-text-fill-color: #2B6FD4;
 }
 
 .roleWrap {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 8px;
+  font-size: clamp(18px, 1.6vw, 24px);
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: -0.02em;
   gap: 0;
 }
 .rolePrefix {
-  color: var(--text);
-  font-weight: 600;
+  color: #0A1628;
+  font-weight: 700;
 }
 .roleWord {
-  color: var(--accent);
-  font-weight: 800;
+  color: #2B6FD4;
+  font-weight: 900;
+  letter-spacing: -0.03em;
   transition: opacity 0.35s ease, transform 0.35s ease;
   display: inline-block;
 }
