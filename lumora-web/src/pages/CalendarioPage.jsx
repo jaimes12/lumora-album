@@ -184,7 +184,8 @@ export default function CalendarioPage() {
                       <button key={ev.id} className={styles.eventPill}
                         style={{ background: meta.bg, borderLeft: `3px solid ${meta.color}`, color: meta.color }}
                         onClick={() => setSelectedEvent(ev)} title={ev.nombre}>
-                        {ev.nombre}
+                        <EventoTipoIcon tipo={ev.tipo} size={9} />
+                        <span className={styles.pillText}>{ev.nombre}</span>
                       </button>
                     )
                   })}
@@ -214,7 +215,10 @@ export default function CalendarioPage() {
                       <span className={styles.upcomingMon}>{MONTHS_ES[evDate.getMonth()].slice(0, 3)}</span>
                     </div>
                     <div className={styles.upcomingInfo}>
-                      <span className={styles.upcomingNombre}>{ev.nombre}</span>
+                      <div className={styles.upcomingNombreRow}>
+                        <EventoTipoIcon tipo={ev.tipo} size={13} />
+                        <span className={styles.upcomingNombre}>{ev.nombre}</span>
+                      </div>
                       <span className={styles.upcomingVenue}>{ev.hora} · {ev.venue || 'Por confirmar'}</span>
                     </div>
                   </div>
