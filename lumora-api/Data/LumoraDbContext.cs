@@ -38,6 +38,7 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
     public DbSet<PipelineStage> PipelineStages => Set<PipelineStage>();
     public DbSet<QuickReply> QuickReplies => Set<QuickReply>();
     public DbSet<OrgSettings> OrgSettings => Set<OrgSettings>();
+    public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {

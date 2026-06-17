@@ -915,3 +915,92 @@
 }
 .pcAddFeature:hover { background: rgba(124,106,247,0.18); }
 .pcActions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+
+
+/* ── Soporte tab ─────────────────────────────────────────────────────────── */
+.soporteWrap { display: flex; flex-direction: column; gap: 16px; }
+
+.soporteStats {
+  display: flex;
+  gap: 12px;
+}
+.soporteStat {
+  flex: 1;
+  background: #181824;
+  border: 1px solid #252535;
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  text-align: center;
+}
+.soporteStat:hover { border-color: #7c6af7; }
+.soporteStatActive { border-color: #7c6af7 !important; background: rgba(124,106,247,0.06); }
+.soporteStatNum { display: block; font-size: 22px; font-weight: 700; color: #e6e6f0; line-height: 1.2; }
+.soporteStatLabel { display: block; font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+.soporteTypeBadge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.soporteMsgCell {
+  max-width: 280px;
+  font-size: 12px;
+  color: #9898b0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.soporteStatusDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.soporteToggleBtn {
+  background: none;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.soporteToggleBtn:hover { opacity: 0.75; }
+
+.trDetail td { background: #13131f !important; }
+
+.soporteDetail {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.soporteDetailMsg {
+  font-size: 13px;
+  color: #c8c8e0;
+  white-space: pre-wrap;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.soporteDetailImgWrap { display: block; width: fit-content; }
+
+.soporteDetailImg {
+  max-width: 360px;
+  max-height: 260px;
+  border-radius: 8px;
+  border: 1px solid #252535;
+  display: block;
+}

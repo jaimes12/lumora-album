@@ -915,6 +915,141 @@ function PromoCodesTab() {
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────
+// ── Soporte tab ────────────────────────────────────────────────────────────
+const TYPE_LABEL   = { duda: 'Duda', problema: 'Problema' }
+const STATUS_COLOR = { open: '#f59e0b', closed: '#34d399' }
+
+function SoporteTab() {
+  const [tickets,    setTickets]    = useState(null)
+  const [expanded,   setExpanded]   = useState(null)
+  const [filter,     setFilter]     = useState('all')
+  const [q,          setQ]          = useState('')
+
+  useEffect(() => {
+    superadminApi.getSupportTickets()
+      .then(setTickets)
+      .catch(() => setTickets([]))
+  }, [])
+
+  const toggleStatus = async (ticket) => {
+    const next = ticket.status === 'open' ? 'closed' : 'open'
+    try {
+      await superadminApi.updateSupportStatus(ticket.id, next)
+      setTickets(prev => prev.map(t => t.id === ticket.id ? { ...t, status: next } : t))
+    } catch {}
+  }
+
+  if (!tickets) return <div className={styles.loadingMsg}>Cargando tickets…</div>
+
+  const openCount = tickets.filter(t => t.status === 'open').length
+
+  const filtered = tickets
+    .filter(t => filter === 'all' || t.status === filter)
+    .filter(t => !q || `${t.orgName} ${t.userName} ${t.message}`.toLowerCase().includes(q.toLowerCase()))
+
+  return (
+    <div className={styles.soporteWrap}>
+      {/* Stats row */}
+      <div className={styles.soporteStats}>
+        <div className={`${styles.soporteStat} ${filter === 'all' ? styles.soporteStatActive : ''}`} onClick={() => setFilter('all')}>
+          <span className={styles.soporteStatNum}>{tickets.length}</span>
+          <span className={styles.soporteStatLabel}>Total</span>
+        </div>
+        <div className={`${styles.soporteStat} ${filter === 'open' ? styles.soporteStatActive : ''}`} onClick={() => setFilter('open')}>
+          <span className={styles.soporteStatNum} style={{ color: '#f59e0b' }}>{openCount}</span>
+          <span className={styles.soporteStatLabel}>Abiertos</span>
+        </div>
+        <div className={`${styles.soporteStat} ${filter === 'closed' ? styles.soporteStatActive : ''}`} onClick={() => setFilter('closed')}>
+          <span className={styles.soporteStatNum} style={{ color: '#34d399' }}>{tickets.length - openCount}</span>
+          <span className={styles.soporteStatLabel}>Resueltos</span>
+        </div>
+      </div>
+
+      {/* Search */}
+      <div className={styles.tableSearch} style={{ background: '#181824', borderRadius: 10, border: '1px solid #252535', marginBottom: 0 }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input placeholder="Buscar…" value={q} onChange={e => setQ(e.target.value)} />
+        {q && <button onClick={() => setQ('')}>✕</button>}
+      </div>
+
+      {/* Table */}
+      <div className={styles.tableWrap}>
+        <div className={styles.tableScroll}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Organización</th>
+                <th>Usuario</th>
+                <th>Tipo</th>
+                <th>Mensaje</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan={7} className={styles.tableEmpty}>Sin tickets</td></tr>
+              ) : filtered.map(t => (
+                <>
+                  <tr key={t.id} className={expanded === t.id ? styles.trExpanded : ''} style={{ cursor: 'pointer' }} onClick={() => setExpanded(expanded === t.id ? null : t.id)}>
+                    <td><strong>{t.orgName || '—'}</strong></td>
+                    <td>
+                      <div style={{ lineHeight: 1.3 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600 }}>{t.userName || '—'}</div>
+                        <div style={{ fontSize: 11, color: '#6b7280' }}>{t.userEmail || ''}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={styles.soporteTypeBadge} style={{ background: t.type === 'problema' ? 'rgba(239,68,68,0.12)' : 'rgba(99,102,241,0.12)', color: t.type === 'problema' ? '#f87171' : '#818cf8' }}>
+                        {TYPE_LABEL[t.type] ?? t.type}
+                      </span>
+                    </td>
+                    <td className={styles.soporteMsgCell}>{t.message.slice(0, 80)}{t.message.length > 80 ? '…' : ''}</td>
+                    <td>
+                      <span className={styles.soporteStatusDot} style={{ background: STATUS_COLOR[t.status] ?? '#6b7280' }} />
+                      <span style={{ fontSize: 12, color: STATUS_COLOR[t.status] ?? '#6b7280' }}>
+                        {t.status === 'open' ? 'Abierto' : 'Resuelto'}
+                      </span>
+                    </td>
+                    <td className={styles.muted} style={{ fontSize: 12 }}>{t.createdAt}</td>
+                    <td onClick={e => e.stopPropagation()}>
+                      <button
+                        className={styles.soporteToggleBtn}
+                        style={{ color: t.status === 'open' ? '#34d399' : '#f59e0b' }}
+                        onClick={() => toggleStatus(t)}
+                      >
+                        {t.status === 'open' ? 'Resolver' : 'Reabrir'}
+                      </button>
+                    </td>
+                  </tr>
+                  {expanded === t.id && (
+                    <tr key={`${t.id}-detail`} className={styles.trDetail}>
+                      <td colSpan={7}>
+                        <div className={styles.soporteDetail}>
+                          <p className={styles.soporteDetailMsg}>{t.message}</p>
+                          {t.photoUrl && (
+                            <a href={t.photoUrl} target="_blank" rel="noreferrer" className={styles.soporteDetailImgWrap}>
+                              <img src={t.photoUrl} alt="captura" className={styles.soporteDetailImg} />
+                            </a>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className={styles.tableCount}>{filtered.length} tickets</div>
+      </div>
+    </div>
+  )
+}
+
 const TABS = [
   { key: 'resumen',        path: 'resumen',        label: 'Resumen' },
   { key: 'organizaciones', path: 'organizaciones', label: 'Organizaciones' },
@@ -925,6 +1060,7 @@ const TABS = [
   { key: 'planes',         path: 'planes',         label: 'Planes' },
   { key: 'paquetes',       path: 'paquetes',       label: 'Paquetes' },
   { key: 'codigos',        path: 'codigos',        label: 'Códigos promo' },
+  { key: 'soporte',        path: 'soporte',        label: 'Soporte' },
 ]
 
 export default function SuperAdminPage() {
@@ -1169,6 +1305,9 @@ export default function SuperAdminPage() {
 
           {/* ── PROMOS ── */}
           {tab === 'codigos' && <PromoCodesTab />}
+
+          {/* ── SOPORTE ── */}
+          {tab === 'soporte' && <SoporteTab />}
         </div>
       </main>
     </div>

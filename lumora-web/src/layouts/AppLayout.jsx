@@ -4,6 +4,7 @@ import { useSettings } from '../context/SettingsContext'
 import { useAuth } from '../context/AuthContext'
 import { whatsappApi } from '../api/whatsappApi'
 import { tasksApi } from '../api/tasksApi'
+import { supportApi } from '../api/supportApi'
 import ProfileModal from '../components/ProfileModal'
 import styles from './AppLayout.module.css'
 import logoFull      from '../assets/logo_elixe.jpeg'
@@ -157,6 +158,126 @@ function WhatsAppModal({ onClose, onConnect }) {
   )
 }
 
+/* ── Support Modal ── */
+function SupportModal({ onClose }) {
+  const [type,     setType]     = useState('problema')
+  const [message,  setMessage]  = useState('')
+  const [photo,    setPhoto]    = useState(null)  // { data: base64, type: mime }
+  const [sending,  setSending]  = useState(false)
+  const [sent,     setSent]     = useState(false)
+  const [error,    setError]    = useState('')
+
+  const handleFile = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) { setError('La imagen no puede pesar más de 5 MB'); return }
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result
+      const base64 = dataUrl.split(',')[1]
+      setPhoto({ data: base64, type: file.type })
+      setError('')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!message.trim()) return
+    setSending(true); setError('')
+    try {
+      await supportApi.create({
+        type,
+        message: message.trim(),
+        photoData: photo?.data ?? null,
+        photoType: photo?.type ?? null,
+      })
+      setSent(true)
+    } catch {
+      setError('No se pudo enviar. Intenta de nuevo.')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <div className={styles.supportOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className={styles.supportModal}>
+        <div className={styles.supportHeader}>
+          <span className={styles.supportTitle}>Soporte</span>
+          <button className={styles.supportClose} onClick={onClose}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        {sent ? (
+          <div className={styles.supportSent}>
+            <div className={styles.supportSentIcon}>✓</div>
+            <p className={styles.supportSentTitle}>¡Mensaje enviado!</p>
+            <p className={styles.supportSentText}>Lo revisaremos pronto y te contactaremos si es necesario.</p>
+            <button className={styles.supportSentBtn} onClick={onClose}>Cerrar</button>
+          </div>
+        ) : (
+          <form className={styles.supportForm} onSubmit={handleSubmit}>
+            <div className={styles.supportTypeRow}>
+              <button
+                type="button"
+                className={`${styles.supportTypeBtn} ${type === 'problema' ? styles.supportTypeBtnActive : ''}`}
+                onClick={() => setType('problema')}
+              >
+                Reportar problema
+              </button>
+              <button
+                type="button"
+                className={`${styles.supportTypeBtn} ${type === 'duda' ? styles.supportTypeBtnActive : ''}`}
+                onClick={() => setType('duda')}
+              >
+                Tengo una duda
+              </button>
+            </div>
+
+            <textarea
+              className={styles.supportTextarea}
+              placeholder={type === 'problema' ? 'Describe el problema que tuviste…' : '¿En qué podemos ayudarte?'}
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              rows={5}
+              maxLength={2000}
+              required
+              autoFocus
+            />
+
+            <label className={styles.supportPhotoLabel}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              {photo ? 'Cambiar imagen' : 'Adjuntar captura (opcional)'}
+              <input type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} />
+            </label>
+
+            {photo && (
+              <div className={styles.supportPhotoPreview}>
+                <img src={`data:${photo.type};base64,${photo.data}`} alt="preview" />
+                <button type="button" className={styles.supportPhotoRemove} onClick={() => setPhoto(null)}>✕</button>
+              </div>
+            )}
+
+            {error && <p className={styles.supportError}>{error}</p>}
+
+            <button
+              type="submit"
+              className={styles.supportSubmit}
+              disabled={sending || !message.trim()}
+            >
+              {sending ? 'Enviando…' : 'Enviar mensaje'}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  )
+}
+
 /* ── Layout ── */
 export default function AppLayout() {
   const navigate = useNavigate()
@@ -183,6 +304,9 @@ export default function AppLayout() {
   // AppBar — Profile
   const [profileDropOpen,    setProfileDropOpen]    = useState(false)
   const [showProfileModal,   setShowProfileModal]   = useState(false)
+
+  // Support modal
+  const [showSupportModal,   setShowSupportModal]   = useState(false)
 
   // Restore WA connected state on mount
   useEffect(() => {
@@ -279,6 +403,7 @@ export default function AppLayout() {
         />
       )}
 {showProfileModal && <ProfileModal onClose={() => setShowProfileModal(false)} />}
+      {showSupportModal && <SupportModal onClose={() => setShowSupportModal(false)} />}
 
       {/* Overlay */}
       {sidebarOpen && (
@@ -364,6 +489,12 @@ export default function AppLayout() {
               </button>
             )}
           </div>
+
+          {/* Support button */}
+          <button className={styles.supportBtn} onClick={() => setShowSupportModal(true)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17" strokeWidth="3" strokeLinecap="round"/></svg>
+            <span>Soporte / Dudas</span>
+          </button>
 
           {/* Settings */}
           <div className={styles.settingsArea}>

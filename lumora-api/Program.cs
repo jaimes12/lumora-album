@@ -558,6 +558,21 @@ try
             3, NOW())
             ON DUPLICATE KEY UPDATE `sort_order` = 3",
 
+        // Support tickets table
+        @"CREATE TABLE IF NOT EXISTS `support_tickets` (
+            `id`         varchar(255) NOT NULL,
+            `org_id`     varchar(255) NULL,
+            `org_name`   varchar(500) NOT NULL DEFAULT '',
+            `user_name`  varchar(500) NOT NULL DEFAULT '',
+            `user_email` varchar(500) NOT NULL DEFAULT '',
+            `type`       varchar(50)  NOT NULL DEFAULT 'duda',
+            `message`    longtext     NOT NULL,
+            `photo_url`  varchar(500) NULL,
+            `status`     varchar(50)  NOT NULL DEFAULT 'open',
+            `created_at` datetime(6)  NOT NULL,
+            PRIMARY KEY (`id`)
+        ) CHARACTER SET utf8mb4",
+
         // Superadmin table
         @"CREATE TABLE IF NOT EXISTS `superadmins` (
             `id`            varchar(255) NOT NULL,

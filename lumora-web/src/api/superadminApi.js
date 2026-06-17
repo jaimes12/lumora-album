@@ -53,4 +53,7 @@ export const superadminApi = {
   updatePromoCode:  (id, d)  => saRequest(`/api/superadmin/promo-codes/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
   togglePromoCode:  (id)     => saRequest(`/api/superadmin/promo-codes/${id}/toggle`, { method: 'PATCH' }),
   deletePromoCode:  (id)     => saRequest(`/api/superadmin/promo-codes/${id}`, { method: 'DELETE' }),
+
+  getSupportTickets:      ()           => saRequest('/api/superadmin/support'),
+  updateSupportStatus:    (id, status) => saRequest(`/api/superadmin/support/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
 }

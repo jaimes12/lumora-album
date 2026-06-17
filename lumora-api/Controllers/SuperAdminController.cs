@@ -455,6 +455,38 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
         });
     }
 
+    // ── Support Tickets ───────────────────────────────────────────────────────
+    [Authorize]
+    [HttpGet("support")]
+    public async Task<IActionResult> GetSupportTickets()
+    {
+        if (!IsSuperAdmin) return Forbid();
+
+        var tickets = await db.SupportTickets
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync();
+
+        return Ok(tickets.Select(t => new {
+            t.Id, t.OrgId, t.OrgName, t.UserName, t.UserEmail,
+            t.Type, t.Message, t.PhotoUrl, t.Status,
+            createdAt = t.CreatedAt.ToString("yyyy-MM-dd HH:mm"),
+        }));
+    }
+
+    [Authorize]
+    [HttpPatch("support/{id}/status")]
+    public async Task<IActionResult> UpdateSupportStatus(string id, [FromBody] UpdateSupportStatusRequest req)
+    {
+        if (!IsSuperAdmin) return Forbid();
+
+        var ticket = await db.SupportTickets.FindAsync(id);
+        if (ticket is null) return NotFound();
+
+        ticket.Status = req.Status == "closed" ? "closed" : "open";
+        await db.SaveChangesAsync();
+        return Ok(new { ticket.Id, ticket.Status });
+    }
+
     private static string PlanLabel(string plan) => plan switch {
         "solo"    => "Solo",
         "negocio" => "Negocio",
@@ -468,6 +500,7 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
 }
 
 public record SuperAdminLoginRequest(string Email, string Password);
+public record UpdateSupportStatusRequest(string Status);
 public record ChangePlanRequest(string Plan);
 public record PlanConfigRequest(
     int Price,
