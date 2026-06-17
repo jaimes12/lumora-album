@@ -526,6 +526,7 @@
     grid-template-columns: 1fr;
     padding: 130px 48px 80px;
     gap: 64px;
+    overflow: hidden;
   }
   .glowLeft, .glowRight { display: none; }
   .device {
@@ -533,19 +534,24 @@
     animation: none;
   }
   .notif { display: none; }
+  .mockupWrap { max-width: 100%; overflow: hidden; }
 }
 
 @media (max-width: 768px) {
-  .hero { padding: 110px 24px 60px; gap: 48px; }
+  .hero { padding: 110px 24px 60px; gap: 40px; }
   .title { font-size: clamp(32px, 8vw, 52px); }
-  .sub { font-size: 15.5px; }
-  .stats { gap: 24px; flex-wrap: wrap; }
-  .deviceBody { grid-template-columns: 1fr; }
+  .sub { font-size: 15px; }
+  .stats { gap: 20px; flex-wrap: wrap; }
+  .evtBody { grid-template-columns: 1fr; }
+  .device { border-radius: 14px; }
+  .btns { flex-direction: column; align-items: flex-start; }
+  .btnPrimary, .btnSecondary { width: 100%; text-align: center; padding: 14px 24px; }
 }
 
 @media (max-width: 480px) {
-  .hero { padding: 100px 16px 48px; }
-  .badge { font-size: 11.5px; }
-  .stats { gap: 16px; }
+  .hero { padding: 90px 16px 48px; gap: 32px; }
+  .badge { font-size: 11.5px; padding: 5px 12px; }
+  .stats { gap: 14px; }
   .statVal { font-size: 20px; }
+  .mockupWrap { display: none; }
 }

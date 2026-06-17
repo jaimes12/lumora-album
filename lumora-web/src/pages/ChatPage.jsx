@@ -1135,6 +1135,7 @@ function ChatPageInner() {
   const [showCreate,        setShowCreate]        = useState(false)
   const [showStageManager,  setShowStageManager]  = useState(false)
   const [showQRManager,     setShowQRManager]     = useState(false)
+  const [search,            setSearch]            = useState('')
 
   const loadLeads = useCallback(async () => {
     try { setLeads(await leadsApi.getAll()) }
@@ -1165,7 +1166,14 @@ function ChatPageInner() {
     tryOpen()
   }, [location.state]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const byStage = (stageId) => leads.filter(l => l.stage === stageId)
+  const filtered = search.trim()
+    ? leads.filter(l => {
+        const q = search.toLowerCase()
+        return l.nombre?.toLowerCase().includes(q) || l.telefono?.toLowerCase().includes(q)
+      })
+    : leads
+
+  const byStage = (stageId) => filtered.filter(l => l.stage === stageId)
 
   const lastStageId   = stages[stages.length - 1]?.id
   const totalConfirmado = leads
@@ -1237,7 +1245,7 @@ function ChatPageInner() {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Pipeline de chats</h1>
-          <p className={styles.sub}>{leads.length} conversaciones · {totalNoLeidos} sin leer</p>
+          <p className={styles.sub}>{search.trim() ? `${filtered.length} resultado${filtered.length !== 1 ? 's' : ''}` : `${leads.length} conversaciones · ${totalNoLeidos} sin leer`}</p>
         </div>
         <div className={styles.headerStats}>
           <div className={styles.statChip}>
@@ -1262,6 +1270,26 @@ function ChatPageInner() {
             Respuestas
           </button>
           <button className={styles.btnNew} onClick={() => setShowCreate(true)}>+ Nuevo lead</button>
+        </div>
+      </div>
+
+      {/* Search bar */}
+      <div className={styles.searchWrap}>
+        <div className={styles.searchBox}>
+          <svg className={styles.searchIcon} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            className={styles.searchInput}
+            placeholder="Buscar por nombre o teléfono…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          {search && (
+            <button className={styles.searchClear} onClick={() => setSearch('')} aria-label="Limpiar">
+              ×
+            </button>
+          )}
         </div>
       </div>
 
