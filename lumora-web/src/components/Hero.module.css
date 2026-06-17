@@ -18,11 +18,58 @@
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(43,111,212,0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(43,111,212,0.045) 1px, transparent 1px);
+    linear-gradient(rgba(43,111,212,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(43,111,212,0.04) 1px, transparent 1px);
   background-size: 64px 64px;
   pointer-events: none;
   z-index: -1;
+}
+
+/* Celebration gradient overlay */
+.heroBgGrad {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 15% 40%, rgba(251,207,232,0.22) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 15%, rgba(196,181,253,0.18) 0%, transparent 45%),
+    radial-gradient(ellipse at 55% 85%, rgba(253,230,138,0.14) 0%, transparent 45%),
+    radial-gradient(ellipse at 75% 60%, rgba(167,243,208,0.10) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+[data-theme="dark"] .heroBgGrad {
+  background:
+    radial-gradient(ellipse at 15% 40%, rgba(167,139,250,0.07) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 15%, rgba(249,168,212,0.06) 0%, transparent 45%),
+    radial-gradient(ellipse at 55% 85%, rgba(251,191,36,0.05) 0%, transparent 45%),
+    radial-gradient(ellipse at 75% 60%, rgba(52,211,153,0.04) 0%, transparent 40%);
+}
+
+/* Floating event icons */
+.bgIcon {
+  position: fixed;
+  pointer-events: none;
+  z-index: -1;
+  line-height: 1;
+  opacity: 0;
+  animation: floatBgIcon linear infinite;
+  filter: saturate(0.85);
+  user-select: none;
+  --peak: 0.13;
+}
+
+[data-theme="dark"] .bgIcon {
+  --peak: 0.07;
+  filter: saturate(0.6) brightness(0.8);
+}
+
+@keyframes floatBgIcon {
+  0%   { opacity: 0;           transform: translateY(0px)   rotate(0deg); }
+  15%  { opacity: calc(var(--peak) * 0.8); }
+  50%  { opacity: var(--peak); transform: translateY(-20px) rotate(6deg); }
+  85%  { opacity: calc(var(--peak) * 0.7); }
+  100% { opacity: 0;           transform: translateY(0px)   rotate(0deg); }
 }
 
 .glowLeft {

@@ -2,6 +2,23 @@ import styles from './Hero.module.css'
 import { useState, useEffect } from 'react'
 import RegisterModal from './RegisterModal'
 
+const BG_ICONS = [
+  { emoji: '💍', top: '7%',  left: '4%',  size: 32, delay: '0s',   dur: '9s'  },
+  { emoji: '🌸', top: '14%', left: '87%', size: 28, delay: '1.4s', dur: '11s' },
+  { emoji: '🎂', top: '44%', left: '2%',  size: 26, delay: '0.6s', dur: '10s' },
+  { emoji: '✨', top: '22%', left: '93%', size: 20, delay: '2.1s', dur: '7s'  },
+  { emoji: '🎊', top: '72%', left: '6%',  size: 28, delay: '1.9s', dur: '12s' },
+  { emoji: '🌹', top: '82%', left: '91%', size: 24, delay: '0.9s', dur: '9s'  },
+  { emoji: '🎈', top: '58%', left: '96%', size: 22, delay: '3.2s', dur: '13s' },
+  { emoji: '🥂', top: '88%', left: '18%', size: 26, delay: '1.6s', dur: '8s'  },
+  { emoji: '🎵', top: '11%', left: '48%', size: 18, delay: '2.7s', dur: '10s' },
+  { emoji: '💐', top: '63%', left: '52%', size: 22, delay: '0.4s', dur: '9s'  },
+  { emoji: '🎀', top: '33%', left: '80%', size: 20, delay: '1.1s', dur: '11s' },
+  { emoji: '🕊️', top: '50%', left: '22%', size: 24, delay: '2.4s', dur: '14s' },
+  { emoji: '⭐', top: '76%', left: '70%', size: 18, delay: '0.7s', dur: '8s'  },
+  { emoji: '🎶', top: '28%', left: '10%', size: 20, delay: '3.5s', dur: '11s' },
+]
+
 const ROLES = [
   'Wedding Planners',
   'Dueños de salones',
@@ -171,6 +188,21 @@ export default function Hero() {
 
       <section className={styles.hero}>
         <div className={styles.gridBg} />
+        <div className={styles.heroBgGrad} />
+        {BG_ICONS.map((ic, i) => (
+          <div
+            key={i}
+            className={styles.bgIcon}
+            style={{
+              top: ic.top, left: ic.left,
+              fontSize: ic.size,
+              animationDelay: ic.delay,
+              animationDuration: ic.dur,
+            }}
+          >
+            {ic.emoji}
+          </div>
+        ))}
         <div className={styles.glowLeft} />
         <div className={styles.glowRight} />
 
