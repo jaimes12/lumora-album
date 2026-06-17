@@ -525,20 +525,21 @@
   .hero {
     grid-template-columns: 1fr;
     padding: 130px 48px 80px;
-    gap: 64px;
-    overflow: hidden;
+    gap: 80px;
   }
   .glowLeft, .glowRight { display: none; }
   .device {
     transform: none !important;
     animation: none;
   }
-  .notif { display: none; }
-  .mockupWrap { max-width: 100%; overflow: hidden; }
+  .mockupWrap { position: relative; }
+
+  /* Hide only the side-floating pill on tablet */
+  .notifMid { display: none; }
 }
 
 @media (max-width: 768px) {
-  .hero { padding: 110px 24px 60px; gap: 40px; }
+  .hero { padding: 110px 24px 60px; gap: 60px; }
   .title { font-size: clamp(32px, 8vw, 52px); }
   .sub { font-size: 15px; }
   .stats { gap: 20px; flex-wrap: wrap; }
@@ -547,30 +548,23 @@
   .btns { flex-direction: column; align-items: flex-start; }
   .btnPrimary, .btnSecondary { width: 100%; text-align: center; padding: 14px 24px; }
 
-  /* Show top + bottom notifs, repositioned for mobile */
-  .notif { display: flex; }
-  .notifTop { top: -18px; right: 12px; left: auto; }
-  .notifMid { display: none; }
-  .notifBot { bottom: -14px; right: 12px; left: auto; }
+  /* Reposition floating pills for mobile */
+  .notifTop { top: -20px; right: 16px; left: auto; }
+  .notifBot { bottom: -16px; right: 16px; left: auto; }
 }
 
 @media (max-width: 480px) {
-  .hero { padding: 90px 16px 48px; gap: 32px; }
+  .hero { padding: 90px 16px 48px; gap: 48px; }
   .badge { font-size: 11.5px; padding: 5px 12px; }
   .stats { gap: 14px; }
   .statVal { font-size: 20px; }
-  .mockupWrap {
-    transform: scale(0.88);
-    transform-origin: top center;
-    margin-bottom: -5%;
-  }
-  .device { border-radius: 10px; }
-  .evtHeader { padding: 10px 12px; gap: 8px; }
+  .device { border-radius: 12px; }
+  .evtHeader { padding: 10px 14px; gap: 8px; }
   .evtEmoji { font-size: 18px; }
-  .evtName { font-size: 12px; }
+  .evtName { font-size: 13px; }
   .evtBody { padding: 8px; gap: 8px; }
-  .evtCard { padding: 8px; gap: 7px; }
-  .notif { font-size: 11.5px; padding: 7px 14px; }
-  .notifTop { top: -14px; right: 8px; }
-  .notifBot { bottom: -10px; right: 8px; }
+  .evtCard { padding: 9px; gap: 7px; }
+  .notif { font-size: 11.5px; padding: 7px 14px; gap: 6px; }
+  .notifTop { top: -16px; right: 10px; }
+  .notifBot { bottom: -12px; right: 10px; }
 }
