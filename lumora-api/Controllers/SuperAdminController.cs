@@ -456,6 +456,12 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
     }
 
     // ── Support Tickets ───────────────────────────────────────────────────────
+    private static object TicketRow(lumora_api.Models.SupportTicket t) => new {
+        t.Id, t.OrgId, t.OrgName, t.UserName, t.UserEmail,
+        t.Type, t.Message, t.PhotoUrl, t.Status,
+        createdAt = t.CreatedAt.ToString("yyyy-MM-dd HH:mm"),
+    };
+
     [Authorize]
     [HttpGet("support")]
     public async Task<IActionResult> GetSupportTickets()
@@ -466,11 +472,75 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync();
 
+        var ids = tickets.Select(t => t.Id).ToList();
+        var msgCounts = await db.SupportMessages
+            .Where(m => ids.Contains(m.TicketId))
+            .GroupBy(m => m.TicketId)
+            .Select(g => new { TicketId = g.Key, Count = g.Count() })
+            .ToListAsync();
+        var countMap = msgCounts.ToDictionary(x => x.TicketId, x => x.Count);
+
         return Ok(tickets.Select(t => new {
             t.Id, t.OrgId, t.OrgName, t.UserName, t.UserEmail,
             t.Type, t.Message, t.PhotoUrl, t.Status,
-            createdAt = t.CreatedAt.ToString("yyyy-MM-dd HH:mm"),
+            createdAt  = t.CreatedAt.ToString("yyyy-MM-dd HH:mm"),
+            replyCount = countMap.GetValueOrDefault(t.Id, 0),
         }));
+    }
+
+    [Authorize]
+    [HttpGet("support/{id}")]
+    public async Task<IActionResult> GetSupportTicket(string id)
+    {
+        if (!IsSuperAdmin) return Forbid();
+
+        var ticket = await db.SupportTickets.FindAsync(id);
+        if (ticket is null) return NotFound();
+
+        var messages = await db.SupportMessages
+            .Where(m => m.TicketId == id)
+            .OrderBy(m => m.CreatedAt)
+            .ToListAsync();
+
+        return Ok(new {
+            ticket.Id, ticket.OrgId, ticket.OrgName, ticket.UserName, ticket.UserEmail,
+            ticket.Type, ticket.Message, ticket.PhotoUrl, ticket.Status,
+            createdAt = ticket.CreatedAt.ToString("yyyy-MM-dd HH:mm"),
+            messages  = messages.Select(m => new {
+                m.Id, m.AuthorRole, m.AuthorName, m.Message,
+                createdAt = m.CreatedAt.ToString("yyyy-MM-dd HH:mm"),
+            }).ToList(),
+        });
+    }
+
+    [Authorize]
+    [HttpPost("support/{id}/messages")]
+    public async Task<IActionResult> ReplyToTicket(string id, [FromBody] AdminReplyRequest req)
+    {
+        if (!IsSuperAdmin) return Forbid();
+
+        var ticket = await db.SupportTickets.FindAsync(id);
+        if (ticket is null) return NotFound();
+
+        var msg = new lumora_api.Models.SupportMessage
+        {
+            Id         = Guid.NewGuid().ToString(),
+            TicketId   = id,
+            AuthorRole = "admin",
+            AuthorName = "Soporte Elixe",
+            Message    = req.Message,
+            CreatedAt  = DateTime.UtcNow,
+        };
+
+        // When admin replies, set to in_progress if still open
+        if (ticket.Status == "open") ticket.Status = "en_proceso";
+
+        db.SupportMessages.Add(msg);
+        await db.SaveChangesAsync();
+
+        return Ok(new { msg.Id, msg.AuthorRole, msg.AuthorName, msg.Message,
+            createdAt = msg.CreatedAt.ToString("yyyy-MM-dd HH:mm"),
+            ticketStatus = ticket.Status });
     }
 
     [Authorize]
@@ -482,9 +552,26 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
         var ticket = await db.SupportTickets.FindAsync(id);
         if (ticket is null) return NotFound();
 
-        ticket.Status = req.Status == "closed" ? "closed" : "open";
+        var valid = new[] { "open", "en_proceso", "closed" };
+        ticket.Status = valid.Contains(req.Status) ? req.Status : "open";
         await db.SaveChangesAsync();
         return Ok(new { ticket.Id, ticket.Status });
+    }
+
+    [Authorize]
+    [HttpDelete("support/{id}")]
+    public async Task<IActionResult> DeleteSupportTicket(string id)
+    {
+        if (!IsSuperAdmin) return Forbid();
+
+        var ticket = await db.SupportTickets.FindAsync(id);
+        if (ticket is null) return NotFound();
+
+        var messages = await db.SupportMessages.Where(m => m.TicketId == id).ToListAsync();
+        db.SupportMessages.RemoveRange(messages);
+        db.SupportTickets.Remove(ticket);
+        await db.SaveChangesAsync();
+        return NoContent();
     }
 
     private static string PlanLabel(string plan) => plan switch {
@@ -501,6 +588,7 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
 
 public record SuperAdminLoginRequest(string Email, string Password);
 public record UpdateSupportStatusRequest(string Status);
+public record AdminReplyRequest(string Message);
 public record ChangePlanRequest(string Plan);
 public record PlanConfigRequest(
     int Price,

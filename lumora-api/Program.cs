@@ -573,6 +573,17 @@ try
             PRIMARY KEY (`id`)
         ) CHARACTER SET utf8mb4",
 
+        @"CREATE TABLE IF NOT EXISTS `support_messages` (
+            `id`          varchar(255) NOT NULL,
+            `ticket_id`   varchar(255) NOT NULL,
+            `author_role` varchar(50)  NOT NULL DEFAULT 'user',
+            `author_name` varchar(500) NOT NULL DEFAULT '',
+            `message`     longtext     NOT NULL,
+            `created_at`  datetime(6)  NOT NULL,
+            PRIMARY KEY (`id`),
+            KEY `idx_support_messages_ticket` (`ticket_id`)
+        ) CHARACTER SET utf8mb4",
+
         // Superadmin table
         @"CREATE TABLE IF NOT EXISTS `superadmins` (
             `id`            varchar(255) NOT NULL,

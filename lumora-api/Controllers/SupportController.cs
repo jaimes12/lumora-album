@@ -13,10 +13,57 @@ namespace lumora_api.Controllers;
 [Authorize]
 public class SupportController(LumoraDbContext db, IR2Service r2) : ControllerBase
 {
-    private string OrgId => User.FindFirst("org_id")?.Value ?? "";
+    private string OrgId    => User.FindFirst("org_id")?.Value ?? "";
     private string UserName => User.FindFirst("name")?.Value ?? User.FindFirst(ClaimTypes.Name)?.Value ?? "";
     private string UserEmail => User.FindFirst("email")?.Value ?? User.FindFirst(ClaimTypes.Email)?.Value ?? "";
 
+    // ── List org's tickets ────────────────────────────────────────────────────
+    [HttpGet]
+    public async Task<IActionResult> GetMyTickets()
+    {
+        var tickets = await db.SupportTickets
+            .Where(t => t.OrgId == OrgId)
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync();
+
+        var ids = tickets.Select(t => t.Id).ToList();
+        var msgCounts = await db.SupportMessages
+            .Where(m => ids.Contains(m.TicketId))
+            .GroupBy(m => m.TicketId)
+            .Select(g => new { TicketId = g.Key, Count = g.Count() })
+            .ToListAsync();
+        var countMap = msgCounts.ToDictionary(x => x.TicketId, x => x.Count);
+
+        return Ok(tickets.Select(t => new {
+            t.Id, t.Type, t.Message, t.PhotoUrl, t.Status,
+            createdAt = t.CreatedAt.ToString("yyyy-MM-dd HH:mm"),
+            replyCount = countMap.GetValueOrDefault(t.Id, 0),
+        }));
+    }
+
+    // ── Get single ticket with conversation ───────────────────────────────────
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetTicket(string id)
+    {
+        var ticket = await db.SupportTickets.FindAsync(id);
+        if (ticket is null || ticket.OrgId != OrgId) return NotFound();
+
+        var messages = await db.SupportMessages
+            .Where(m => m.TicketId == id)
+            .OrderBy(m => m.CreatedAt)
+            .ToListAsync();
+
+        return Ok(new {
+            ticket.Id, ticket.Type, ticket.Message, ticket.PhotoUrl, ticket.Status,
+            createdAt = ticket.CreatedAt.ToString("yyyy-MM-dd HH:mm"),
+            messages = messages.Select(m => new {
+                m.Id, m.AuthorRole, m.AuthorName, m.Message,
+                createdAt = m.CreatedAt.ToString("yyyy-MM-dd HH:mm"),
+            }).ToList(),
+        });
+    }
+
+    // ── Create ticket ─────────────────────────────────────────────────────────
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateSupportTicketRequest req)
     {
@@ -31,7 +78,7 @@ public class SupportController(LumoraDbContext db, IR2Service r2) : ControllerBa
                 var mime = req.PhotoType.Split(';')[0].Trim();
                 photoUrl = await r2.UploadAsync(bytes, mime);
             }
-            catch { /* photo upload is non-fatal */ }
+            catch { }
         }
 
         var ticket = new SupportTicket
@@ -51,7 +98,36 @@ public class SupportController(LumoraDbContext db, IR2Service r2) : ControllerBa
         db.SupportTickets.Add(ticket);
         await db.SaveChangesAsync();
 
-        return Ok(new { ticket.Id, ticket.Status });
+        return Ok(new { ticket.Id, ticket.Status, ticket.Type, ticket.Message, ticket.PhotoUrl,
+            createdAt = ticket.CreatedAt.ToString("yyyy-MM-dd HH:mm"), replyCount = 0 });
+    }
+
+    // ── User reply to a ticket ────────────────────────────────────────────────
+    [HttpPost("{id}/messages")]
+    public async Task<IActionResult> AddMessage(string id, [FromBody] AddSupportMessageRequest req)
+    {
+        var ticket = await db.SupportTickets.FindAsync(id);
+        if (ticket is null || ticket.OrgId != OrgId) return NotFound();
+        if (ticket.Status == "closed") return BadRequest(new { message = "Este ticket está cerrado" });
+
+        var msg = new SupportMessage
+        {
+            Id         = Guid.NewGuid().ToString(),
+            TicketId   = id,
+            AuthorRole = "user",
+            AuthorName = UserName,
+            Message    = req.Message,
+            CreatedAt  = DateTime.UtcNow,
+        };
+
+        // Reopen ticket if it was resolved when user replies
+        if (ticket.Status == "closed") ticket.Status = "open";
+
+        db.SupportMessages.Add(msg);
+        await db.SaveChangesAsync();
+
+        return Ok(new { msg.Id, msg.AuthorRole, msg.AuthorName, msg.Message,
+            createdAt = msg.CreatedAt.ToString("yyyy-MM-dd HH:mm") });
     }
 }
 
@@ -61,3 +137,5 @@ public record CreateSupportTicketRequest(
     string? PhotoData,
     string? PhotoType
 );
+
+public record AddSupportMessageRequest(string Message);

@@ -158,14 +158,36 @@ function WhatsAppModal({ onClose, onConnect }) {
   )
 }
 
+// ── Status helpers ──────────────────────────────────────────────────────────
+const ST_LABEL = { open: 'Abierto', en_proceso: 'En proceso', closed: 'Resuelto' }
+const ST_COLOR = { open: '#f59e0b', en_proceso: '#38bdf8', closed: '#34d399' }
+
 /* ── Support Modal ── */
 function SupportModal({ onClose }) {
-  const [type,     setType]     = useState('problema')
-  const [message,  setMessage]  = useState('')
-  const [photo,    setPhoto]    = useState(null)  // { data: base64, type: mime }
-  const [sending,  setSending]  = useState(false)
-  const [sent,     setSent]     = useState(false)
-  const [error,    setError]    = useState('')
+  const [view,      setView]      = useState('home')    // home | new | detail
+  const [tickets,   setTickets]   = useState(null)
+  const [detail,    setDetail]    = useState(null)      // { id, type, message, status, messages }
+  const [replyText, setReplyText] = useState('')
+  const [replying,  setReplying]  = useState(false)
+
+  // new ticket form state
+  const [type,    setType]    = useState('problema')
+  const [message, setMessage] = useState('')
+  const [photo,   setPhoto]   = useState(null)
+  const [sending, setSending] = useState(false)
+  const [error,   setError]   = useState('')
+
+  useEffect(() => {
+    supportApi.getMyTickets().then(setTickets).catch(() => setTickets([]))
+  }, [])
+
+  const openDetail = async (id) => {
+    try {
+      const data = await supportApi.getTicket(id)
+      setDetail(data)
+      setView('detail')
+    } catch {}
+  }
 
   const handleFile = (e) => {
     const file = e.target.files?.[0]
@@ -173,26 +195,24 @@ function SupportModal({ onClose }) {
     if (file.size > 5 * 1024 * 1024) { setError('La imagen no puede pesar más de 5 MB'); return }
     const reader = new FileReader()
     reader.onload = (ev) => {
-      const dataUrl = ev.target.result
-      const base64 = dataUrl.split(',')[1]
-      setPhoto({ data: base64, type: file.type })
+      setPhoto({ data: ev.target.result.split(',')[1], type: file.type })
       setError('')
     }
     reader.readAsDataURL(file)
   }
 
-  const handleSubmit = async (e) => {
+  const handleCreate = async (e) => {
     e.preventDefault()
     if (!message.trim()) return
     setSending(true); setError('')
     try {
-      await supportApi.create({
-        type,
-        message: message.trim(),
-        photoData: photo?.data ?? null,
-        photoType: photo?.type ?? null,
+      const created = await supportApi.create({
+        type, message: message.trim(),
+        photoData: photo?.data ?? null, photoType: photo?.type ?? null,
       })
-      setSent(true)
+      setTickets(prev => [created, ...(prev ?? [])])
+      setMessage(''); setPhoto(null); setType('problema')
+      setView('home')
     } catch {
       setError('No se pudo enviar. Intenta de nuevo.')
     } finally {
@@ -200,78 +220,185 @@ function SupportModal({ onClose }) {
     }
   }
 
+  const handleReply = async (e) => {
+    e.preventDefault()
+    if (!replyText.trim() || !detail) return
+    setReplying(true)
+    try {
+      const msg = await supportApi.addMessage(detail.id, replyText.trim())
+      setDetail(d => ({ ...d, messages: [...(d.messages ?? []), msg] }))
+      setReplyText('')
+    } catch {}
+    finally { setReplying(false) }
+  }
+
+  const CloseBtn = () => (
+    <button className={styles.supportClose} onClick={onClose}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  )
+
+  const BackBtn = ({ label = 'Volver' }) => (
+    <button className={styles.supportBackBtn} onClick={() => { setView('home'); setError('') }}>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      {label}
+    </button>
+  )
+
   return (
     <div className={styles.supportOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
       <div className={styles.supportModal}>
-        <div className={styles.supportHeader}>
-          <span className={styles.supportTitle}>Soporte</span>
-          <button className={styles.supportClose} onClick={onClose}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-        </div>
 
-        {sent ? (
-          <div className={styles.supportSent}>
-            <div className={styles.supportSentIcon}>✓</div>
-            <p className={styles.supportSentTitle}>¡Mensaje enviado!</p>
-            <p className={styles.supportSentText}>Lo revisaremos pronto y te contactaremos si es necesario.</p>
-            <button className={styles.supportSentBtn} onClick={onClose}>Cerrar</button>
-          </div>
-        ) : (
-          <form className={styles.supportForm} onSubmit={handleSubmit}>
-            <div className={styles.supportTypeRow}>
-              <button
-                type="button"
-                className={`${styles.supportTypeBtn} ${type === 'problema' ? styles.supportTypeBtnActive : ''}`}
-                onClick={() => setType('problema')}
-              >
-                Reportar problema
+        {/* ── HOME ── */}
+        {view === 'home' && (
+          <>
+            <div className={styles.supportHeader}>
+              <span className={styles.supportTitle}>Soporte</span>
+              <CloseBtn />
+            </div>
+            <div className={styles.supportHome}>
+              <button className={styles.supportNewBtn} onClick={() => setView('new')}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Nuevo ticket
               </button>
-              <button
-                type="button"
-                className={`${styles.supportTypeBtn} ${type === 'duda' ? styles.supportTypeBtnActive : ''}`}
-                onClick={() => setType('duda')}
-              >
-                Tengo una duda
+
+              {tickets === null ? (
+                <p className={styles.supportLoadingMsg}>Cargando tickets…</p>
+              ) : tickets.length === 0 ? (
+                <p className={styles.supportEmptyMsg}>No tienes tickets de soporte aún.</p>
+              ) : (
+                <div className={styles.supportTicketList}>
+                  <p className={styles.supportTicketListTitle}>Mis tickets</p>
+                  {tickets.map(t => (
+                    <button key={t.id} className={styles.supportTicketRow} onClick={() => openDetail(t.id)}>
+                      <div className={styles.supportTicketRowLeft}>
+                        <span className={styles.supportTicketType} style={{ color: t.type === 'problema' ? '#f87171' : '#818cf8' }}>
+                          {t.type === 'problema' ? 'Problema' : 'Duda'}
+                        </span>
+                        <span className={styles.supportTicketMsg}>{t.message.slice(0, 60)}{t.message.length > 60 ? '…' : ''}</span>
+                        <span className={styles.supportTicketDate}>{t.createdAt}</span>
+                      </div>
+                      <div className={styles.supportTicketRowRight}>
+                        <span className={styles.supportTicketStatus} style={{ color: ST_COLOR[t.status] ?? '#6b7280' }}>
+                          {ST_LABEL[t.status] ?? t.status}
+                        </span>
+                        {t.replyCount > 0 && (
+                          <span className={styles.supportTicketReplies}>{t.replyCount} resp.</span>
+                        )}
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ── NEW TICKET ── */}
+        {view === 'new' && (
+          <>
+            <div className={styles.supportHeader}>
+              <BackBtn />
+              <CloseBtn />
+            </div>
+            <form className={styles.supportForm} onSubmit={handleCreate}>
+              <div className={styles.supportTypeRow}>
+                <button type="button"
+                  className={`${styles.supportTypeBtn} ${type === 'problema' ? styles.supportTypeBtnActive : ''}`}
+                  onClick={() => setType('problema')}>Reportar problema</button>
+                <button type="button"
+                  className={`${styles.supportTypeBtn} ${type === 'duda' ? styles.supportTypeBtnActive : ''}`}
+                  onClick={() => setType('duda')}>Tengo una duda</button>
+              </div>
+
+              <textarea
+                className={styles.supportTextarea}
+                placeholder={type === 'problema' ? 'Describe el problema que tuviste…' : '¿En qué podemos ayudarte?'}
+                value={message}
+                onChange={e => setMessage(e.target.value)}
+                rows={5} maxLength={2000} required autoFocus
+              />
+
+              <label className={styles.supportPhotoLabel}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                {photo ? 'Cambiar imagen' : 'Adjuntar captura (opcional)'}
+                <input type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} />
+              </label>
+
+              {photo && (
+                <div className={styles.supportPhotoPreview}>
+                  <img src={`data:${photo.type};base64,${photo.data}`} alt="preview" />
+                  <button type="button" className={styles.supportPhotoRemove} onClick={() => setPhoto(null)}>✕</button>
+                </div>
+              )}
+
+              {error && <p className={styles.supportError}>{error}</p>}
+              <button type="submit" className={styles.supportSubmit} disabled={sending || !message.trim()}>
+                {sending ? 'Enviando…' : 'Enviar ticket'}
               </button>
+            </form>
+          </>
+        )}
+
+        {/* ── DETAIL / CONVERSATION ── */}
+        {view === 'detail' && detail && (
+          <>
+            <div className={styles.supportHeader}>
+              <BackBtn />
+              <span className={styles.supportStatusBadge} style={{ background: `${ST_COLOR[detail.status]}20`, color: ST_COLOR[detail.status] }}>
+                {ST_LABEL[detail.status] ?? detail.status}
+              </span>
+              <CloseBtn />
+            </div>
+            <div className={styles.supportConvo}>
+              {/* Original message */}
+              <div className={`${styles.supportMsg} ${styles.supportMsgUser}`}>
+                <div className={styles.supportMsgBubble}>
+                  <p className={styles.supportMsgText}>{detail.message}</p>
+                  {detail.photoUrl && (
+                    <a href={detail.photoUrl} target="_blank" rel="noreferrer">
+                      <img src={detail.photoUrl} alt="captura" className={styles.supportMsgImg} />
+                    </a>
+                  )}
+                </div>
+                <span className={styles.supportMsgMeta}>Tú · {detail.createdAt}</span>
+              </div>
+
+              {/* Replies */}
+              {(detail.messages ?? []).map(m => (
+                <div key={m.id} className={`${styles.supportMsg} ${m.authorRole === 'admin' ? styles.supportMsgAdmin : styles.supportMsgUser}`}>
+                  <div className={styles.supportMsgBubble}>
+                    <p className={styles.supportMsgText}>{m.message}</p>
+                  </div>
+                  <span className={styles.supportMsgMeta}>{m.authorRole === 'admin' ? 'Soporte Elixe' : 'Tú'} · {m.createdAt}</span>
+                </div>
+              ))}
+
+              {detail.status === 'closed' && (
+                <p className={styles.supportClosedNote}>Este ticket está resuelto. Si tienes un nuevo problema, abre un ticket nuevo.</p>
+              )}
             </div>
 
-            <textarea
-              className={styles.supportTextarea}
-              placeholder={type === 'problema' ? 'Describe el problema que tuviste…' : '¿En qué podemos ayudarte?'}
-              value={message}
-              onChange={e => setMessage(e.target.value)}
-              rows={5}
-              maxLength={2000}
-              required
-              autoFocus
-            />
-
-            <label className={styles.supportPhotoLabel}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              {photo ? 'Cambiar imagen' : 'Adjuntar captura (opcional)'}
-              <input type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} />
-            </label>
-
-            {photo && (
-              <div className={styles.supportPhotoPreview}>
-                <img src={`data:${photo.type};base64,${photo.data}`} alt="preview" />
-                <button type="button" className={styles.supportPhotoRemove} onClick={() => setPhoto(null)}>✕</button>
-              </div>
+            {detail.status !== 'closed' && (
+              <form className={styles.supportReplyBar} onSubmit={handleReply}>
+                <input
+                  className={styles.supportReplyInput}
+                  placeholder="Escribe tu respuesta…"
+                  value={replyText}
+                  onChange={e => setReplyText(e.target.value)}
+                  maxLength={2000}
+                />
+                <button type="submit" className={styles.supportReplyBtn} disabled={replying || !replyText.trim()}>
+                  {replying ? '…' : (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  )}
+                </button>
+              </form>
             )}
-
-            {error && <p className={styles.supportError}>{error}</p>}
-
-            <button
-              type="submit"
-              className={styles.supportSubmit}
-              disabled={sending || !message.trim()}
-            >
-              {sending ? 'Enviando…' : 'Enviar mensaje'}
-            </button>
-          </form>
+          </>
         )}
       </div>
     </div>

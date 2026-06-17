@@ -1521,22 +1521,50 @@
   border: 1px solid var(--border);
   border-radius: 16px;
   width: 100%;
-  max-width: 460px;
+  max-width: 480px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  overflow: hidden;
 }
 
 .supportHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 18px 20px 14px;
+  gap: 10px;
+  padding: 14px 16px 12px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .supportTitle {
   font-size: 15px;
   font-weight: 700;
   color: var(--text);
+  flex: 1;
+}
+
+.supportBackBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: color 0.15s;
+}
+.supportBackBtn:hover { color: var(--text); }
+
+.supportStatusBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
 }
 
 .supportClose {
@@ -1549,14 +1577,90 @@
   display: flex;
   align-items: center;
   transition: color 0.15s;
+  margin-left: auto;
 }
 .supportClose:hover { color: var(--text); }
 
-.supportForm {
-  padding: 18px 20px 20px;
+/* ── Home view ── */
+.supportHome {
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.supportNewBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px;
+  background: rgba(124,106,247,0.1);
+  border: 1px dashed rgba(124,106,247,0.4);
+  border-radius: 10px;
+  color: #7c6af7;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.supportNewBtn:hover { background: rgba(124,106,247,0.18); }
+
+.supportLoadingMsg, .supportEmptyMsg {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 20px 0;
+  margin: 0;
+}
+
+.supportTicketList { display: flex; flex-direction: column; gap: 6px; }
+
+.supportTicketListTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 4px;
+}
+
+.supportTicketRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--bg-2, rgba(255,255,255,0.03));
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: border-color 0.15s, background 0.15s;
+}
+.supportTicketRow:hover { border-color: rgba(124,106,247,0.4); background: rgba(124,106,247,0.04); }
+
+.supportTicketRowLeft { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.supportTicketType { font-size: 11px; font-weight: 700; }
+.supportTicketMsg { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.supportTicketDate { font-size: 11px; color: var(--text-muted); opacity: 0.6; }
+
+.supportTicketRowRight { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; color: var(--text-muted); }
+.supportTicketStatus { font-size: 11px; font-weight: 600; }
+.supportTicketReplies { font-size: 10px; color: var(--text-muted); opacity: 0.7; }
+
+/* ── New ticket form ── */
+.supportForm {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .supportTypeRow {
@@ -1599,10 +1703,7 @@
   transition: border-color 0.15s;
   box-sizing: border-box;
 }
-.supportTextarea:focus {
-  outline: none;
-  border-color: #7c6af7;
-}
+.supportTextarea:focus { outline: none; border-color: #7c6af7; }
 
 .supportPhotoLabel {
   display: flex;
@@ -1611,19 +1712,16 @@
   font-size: 12px;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 6px 0;
+  padding: 4px 0;
   width: fit-content;
   transition: color 0.15s;
 }
 .supportPhotoLabel:hover { color: var(--text); }
 
-.supportPhotoPreview {
-  position: relative;
-  width: fit-content;
-}
+.supportPhotoPreview { position: relative; width: fit-content; }
 .supportPhotoPreview img {
   max-width: 100%;
-  max-height: 140px;
+  max-height: 120px;
   border-radius: 8px;
   border: 1px solid var(--border);
   display: block;
@@ -1645,11 +1743,7 @@
   justify-content: center;
 }
 
-.supportError {
-  font-size: 12px;
-  color: #f87171;
-  margin: 0;
-}
+.supportError { font-size: 12px; color: #f87171; margin: 0; }
 
 .supportSubmit {
   background: #7c6af7;
@@ -1665,45 +1759,103 @@
 .supportSubmit:disabled { opacity: 0.5; cursor: not-allowed; }
 .supportSubmit:not(:disabled):hover { opacity: 0.88; }
 
-.supportSent {
-  padding: 32px 24px;
-  text-align: center;
+/* ── Conversation view ── */
+.supportConvo {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10px;
+  gap: 12px;
+  padding: 14px 16px;
+  overflow-y: auto;
+  flex: 1;
 }
-.supportSentIcon {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: rgba(52,211,153,0.15);
-  color: #34d399;
-  font-size: 22px;
+
+.supportMsg { display: flex; flex-direction: column; gap: 4px; }
+.supportMsgUser { align-items: flex-end; }
+.supportMsgAdmin { align-items: flex-start; }
+
+.supportMsgBubble {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.supportMsgUser .supportMsgBubble {
+  background: rgba(124,106,247,0.15);
+  border-bottom-right-radius: 4px;
+}
+.supportMsgAdmin .supportMsgBubble {
+  background: var(--bg-2, rgba(255,255,255,0.05));
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+
+.supportMsgText {
+  font-size: 13px;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.supportMsgImg {
+  max-width: 200px;
+  border-radius: 8px;
+  display: block;
+}
+
+.supportMsgMeta {
+  font-size: 10px;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.supportClosedNote {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 8px 16px;
+  background: rgba(52,211,153,0.06);
+  border-radius: 8px;
+  margin: 0;
+}
+
+.supportReplyBar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.supportReplyInput {
+  flex: 1;
+  background: var(--bg-2, rgba(255,255,255,0.04));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  padding: 9px 12px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.supportReplyInput:focus { border-color: #7c6af7; }
+
+.supportReplyBtn {
+  background: #7c6af7;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
 }
-.supportSentTitle {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text);
-  margin: 0;
-}
-.supportSentText {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin: 0;
-}
-.supportSentBtn {
-  margin-top: 8px;
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text-muted);
-  font-size: 13px;
-  padding: 8px 20px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.supportSentBtn:hover { color: var(--text); border-color: var(--text-muted); }
+.supportReplyBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.supportReplyBtn:not(:disabled):hover { opacity: 0.85; }

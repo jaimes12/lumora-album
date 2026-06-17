@@ -39,6 +39,7 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
     public DbSet<QuickReply> QuickReplies => Set<QuickReply>();
     public DbSet<OrgSettings> OrgSettings => Set<OrgSettings>();
     public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
+    public DbSet<SupportMessage> SupportMessages => Set<SupportMessage>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {

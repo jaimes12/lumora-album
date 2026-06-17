@@ -917,13 +917,135 @@ function PromoCodesTab() {
 // ── Main ───────────────────────────────────────────────────────────────────
 // ── Soporte tab ────────────────────────────────────────────────────────────
 const TYPE_LABEL   = { duda: 'Duda', problema: 'Problema' }
-const STATUS_COLOR = { open: '#f59e0b', closed: '#34d399' }
+const STATUS_COLOR = { open: '#f59e0b', en_proceso: '#38bdf8', closed: '#34d399' }
+const STATUS_LABEL = { open: 'Abierto', en_proceso: 'En proceso', closed: 'Resuelto' }
+const STATUS_OPTS  = ['open', 'en_proceso', 'closed']
+
+// Loads conversation for a single ticket on-demand
+function TicketDetail({ ticket, onStatusChange, onDelete }) {
+  const [detail,    setDetail]    = useState(null)
+  const [replyText, setReplyText] = useState('')
+  const [replying,  setReplying]  = useState(false)
+  const [deleting,  setDeleting]  = useState(false)
+  const [confirmDel, setConfirmDel] = useState(false)
+
+  useEffect(() => {
+    superadminApi.getSupportTicket(ticket.id)
+      .then(setDetail)
+      .catch(() => setDetail({ ...ticket, messages: [] }))
+  }, [ticket.id]) // eslint-disable-line
+
+  const handleReply = async (e) => {
+    e.preventDefault()
+    if (!replyText.trim()) return
+    setReplying(true)
+    try {
+      const res = await superadminApi.replyToTicket(ticket.id, replyText.trim())
+      setDetail(d => ({ ...d, messages: [...(d?.messages ?? []), res] }))
+      if (res.ticketStatus) onStatusChange(ticket.id, res.ticketStatus)
+      setReplyText('')
+    } catch {}
+    finally { setReplying(false) }
+  }
+
+  const handleStatusChange = async (status) => {
+    try {
+      await superadminApi.updateSupportStatus(ticket.id, status)
+      onStatusChange(ticket.id, status)
+    } catch {}
+  }
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    try {
+      await superadminApi.deleteSupportTicket(ticket.id)
+      onDelete(ticket.id)
+    } catch { setDeleting(false) }
+  }
+
+  return (
+    <div className={styles.soporteDetail}>
+      {/* Status buttons */}
+      <div className={styles.soporteDetailActions}>
+        <div className={styles.soporteStatusBtns}>
+          {STATUS_OPTS.map(s => (
+            <button
+              key={s}
+              className={`${styles.soporteStatusBtn} ${ticket.status === s ? styles.soporteStatusBtnActive : ''}`}
+              style={ticket.status === s ? { borderColor: STATUS_COLOR[s], color: STATUS_COLOR[s], background: `${STATUS_COLOR[s]}18` } : {}}
+              onClick={() => handleStatusChange(s)}
+            >
+              {STATUS_LABEL[s]}
+            </button>
+          ))}
+        </div>
+        {confirmDel ? (
+          <div className={styles.soporteDelConfirm}>
+            <span>¿Eliminar?</span>
+            <button className={styles.soporteDelYes} onClick={handleDelete} disabled={deleting}>
+              {deleting ? '…' : 'Sí'}
+            </button>
+            <button className={styles.soporteDelNo} onClick={() => setConfirmDel(false)}>No</button>
+          </div>
+        ) : (
+          <button className={styles.soporteDeleteBtn} onClick={() => setConfirmDel(true)}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            Eliminar
+          </button>
+        )}
+      </div>
+
+      {/* Conversation */}
+      <div className={styles.soporteConvo}>
+        {/* Original message */}
+        <div className={styles.soporteConvoMsg}>
+          <div className={styles.soporteConvoBubble} style={{ background: 'rgba(124,106,247,0.1)', borderColor: 'rgba(124,106,247,0.2)' }}>
+            <p className={styles.soporteConvoText}>{detail?.message ?? ticket.message}</p>
+            {(detail?.photoUrl ?? ticket.photoUrl) && (
+              <a href={detail?.photoUrl ?? ticket.photoUrl} target="_blank" rel="noreferrer">
+                <img src={detail?.photoUrl ?? ticket.photoUrl} alt="captura" className={styles.soporteDetailImg} />
+              </a>
+            )}
+          </div>
+          <span className={styles.soporteConvoMeta}>{ticket.userName || ticket.userEmail} · {ticket.createdAt}</span>
+        </div>
+
+        {detail === null && <p style={{ fontSize: 12, color: '#6b7280' }}>Cargando conversación…</p>}
+
+        {(detail?.messages ?? []).map(m => (
+          <div key={m.id} className={`${styles.soporteConvoMsg} ${m.authorRole === 'admin' ? styles.soporteConvoAdmin : ''}`}>
+            <div className={styles.soporteConvoAdminBubble}>
+              <p className={styles.soporteConvoText}>{m.message}</p>
+            </div>
+            <span className={styles.soporteConvoMeta}>
+              {m.authorRole === 'admin' ? 'Soporte Elixe' : (ticket.userName || 'Usuario')} · {m.createdAt}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Reply */}
+      <form className={styles.soporteReplyBar} onSubmit={handleReply}>
+        <input
+          className={styles.soporteReplyInput}
+          placeholder="Responder al cliente…"
+          value={replyText}
+          onChange={e => setReplyText(e.target.value)}
+          maxLength={2000}
+        />
+        <button type="submit" className={styles.soporteReplyBtn} disabled={replying || !replyText.trim()}>
+          {replying ? '…' : 'Enviar'}
+        </button>
+      </form>
+    </div>
+  )
+}
 
 function SoporteTab() {
-  const [tickets,    setTickets]    = useState(null)
-  const [expanded,   setExpanded]   = useState(null)
-  const [filter,     setFilter]     = useState('all')
-  const [q,          setQ]          = useState('')
+  const [tickets,  setTickets]  = useState(null)
+  const [expanded, setExpanded] = useState(null)
+  const [filter,   setFilter]   = useState('all')
+  const [q,        setQ]        = useState('')
 
   useEffect(() => {
     superadminApi.getSupportTickets()
@@ -931,17 +1053,18 @@ function SoporteTab() {
       .catch(() => setTickets([]))
   }, [])
 
-  const toggleStatus = async (ticket) => {
-    const next = ticket.status === 'open' ? 'closed' : 'open'
-    try {
-      await superadminApi.updateSupportStatus(ticket.id, next)
-      setTickets(prev => prev.map(t => t.id === ticket.id ? { ...t, status: next } : t))
-    } catch {}
+  const handleStatusChange = (id, status) =>
+    setTickets(prev => prev.map(t => t.id === id ? { ...t, status } : t))
+
+  const handleDelete = (id) => {
+    setTickets(prev => prev.filter(t => t.id !== id))
+    setExpanded(null)
   }
 
   if (!tickets) return <div className={styles.loadingMsg}>Cargando tickets…</div>
 
-  const openCount = tickets.filter(t => t.status === 'open').length
+  const openCount    = tickets.filter(t => t.status === 'open').length
+  const enProcesoCount = tickets.filter(t => t.status === 'en_proceso').length
 
   const filtered = tickets
     .filter(t => filter === 'all' || t.status === filter)
@@ -951,18 +1074,17 @@ function SoporteTab() {
     <div className={styles.soporteWrap}>
       {/* Stats row */}
       <div className={styles.soporteStats}>
-        <div className={`${styles.soporteStat} ${filter === 'all' ? styles.soporteStatActive : ''}`} onClick={() => setFilter('all')}>
-          <span className={styles.soporteStatNum}>{tickets.length}</span>
-          <span className={styles.soporteStatLabel}>Total</span>
-        </div>
-        <div className={`${styles.soporteStat} ${filter === 'open' ? styles.soporteStatActive : ''}`} onClick={() => setFilter('open')}>
-          <span className={styles.soporteStatNum} style={{ color: '#f59e0b' }}>{openCount}</span>
-          <span className={styles.soporteStatLabel}>Abiertos</span>
-        </div>
-        <div className={`${styles.soporteStat} ${filter === 'closed' ? styles.soporteStatActive : ''}`} onClick={() => setFilter('closed')}>
-          <span className={styles.soporteStatNum} style={{ color: '#34d399' }}>{tickets.length - openCount}</span>
-          <span className={styles.soporteStatLabel}>Resueltos</span>
-        </div>
+        {[
+          { key: 'all',        label: 'Total',      num: tickets.length,  color: '#e6e6f0' },
+          { key: 'open',       label: 'Abiertos',   num: openCount,       color: '#f59e0b' },
+          { key: 'en_proceso', label: 'En proceso', num: enProcesoCount,  color: '#38bdf8' },
+          { key: 'closed',     label: 'Resueltos',  num: tickets.length - openCount - enProcesoCount, color: '#34d399' },
+        ].map(s => (
+          <div key={s.key} className={`${styles.soporteStat} ${filter === s.key ? styles.soporteStatActive : ''}`} onClick={() => setFilter(s.key)}>
+            <span className={styles.soporteStatNum} style={{ color: s.color }}>{s.num}</span>
+            <span className={styles.soporteStatLabel}>{s.label}</span>
+          </div>
+        ))}
       </div>
 
       {/* Search */}
@@ -986,12 +1108,11 @@ function SoporteTab() {
                 <th>Mensaje</th>
                 <th>Estado</th>
                 <th>Fecha</th>
-                <th></th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={7} className={styles.tableEmpty}>Sin tickets</td></tr>
+                <tr><td colSpan={6} className={styles.tableEmpty}>Sin tickets</td></tr>
               ) : filtered.map(t => (
                 <>
                   <tr key={t.id} className={expanded === t.id ? styles.trExpanded : ''} style={{ cursor: 'pointer' }} onClick={() => setExpanded(expanded === t.id ? null : t.id)}>
@@ -1011,31 +1132,19 @@ function SoporteTab() {
                     <td>
                       <span className={styles.soporteStatusDot} style={{ background: STATUS_COLOR[t.status] ?? '#6b7280' }} />
                       <span style={{ fontSize: 12, color: STATUS_COLOR[t.status] ?? '#6b7280' }}>
-                        {t.status === 'open' ? 'Abierto' : 'Resuelto'}
+                        {STATUS_LABEL[t.status] ?? t.status}
                       </span>
                     </td>
                     <td className={styles.muted} style={{ fontSize: 12 }}>{t.createdAt}</td>
-                    <td onClick={e => e.stopPropagation()}>
-                      <button
-                        className={styles.soporteToggleBtn}
-                        style={{ color: t.status === 'open' ? '#34d399' : '#f59e0b' }}
-                        onClick={() => toggleStatus(t)}
-                      >
-                        {t.status === 'open' ? 'Resolver' : 'Reabrir'}
-                      </button>
-                    </td>
                   </tr>
                   {expanded === t.id && (
                     <tr key={`${t.id}-detail`} className={styles.trDetail}>
-                      <td colSpan={7}>
-                        <div className={styles.soporteDetail}>
-                          <p className={styles.soporteDetailMsg}>{t.message}</p>
-                          {t.photoUrl && (
-                            <a href={t.photoUrl} target="_blank" rel="noreferrer" className={styles.soporteDetailImgWrap}>
-                              <img src={t.photoUrl} alt="captura" className={styles.soporteDetailImg} />
-                            </a>
-                          )}
-                        </div>
+                      <td colSpan={6}>
+                        <TicketDetail
+                          ticket={t}
+                          onStatusChange={handleStatusChange}
+                          onDelete={handleDelete}
+                        />
                       </td>
                     </tr>
                   )}
