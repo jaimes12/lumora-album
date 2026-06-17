@@ -553,5 +553,15 @@
   .badge { font-size: 11.5px; padding: 5px 12px; }
   .stats { gap: 14px; }
   .statVal { font-size: 20px; }
-  .mockupWrap { display: none; }
+  .mockupWrap {
+    transform: scale(0.88);
+    transform-origin: top center;
+    margin-bottom: -5%;
+  }
+  .device { border-radius: 10px; }
+  .evtHeader { padding: 10px 12px; gap: 8px; }
+  .evtEmoji { font-size: 18px; }
+  .evtName { font-size: 12px; }
+  .evtBody { padding: 8px; gap: 8px; }
+  .evtCard { padding: 8px; gap: 7px; }
 }
