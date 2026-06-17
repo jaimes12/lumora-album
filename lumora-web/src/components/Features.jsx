@@ -111,6 +111,109 @@ function TasksMock() {
   )
 }
 
+/* ── Mock: Proveedores ── */
+function ProveedoresMock() {
+  const vendors = [
+    { emoji: '🌸', name: 'Flores Cristal',    cat: 'Decoración',     stars: 5, phone: '55-1234-5678', color: '#f472b6' },
+    { emoji: '📷', name: 'Foto Estudio MX',   cat: 'Fotografía',     stars: 5, phone: '55-8765-4321', color: '#38bdf8' },
+    { emoji: '🎵', name: 'DJ Kevin Sound',    cat: 'Entretenimiento', stars: 4, phone: '55-4567-8901', color: '#a78bfa' },
+    { emoji: '🍽️', name: 'Catering Deluxe',  cat: 'Banquetes',      stars: 4, phone: '55-2345-6789', color: '#34d399' },
+  ]
+  return (
+    <div className={styles.vendorMock}>
+      <div className={styles.vendorHead}>
+        <span className={styles.vendorHeadTitle}>Directorio de proveedores</span>
+        <span className={styles.vendorCount}>{vendors.length} contactos</span>
+      </div>
+      {vendors.map((v, i) => (
+        <div key={i} className={styles.vendorRow}>
+          <div className={styles.vendorEmoji}>{v.emoji}</div>
+          <div className={styles.vendorInfo}>
+            <span className={styles.vendorName}>{v.name}</span>
+            <span className={styles.vendorCat} style={{ color: v.color, background: v.color + '18' }}>{v.cat}</span>
+          </div>
+          <div className={styles.vendorRight}>
+            <span className={styles.vendorStars}>{'★'.repeat(v.stars)}{'☆'.repeat(5 - v.stars)}</span>
+            <span className={styles.vendorPhone}>{v.phone}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/* ── Mock: Notas compartidas ── */
+function NotasMock() {
+  const notes = [
+    { color: '#fef08a', border: '#facc15', text: 'Pedir flores blancas para la entrada del salón 🌸', author: 'Ana', reactions: [{ e: '👍', n: 2 }] },
+    { color: '#bbf7d0', border: '#4ade80', text: 'El DJ llega a las 6pm — confirmar estacionamiento', author: 'Miguel', reactions: [{ e: '✅', n: 1 }] },
+    { color: '#bae6fd', border: '#38bdf8', text: 'Mesa de pasteles en la esquina norte, no junto al AC', author: 'Lucía', reactions: [{ e: '🔥', n: 3 }, { e: '❤️', n: 1 }] },
+  ]
+  return (
+    <div className={styles.notesMock}>
+      {notes.map((n, i) => (
+        <div key={i} className={styles.noteMockCard} style={{ background: n.color, borderColor: n.border }}>
+          <p className={styles.noteMockText}>{n.text}</p>
+          <div className={styles.noteMockFooter}>
+            <div className={styles.noteMockAuthorRow}>
+              <div className={styles.noteMockAvatar} style={{ borderColor: n.border }}>{n.author[0]}</div>
+              <span className={styles.noteMockAuthor}>{n.author}</span>
+            </div>
+            <div className={styles.noteMockReactions}>
+              {n.reactions.map(r => (
+                <span key={r.e} className={styles.noteMockChip}>{r.e} {r.n}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/* ── Mock: Ventas ── */
+function VentasMock() {
+  const bars = [
+    { month: 'Ene', val: 42000, h: 52 },
+    { month: 'Feb', val: 58000, h: 68 },
+    { month: 'Mar', val: 51000, h: 61 },
+    { month: 'Abr', val: 73000, h: 84 },
+    { month: 'May', val: 66000, h: 76 },
+    { month: 'Jun', val: 89000, h: 100, active: true },
+  ]
+  return (
+    <div className={styles.salesMock}>
+      <div className={styles.salesTop}>
+        <div>
+          <div className={styles.salesTotalLabel}>Ingresos — 2026</div>
+          <div className={styles.salesTotalVal}>$379,000</div>
+        </div>
+        <div className={styles.salesTrend}>↑ 34% vs año anterior</div>
+      </div>
+      <div className={styles.salesChart}>
+        {bars.map(b => (
+          <div key={b.month} className={styles.salesBarWrap}>
+            <div className={`${styles.salesBar} ${b.active ? styles.salesBarActive : ''}`} style={{ height: `${b.h}%` }} />
+            <span className={styles.salesBarLabel}>{b.month}</span>
+          </div>
+        ))}
+      </div>
+      <div className={styles.salesLegend}>
+        <div className={styles.salesLegendRow}>
+          <span className={styles.salesDot} style={{ background: '#a78bfa' }} />
+          <span>Eventos confirmados</span>
+          <span className={styles.salesLegendVal}>$261,000</span>
+        </div>
+        <div className={styles.salesLegendRow}>
+          <span className={styles.salesDot} style={{ background: '#f472b6' }} />
+          <span>Anticipos recibidos</span>
+          <span className={styles.salesLegendVal}>$118,000</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ── Feature spotlights ── */
 const FEATURES = [
   {
@@ -139,6 +242,33 @@ const FEATURES = [
     color: '#fb923c',
     Mock: TasksMock,
     reverse: false,
+  },
+  {
+    label: 'Proveedores',
+    title: 'Tu red de proveedores, siempre a la mano.',
+    desc: 'Guarda fotógrafos, decoradores, caterers, DJs y más. Califica su desempeño, guarda su contacto y asígnalos directamente a tus eventos.',
+    bullets: ['Directorio por categoría', 'Calificaciones y notas por proveedor', 'Asignación directa a eventos'],
+    color: '#38bdf8',
+    Mock: ProveedoresMock,
+    reverse: true,
+  },
+  {
+    label: 'Notas compartidas',
+    title: 'Colabora con tu equipo en tiempo real.',
+    desc: 'Publica notas tipo post-it que todo tu equipo puede ver y reaccionar. Ideas, recordatorios, instrucciones — todo en un solo tablero compartido.',
+    bullets: ['Notas visibles para todo el equipo', 'Reacciones con emojis', 'Colores para organizar por tema'],
+    color: '#f472b6',
+    Mock: NotasMock,
+    reverse: false,
+  },
+  {
+    label: 'Ventas',
+    title: 'Conoce el rendimiento de tu negocio.',
+    desc: 'Visualiza ingresos por mes, eventos confirmados, anticipos y pagos pendientes. Toma decisiones con datos reales de tu negocio.',
+    bullets: ['Gráfica de ingresos mensual', 'Desglose por tipo de evento', 'Comparativa año a año'],
+    color: '#a78bfa',
+    Mock: VentasMock,
+    reverse: true,
   },
 ]
 

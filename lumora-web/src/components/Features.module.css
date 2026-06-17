@@ -368,6 +368,186 @@
   flex-shrink: 0;
 }
 
+/* ── Vendors mock ── */
+.vendorMock {
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+}
+
+.vendorHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-2);
+}
+
+.vendorHeadTitle { font-size: 13px; font-weight: 700; }
+.vendorCount {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 2px 10px;
+}
+
+.vendorRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+.vendorRow:last-child { border-bottom: none; }
+.vendorRow:hover { background: var(--bg-2); }
+
+.vendorEmoji { font-size: 22px; flex-shrink: 0; }
+.vendorInfo { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.vendorName { font-size: 13px; font-weight: 600; white-space: nowrap; }
+.vendorCat {
+  font-size: 10px; font-weight: 600;
+  padding: 2px 8px; border-radius: 100px;
+  white-space: nowrap;
+}
+
+.vendorRight { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.vendorStars { font-size: 11px; color: #facc15; letter-spacing: -1px; }
+.vendorPhone { font-size: 10px; color: var(--text-muted); }
+
+/* ── Notes mock ── */
+.notesMock {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  padding: 4px;
+}
+
+.noteMockCard {
+  border: 1.5px solid;
+  border-radius: 4px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 2px 3px 10px rgba(0,0,0,0.09);
+  transform: rotate(var(--r, 0deg));
+}
+.noteMockCard:nth-child(1) { --r: -1.5deg; }
+.noteMockCard:nth-child(2) { --r: 1deg; }
+.noteMockCard:nth-child(3) { --r: -0.8deg; }
+
+.noteMockText {
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.noteMockFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0,0,0,0.08);
+}
+
+.noteMockAuthorRow { display: flex; align-items: center; gap: 5px; }
+.noteMockAvatar {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid;
+  background: rgba(0,0,0,0.08);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8px; font-weight: 700; color: #1a1a1a; flex-shrink: 0;
+}
+.noteMockAuthor { font-size: 10px; font-weight: 700; color: #1a1a1a; }
+
+.noteMockReactions { display: flex; gap: 4px; flex-wrap: wrap; }
+.noteMockChip {
+  font-size: 10px;
+  background: rgba(0,0,0,0.07);
+  border-radius: 100px;
+  padding: 1px 6px;
+  color: #1a1a1a;
+}
+
+/* ── Sales mock ── */
+.salesMock {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.salesTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.salesTotalLabel { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.salesTotalVal { font-size: 28px; font-weight: 800; letter-spacing: -0.04em; margin-top: 2px; }
+
+.salesTrend {
+  font-size: 11px;
+  font-weight: 700;
+  color: #34d399;
+  background: rgba(52,211,153,0.1);
+  border: 1px solid rgba(52,211,153,0.25);
+  border-radius: 100px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.salesChart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 120px;
+}
+
+.salesBarWrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.salesBar {
+  width: 100%;
+  background: rgba(167,139,250,0.25);
+  border: 1px solid rgba(167,139,250,0.4);
+  border-radius: 6px 6px 3px 3px;
+  transition: height 0.3s;
+  min-height: 8px;
+}
+
+.salesBarActive {
+  background: linear-gradient(to top, #7c6af7, #a78bfa);
+  border-color: #a78bfa;
+  box-shadow: 0 0 16px rgba(167,139,250,0.4);
+}
+
+.salesBarLabel { font-size: 10px; color: var(--text-muted); }
+
+.salesLegend { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; border-top: 1px solid var(--border); }
+.salesLegendRow { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--text-muted); }
+.salesDot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.salesLegendVal { margin-left: auto; font-weight: 700; color: var(--text); font-size: 12px; }
+
 /* ── Responsive ── */
 @media (max-width: 1100px) {
   .section { padding: 80px 32px; }
