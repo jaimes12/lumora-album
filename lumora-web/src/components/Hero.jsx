@@ -237,7 +237,7 @@ export default function Hero() {
             <button className={styles.btnPrimary} onClick={() => setShowRegister(true)}>
               Crear cuenta →
             </button>
-            <button className={styles.btnSecondary}>
+            <button className={styles.btnSecondary} onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}>
               Ver demo en vivo
             </button>
           </div>
