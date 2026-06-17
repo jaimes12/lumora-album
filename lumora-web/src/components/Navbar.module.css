@@ -102,7 +102,7 @@
 @media (max-width: 768px) {
   .nav { padding: 12px 16px; }
   .links { display: none; }
-  .btnLogin { display: none; }
   .logoImg { height: 44px; }
+  .btnLogin { padding: 8px 12px; font-size: 13px; }
   .btnCta { padding: 8px 14px; font-size: 13px; }
 }
