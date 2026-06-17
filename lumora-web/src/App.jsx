@@ -41,9 +41,9 @@ function LandingPage() {
       <Navbar />
       <main>
         <Hero />
-        <Audience />
         <Features />
         <HowItWorks />
+        <Audience />
         <Pricing />
         <CTA />
       </main>
