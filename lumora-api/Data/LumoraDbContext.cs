@@ -40,6 +40,8 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
     public DbSet<OrgSettings> OrgSettings => Set<OrgSettings>();
     public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
     public DbSet<SupportMessage> SupportMessages => Set<SupportMessage>();
+    public DbSet<SharedNote> SharedNotes => Set<SharedNote>();
+    public DbSet<NoteReaction> NoteReactions => Set<NoteReaction>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {

@@ -1,0 +1,415 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 24px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.btnNew {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btnNew:hover { background: var(--accent-2); transform: translateY(-1px); }
+
+/* Sticky note board */
+.board {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+  align-items: start;
+  overflow-y: auto;
+  padding-bottom: 32px;
+}
+
+/* Note card */
+.noteCard {
+  position: relative;
+  border: 1.5px solid;
+  border-radius: 4px;
+  padding: 18px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transform: rotate(var(--rotate, 0deg));
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 3px 4px 12px rgba(0,0,0,0.10);
+  cursor: default;
+}
+.noteCard:hover {
+  transform: rotate(0deg) translateY(-3px);
+  box-shadow: 6px 8px 24px rgba(0,0,0,0.16);
+  z-index: 2;
+}
+
+/* Delete button */
+.noteDeleteBtn {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  color: rgba(0,0,0,0.3);
+  cursor: pointer;
+  padding: 0 2px;
+  transition: color 0.15s;
+  opacity: 0;
+}
+.noteCard:hover .noteDeleteBtn { opacity: 1; }
+.noteDeleteBtn:hover { color: #ef4444; }
+
+/* Content */
+.noteContent {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #1a1a1a;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  padding-right: 20px;
+}
+
+/* Footer */
+.noteFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  margin-top: auto;
+}
+
+.noteAuthor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.noteAvatar {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.noteAvatarText {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid;
+  background: rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #1a1a1a;
+  flex-shrink: 0;
+}
+
+.noteAuthorInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.noteAuthorName {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.noteDate {
+  font-size: 10px;
+  color: rgba(0,0,0,0.4);
+}
+
+/* Reactions */
+.reactionsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+
+.reactionChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(0,0,0,0.06);
+  border: 1.5px solid transparent;
+  border-radius: 100px;
+  padding: 2px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: #1a1a1a;
+}
+.reactionChip:hover { background: rgba(0,0,0,0.12); }
+.reactionChipMine {
+  background: rgba(0,0,0,0.1);
+  font-weight: 600;
+}
+
+.reactionCount {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(0,0,0,0.5);
+}
+
+.emojiPickerWrap { position: relative; }
+
+.addReactionBtn {
+  background: rgba(0,0,0,0.06);
+  border: 1.5px dashed rgba(0,0,0,0.18);
+  border-radius: 100px;
+  padding: 2px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  color: rgba(0,0,0,0.45);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.addReactionBtn:hover { background: rgba(0,0,0,0.1); }
+
+.emojiPicker {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px;
+  display: flex;
+  gap: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  z-index: 100;
+  white-space: nowrap;
+}
+
+.emojiOption {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px 6px;
+  transition: background 0.1s;
+}
+.emojiOption:hover { background: var(--bg-2); }
+
+/* Empty */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex: 1;
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+}
+.emptyEmoji { font-size: 48px; }
+
+/* Upgrade gate */
+.upgradeWrap {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+}
+.upgradeCard {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 48px 40px;
+  max-width: 440px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.upgradeEmoji { font-size: 52px; }
+.upgradeTitle {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.upgradeSub {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin: 0;
+}
+.upgradeBtn {
+  display: inline-block;
+  background: var(--accent);
+  color: white;
+  text-decoration: none;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 6px;
+  transition: background 0.2s;
+}
+.upgradeBtn:hover { background: var(--accent-2); }
+
+/* ── New Note Modal ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.3);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modalTitle {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0 4px;
+}
+.closeBtn:hover { color: var(--text); }
+
+.previewNote {
+  border: 1.5px solid;
+  border-radius: 4px;
+  padding: 14px;
+  box-shadow: 2px 3px 10px rgba(0,0,0,0.08);
+}
+.previewTextarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #1a1a1a;
+  font-family: inherit;
+}
+
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.colorLabel {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+.colorDot {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 2px solid;
+  cursor: pointer;
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+.colorDot:hover { transform: scale(1.15); }
+.colorDotActive {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 3px var(--accent);
+}
+
+.modalFooter {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.cancelBtn {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.cancelBtn:hover { color: var(--text); }
+.saveBtn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 9px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.saveBtn:hover:not(:disabled) { background: var(--accent-2); }
+.saveBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .board { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+  .noteCard { transform: none !important; }
+}

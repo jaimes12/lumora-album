@@ -33,6 +33,7 @@ import ProductosPage from './pages/ProductosPage'
 import ConfigPage        from './pages/ConfigPage'
 import TrabajadoresPage  from './pages/TrabajadoresPage'
 import SuperAdminPage    from './pages/SuperAdminPage'
+import NotasPage         from './pages/NotasPage'
 
 function LandingPage() {
   return (
@@ -103,6 +104,7 @@ export default function App() {
               <Route path="contactos"   element={<ContactosPage />} />
               <Route path="proveedores" element={<ProveedoresPage />} />
               <Route path="ventas"      element={<VentasPage />} />
+              <Route path="notas"       element={<NotasPage />} />
               <Route path="contratos"   element={<ContratosPage />} />
               <Route path="calendario"  element={<CalendarioPage />} />
               <Route path="paquetes"      element={<PaquetesPage />} />

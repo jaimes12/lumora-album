@@ -593,6 +593,32 @@ try
             PRIMARY KEY (`id`),
             UNIQUE KEY `uq_superadmin_email` (`email`)
         ) CHARACTER SET utf8mb4",
+
+        // Notas compartidas
+        @"CREATE TABLE IF NOT EXISTS `shared_notes` (
+            `id`         varchar(255) NOT NULL,
+            `org_id`     varchar(255) NOT NULL,
+            `user_id`    varchar(255) NOT NULL,
+            `user_name`  varchar(255) NOT NULL,
+            `user_photo` varchar(500)  NULL,
+            `content`    longtext     NOT NULL,
+            `color`      varchar(50)  NOT NULL DEFAULT 'yellow',
+            `created_at` datetime(6)  NOT NULL,
+            PRIMARY KEY (`id`),
+            KEY `idx_shared_notes_org` (`org_id`)
+        ) CHARACTER SET utf8mb4",
+
+        @"CREATE TABLE IF NOT EXISTS `note_reactions` (
+            `id`         varchar(255) NOT NULL,
+            `note_id`    varchar(255) NOT NULL,
+            `user_id`    varchar(255) NOT NULL,
+            `user_name`  varchar(255) NOT NULL,
+            `emoji`      varchar(20)  NOT NULL,
+            `created_at` datetime(6)  NOT NULL,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `uq_note_reaction` (`note_id`, `user_id`, `emoji`),
+            KEY `idx_note_reactions_note` (`note_id`)
+        ) CHARACTER SET utf8mb4",
     };
 
     try
