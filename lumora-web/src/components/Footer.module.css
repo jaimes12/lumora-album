@@ -36,6 +36,24 @@
 
 .tagline { font-size: 14px; color: var(--text-muted); max-width: 220px; line-height: 1.5; }
 
+.socials {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.socialLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  transition: color 0.15s;
+  width: fit-content;
+}
+.socialLink:hover { color: var(--accent-2); }
+
 .links { display: flex; gap: 48px; }
 
 .col {
