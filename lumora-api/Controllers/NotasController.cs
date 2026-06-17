@@ -158,5 +158,5 @@ public class NotasController(LumoraDbContext db) : ControllerBase
     }
 }
 
-record CreateNoteRequest(string Content, string? Color);
-record ToggleReactionRequest(string Emoji);
+public record CreateNoteRequest(string Content, string? Color);
+public record ToggleReactionRequest(string Emoji);
