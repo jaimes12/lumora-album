@@ -416,6 +416,8 @@ export default function AppLayout() {
 
   // WhatsApp
   const [waConnected,        setWaConnected]        = useState(false)
+  const [waDisconnectedAt,   setWaDisconnectedAt]   = useState(null)  // Date when disconnect detected
+  const [waNow,              setWaNow]              = useState(Date.now())
   const [showWaModal,        setShowWaModal]        = useState(false)
   const [confirmDisconnect,  setConfirmDisconnect]  = useState(false)
 
@@ -435,11 +437,28 @@ export default function AppLayout() {
   // Support modal
   const [showSupportModal,   setShowSupportModal]   = useState(false)
 
-  // Restore WA connected state on mount
+  // Poll WA status every 30s — detects disconnections without the modal
   useEffect(() => {
-    whatsappApi.getStatus()
-      .then(s => { if (s.connected) setWaConnected(true) })
-      .catch(() => {})
+    const checkWa = () => {
+      whatsappApi.getStatus()
+        .then(s => {
+          setWaConnected(prev => {
+            if (s.connected && !prev) setWaDisconnectedAt(null)
+            if (!s.connected && prev) setWaDisconnectedAt(Date.now())
+            return s.connected
+          })
+        })
+        .catch(() => {})
+    }
+    checkWa()
+    const id = setInterval(checkWa, 30_000)
+    return () => clearInterval(id)
+  }, [])
+
+  // Tick every minute so the "hace X min" label updates
+  useEffect(() => {
+    const id = setInterval(() => setWaNow(Date.now()), 60_000)
+    return () => clearInterval(id)
   }, [])
 
   // Close sidebar on route change
@@ -513,12 +532,24 @@ export default function AppLayout() {
 
   const handleConnect = () => {
     setWaConnected(true)
+    setWaDisconnectedAt(null)
   }
 
   const handleDisconnect = async () => {
     await whatsappApi.disconnect().catch(() => {})
     setWaConnected(false)
+    setWaDisconnectedAt(Date.now())
     setConfirmDisconnect(false)
+  }
+
+  const waTimeAgo = (ts) => {
+    if (!ts) return ''
+    const mins = Math.floor((waNow - ts) / 60_000)
+    if (mins < 1)  return 'hace un momento'
+    if (mins < 60) return `hace ${mins} min`
+    const hrs = Math.floor(mins / 60)
+    if (hrs < 24)  return `hace ${hrs} h`
+    return `hace ${Math.floor(hrs / 24)} días`
   }
 
   return (
@@ -610,10 +641,20 @@ export default function AppLayout() {
                 )}
               </div>
             ) : (
-              <button className={styles.waConnectBtn} onClick={() => setShowWaModal(true)}>
-                <div className={styles.waConnectIcon}><WhatsAppIcon /></div>
-                <span>Conectar WhatsApp</span>
-              </button>
+              <div className={styles.waDisconnectedWrap}>
+                <div className={styles.waDisconnectedRow}>
+                  <span className={styles.waRedDot} />
+                  <div className={styles.waDisconnectedInfo}>
+                    <span className={styles.waDisconnectedText}>Desconectado</span>
+                    {waDisconnectedAt && (
+                      <span className={styles.waDisconnectedSince}>{waTimeAgo(waDisconnectedAt)}</span>
+                    )}
+                  </div>
+                </div>
+                <button className={styles.waReconnectBtn} onClick={() => setShowWaModal(true)}>
+                  Reconectar
+                </button>
+              </div>
             )}
           </div>
 
