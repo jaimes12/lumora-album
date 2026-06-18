@@ -51,7 +51,7 @@ export default function Navbar() {
             Iniciar sesión
           </button>
           <button className={styles.btnCta} onClick={() => setShowRegister(true)}>
-            Crear cuenta →
+            Crear cuenta gratis →
           </button>
         </div>
       </nav>
