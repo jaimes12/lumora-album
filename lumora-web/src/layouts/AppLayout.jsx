@@ -412,7 +412,7 @@ function SupportModal({ onClose }) {
 /* ── Layout ── */
 export default function AppLayout() {
   const navigate = useNavigate()
-  const { theme, lang, toggleTheme, toggleLang, i18n } = useSettings()
+  const { theme, lang, currency, toggleTheme, toggleLang, cycleCurrency, i18n } = useSettings()
   const { user, logout } = useAuth()
   const VALID_PLANS = ['solo', 'negocio', 'agencia']
   const isLocked  = !user?.plan || !VALID_PLANS.includes(user.plan)
@@ -646,18 +646,16 @@ export default function AppLayout() {
                 )}
               </div>
             ) : (
-              <div className={styles.waDisconnectedWrap}>
-                <div className={styles.waDisconnectedRow}>
-                  <span className={styles.waRedDot} />
-                  <div className={styles.waDisconnectedInfo}>
-                    <span className={styles.waDisconnectedText}>Desconectado</span>
-                    {waDisconnectedAt && (
-                      <span className={styles.waDisconnectedSince}>{waTimeAgo(waDisconnectedAt)}</span>
-                    )}
+              <div className={`${styles.waDisconnectedWrap} ${!waDisconnectedAt ? styles.waDisconnectedWrapClean : ''}`}>
+                {waDisconnectedAt && (
+                  <div className={styles.waDisconnectedRow}>
+                    <span className={styles.waRedDot} />
+                    <span className={styles.waDisconnectedSince}>Desconectado {waTimeAgo(waDisconnectedAt)}</span>
                   </div>
-                </div>
+                )}
                 <button className={styles.waReconnectBtn} onClick={() => setShowWaModal(true)}>
-                  {waDisconnectedAt ? 'Reconectar' : 'Conectar'}
+                  <WhatsAppIcon />
+                  {waDisconnectedAt ? 'Reconectar WhatsApp' : 'Conectar WhatsApp'}
                 </button>
               </div>
             )}
@@ -679,6 +677,13 @@ export default function AppLayout() {
               <span className={styles.langFlag}>{lang === 'es' ? '🇲🇽' : '🇺🇸'}</span>
               <span>{lang === 'es' ? 'English' : 'Español'}</span>
               <span className={styles.langBadge}>{lang.toUpperCase()}</span>
+            </button>
+            <button className={styles.toggleBtn} onClick={cycleCurrency} title="Cambiar moneda (solo visualización)">
+              <span className={styles.langFlag}>
+                {currency === 'MXN' ? '🇲🇽' : currency === 'USD' ? '🇺🇸' : '🇪🇺'}
+              </span>
+              <span>Moneda</span>
+              <span className={styles.langBadge}>{currency}</span>
             </button>
           </div>
 

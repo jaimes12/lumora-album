@@ -1,4 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import { fmt as fmtBase } from '../data/eventosData'
+
+const CURRENCIES = ['MXN', 'USD', 'EUR']
+export { CURRENCIES }
 
 const SettingsContext = createContext(null)
 
@@ -46,23 +50,25 @@ export const t = {
 }
 
 export function SettingsProvider({ children }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light')
-  const [lang, setLang]   = useState(() => localStorage.getItem('lang')  || 'es')
+  const [theme,    setTheme]    = useState(() => localStorage.getItem('theme')    || 'light')
+  const [lang,     setLang]     = useState(() => localStorage.getItem('lang')     || 'es')
+  const [currency, setCurrency] = useState(() => localStorage.getItem('currency') || 'MXN')
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('theme', theme)
   }, [theme])
 
-  useEffect(() => {
-    localStorage.setItem('lang', lang)
-  }, [lang])
+  useEffect(() => { localStorage.setItem('lang',     lang)     }, [lang])
+  useEffect(() => { localStorage.setItem('currency', currency) }, [currency])
 
-  const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
-  const toggleLang  = () => setLang(l => l === 'es' ? 'en' : 'es')
+  const toggleTheme    = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
+  const toggleLang     = () => setLang(l => l === 'es' ? 'en' : 'es')
+  const cycleCurrency  = () => setCurrency(c => CURRENCIES[(CURRENCIES.indexOf(c) + 1) % CURRENCIES.length])
+  const fmtMoney       = (n) => fmtBase(n, currency)
 
   return (
-    <SettingsContext.Provider value={{ theme, lang, toggleTheme, toggleLang, i18n: t[lang] }}>
+    <SettingsContext.Provider value={{ theme, lang, currency, toggleTheme, toggleLang, cycleCurrency, fmtMoney, i18n: t[lang] }}>
       {children}
     </SettingsContext.Provider>
   )

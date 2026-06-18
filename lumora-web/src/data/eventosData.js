@@ -170,5 +170,15 @@ export const CAT_COLOR = {
   Transporte: '#94a3b8', Otro: '#64748b',
 }
 
-export const fmt = (n) =>
-  '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0 })
+export const CURRENCY_RATES   = { MXN: 1, USD: 1 / 17.5, EUR: 1 / 19.5 }
+export const CURRENCY_SYMBOLS = { MXN: '$', USD: 'USD $', EUR: '€' }
+export const CURRENCY_LOCALES = { MXN: 'es-MX', USD: 'en-US', EUR: 'de-DE' }
+
+export const fmt = (n, currency = 'MXN') => {
+  const rate      = CURRENCY_RATES[currency]   ?? 1
+  const symbol    = CURRENCY_SYMBOLS[currency] ?? '$'
+  const locale    = CURRENCY_LOCALES[currency] ?? 'es-MX'
+  const converted = Number(n) * rate
+  const decimals  = currency === 'MXN' ? 0 : 2
+  return symbol + converted.toLocaleString(locale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+}

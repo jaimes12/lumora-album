@@ -5,6 +5,7 @@ import { eventosApi } from '../api/eventosApi'
 import { clientesApi } from '../api/clientesApi'
 import { proveedoresApi } from '../api/proveedoresApi'
 import { ESTADO_META, CAT_COLOR, fmt } from '../data/eventosData'
+import { useSettings } from '../context/SettingsContext'
 import EventoTipoIcon from '../components/EventoTipoIcon'
 import { findOrCreateLeadByPhone } from '../api/leadsApi'
 import { ChatModal, DEFAULT_STAGES } from './ChatPage'
@@ -154,6 +155,7 @@ function EditEventModal({ evento, onSave, onClose }) {
 export default function EventoDetallePage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { fmtMoney, currency } = useSettings()
 
   const [evento,        setEvento]        = useState(null)
   const [cliente,       setCliente]       = useState(null)
@@ -383,16 +385,16 @@ export default function EventoDetallePage() {
             <div className={styles.finGrid}>
               <div className={styles.finStat}>
                 <span className={styles.finLabel}>Total del evento</span>
-                <span className={styles.finTotal}>{fmt(evento.presupuestoTotal)}</span>
+                <span className={styles.finTotal}>{fmtMoney(evento.presupuestoTotal)}</span>
               </div>
               <div className={styles.finStat}>
                 <span className={styles.finLabel}>Abonado</span>
-                <span className={styles.finAbonado}>{fmt(abonado)}</span>
+                <span className={styles.finAbonado}>{fmtMoney(abonado)}</span>
               </div>
               <div className={styles.finStat}>
                 <span className={styles.finLabel}>Por liquidar</span>
                 <span className={`${styles.finPendiente} ${pendiente === 0 ? styles.finPagado : ''}`}>
-                  {pendiente === 0 ? '✓ Liquidado' : fmt(pendiente)}
+                  {pendiente === 0 ? '✓ Liquidado' : fmtMoney(pendiente)}
                 </span>
               </div>
             </div>
@@ -435,7 +437,7 @@ export default function EventoDetallePage() {
                         <span className={styles.pagoConcepto}>{p.concepto}</span>
                         <span className={styles.pagoFechaMetodo}>{p.fecha} · {p.metodo}</span>
                       </div>
-                      <span className={styles.pagoMonto}>{fmt(p.monto)}</span>
+                      <span className={styles.pagoMonto}>{fmtMoney(p.monto)}</span>
                     </div>
                   ))}
                 </div>

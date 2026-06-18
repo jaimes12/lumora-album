@@ -3,6 +3,7 @@ import { ventasApi } from '../api/ventasApi'
 import { clientesApi } from '../api/clientesApi'
 import { eventosApi } from '../api/eventosApi'
 import { ventasStatsApi } from '../api/ventasStatsApi'
+import { useSettings } from '../context/SettingsContext'
 import styles from './VentasPage.module.css'
 
 // ── NuevoDocModal ──────────────────────────────────────────────────────────
@@ -365,14 +366,13 @@ function VentaDetailModal({ item, onClose, onUpdated, onDeleted, onCreated }) {
   const [saving,         setSaving]         = useState(false)
   const [error,          setError]          = useState('')
   const [confirmDelete,  setConfirmDelete]  = useState(false)
+  const { fmtMoney: fmt } = useSettings()
 
   const isCot    = item.tipo === 'quote'
   const meta     = isCot ? COT_META : FAC_META
   const m        = meta[item.estado] ?? { label: item.estado, cls: 'draft' }
   const actions  = isCot ? (COT_ACTIONS[item.estado] ?? []) : (FAC_ACTIONS[item.estado] ?? [])
   const canDelete = ['draft', 'cancelled'].includes(item.estado)
-
-  const fmt = n => '$' + Number(n).toLocaleString('es-MX')
 
   const handleAction = async (action) => {
     if (action.action === 'convert') {

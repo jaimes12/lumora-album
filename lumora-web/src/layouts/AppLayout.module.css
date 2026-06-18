@@ -1017,6 +1017,12 @@
   border-radius: 9px;
 }
 
+.waDisconnectedWrapClean {
+  background: transparent;
+  border-color: transparent;
+  padding: 0;
+}
+
 .waDisconnectedRow {
   display: flex;
   align-items: center;
@@ -1052,7 +1058,7 @@
 
 .waReconnectBtn {
   width: 100%;
-  padding: 6px 10px;
+  padding: 7px 10px;
   background: rgba(37,211,102,0.08);
   border: 1px solid rgba(37,211,102,0.2);
   border-radius: 7px;
@@ -1061,7 +1067,10 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 .waReconnectBtn:hover {
   background: rgba(37,211,102,0.14);
