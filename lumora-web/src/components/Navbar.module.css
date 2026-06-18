@@ -5,29 +5,30 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 48px;
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  padding: 0 48px;
+  height: 64px;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
   transition: background 0.3s;
 }
 
 [data-theme="dark"] .nav {
-  background: rgba(2,12,31,0.90);
+  background: rgba(2,12,31,0.92);
 }
 
 .logo { display: flex; align-items: center; }
 
 .logoImg {
-  height: 58px;
+  height: 42px;
   width: auto;
   object-fit: contain;
 }
 
 .links {
   display: flex;
-  gap: 32px;
+  gap: 36px;
 }
 
 .links a {
@@ -41,46 +42,23 @@
 
 .actions {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   align-items: center;
-}
-
-.themeBtn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.themeBtn:hover {
-  background: var(--bg-2);
-  color: var(--text);
-  border-color: var(--border-hover);
 }
 
 .btnLogin {
   background: transparent;
   color: var(--text-muted);
   border: none;
-  padding: 9px 16px;
+  padding: 8px 14px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: color 0.15s;
-  border-radius: 10px;
+  font-family: inherit;
 }
 
-.btnLogin:hover {
-  color: var(--text);
-  background: var(--bg-2);
-}
+.btnLogin:hover { color: var(--text); }
 
 .btnCta {
   background: var(--accent);
@@ -92,6 +70,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  font-family: inherit;
 }
 
 .btnCta:hover {
@@ -100,9 +79,9 @@
 }
 
 @media (max-width: 768px) {
-  .nav { padding: 12px 16px; }
+  .nav { padding: 0 16px; height: 56px; }
   .links { display: none; }
-  .logoImg { height: 44px; }
-  .btnLogin { padding: 8px 12px; font-size: 13px; }
-  .btnCta { padding: 8px 14px; font-size: 13px; }
+  .logoImg { height: 36px; }
+  .btnLogin { padding: 7px 10px; font-size: 13px; }
+  .btnCta { padding: 8px 16px; font-size: 13px; }
 }
