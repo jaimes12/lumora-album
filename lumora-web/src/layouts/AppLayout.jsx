@@ -657,7 +657,7 @@ export default function AppLayout() {
                   </div>
                 </div>
                 <button className={styles.waReconnectBtn} onClick={() => setShowWaModal(true)}>
-                  Reconectar
+                  {waDisconnectedAt ? 'Reconectar' : 'Conectar'}
                 </button>
               </div>
             )}
