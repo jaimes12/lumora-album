@@ -28,8 +28,8 @@ const PAIN_POINTS = [
 ]
 
 const STATS = [
-  { value: '2,400+', label: 'Eventos gestionados' },
-  { value: '98%',   label: 'Satisfacción' },
+  { value: '200+',  label: 'Organizadores activos' },
+  { value: '4,000+', label: 'Eventos gestionados' },
   { value: '3×',    label: 'Más rápido que Excel' },
 ]
 
