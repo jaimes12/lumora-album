@@ -103,6 +103,20 @@ public class AuthController(IAuthService auth, IR2Service r2) : ControllerBase
         catch (UnauthorizedAccessException ex) { return Unauthorized(new { message = ex.Message }); }
     }
 
+    [HttpPost("start-trial")]
+    [Authorize]
+    public async Task<IActionResult> StartTrial()
+    {
+        var orgId = User.FindFirst("org_id")?.Value;
+        if (string.IsNullOrEmpty(orgId)) return Unauthorized();
+        try
+        {
+            var trialStartedAt = await auth.StartTrialAsync(orgId);
+            return Ok(new { trialStartedAt });
+        }
+        catch (Exception ex) { return StatusCode(500, new { message = ex.Message }); }
+    }
+
     [HttpPatch("photo")]
     [Authorize]
     public async Task<IActionResult> UpdatePhoto([FromBody] UpdatePhotoRequest req)

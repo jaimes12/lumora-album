@@ -69,7 +69,7 @@ const CheckIcon = () => (
 )
 
 export default function PaquetesPage() {
-  const { user, updatePlan } = useAuth()
+  const { user, updatePlan, startTrial } = useAuth()
   const { currency, setCurrency } = useSettings()
   const [plans,          setPlans]          = useState(PLANS_FALLBACK)
   const [loading,        setLoading]        = useState(null)
@@ -81,6 +81,7 @@ export default function PaquetesPage() {
   const [histLoading,    setHistLoading]    = useState(false)
   const [subInfo,        setSubInfo]        = useState(null)
   const [subLoading,     setSubLoading]     = useState(false)
+  const [trialLoading,   setTrialLoading]   = useState(false)
 
   useEffect(() => {
     const PLAN_IDS = ['solo', 'negocio', 'agencia']
@@ -93,8 +94,23 @@ export default function PaquetesPage() {
       .catch(() => {})
   }, [])
 
-  const currentPlan = user?.plan ?? 'free'
-  const activePlan  = plans.find(p => p.id === currentPlan)
+  const currentPlan  = user?.plan ?? 'free'
+  const activePlan   = plans.find(p => p.id === currentPlan)
+  const TRIAL_DAYS   = 5
+  const trialStarted = user?.trialStartedAt ? new Date(user.trialStartedAt) : null
+  const trialDaysLeft = trialStarted
+    ? Math.max(0, TRIAL_DAYS - Math.floor((Date.now() - trialStarted.getTime()) / 86_400_000))
+    : null
+  const inTrial = currentPlan === 'free' && trialDaysLeft !== null && trialDaysLeft > 0
+  const trialExpired = currentPlan === 'free' && trialDaysLeft === 0 && trialStarted !== null
+  const noTrial = currentPlan === 'free' && trialStarted === null
+
+  const handleStartTrial = async () => {
+    setTrialLoading(true)
+    try { await startTrial() }
+    catch {}
+    finally { setTrialLoading(false) }
+  }
 
   useEffect(() => {
     if (currentPlan === 'free') return
@@ -194,12 +210,47 @@ export default function PaquetesPage() {
         </section>
       ) : (
         <section className={styles.section}>
-          <div className={styles.noPlan}>
-            <p>No tienes un plan activo. Elige uno para comenzar.</p>
-            <button className={styles.btnChangePlan} onClick={() => setShowChangePlan(true)}>
-              Ver planes
-            </button>
-          </div>
+          {noTrial ? (
+            <div className={styles.trialCard}>
+              <div className={styles.trialCardEmoji}>🎉</div>
+              <div className={styles.trialCardBody}>
+                <h3 className={styles.trialCardTitle}>Activa tu prueba gratuita de 5 días</h3>
+                <p className={styles.trialCardDesc}>
+                  Accede a todas las funciones de Elixe sin costo. Sin tarjeta de crédito requerida.
+                </p>
+                <button
+                  className={styles.trialCardBtn}
+                  onClick={handleStartTrial}
+                  disabled={trialLoading}
+                >
+                  {trialLoading ? 'Activando…' : '🚀 Activar 5 días gratis'}
+                </button>
+              </div>
+            </div>
+          ) : inTrial ? (
+            <div className={styles.trialCard} style={{ '--trial-color': '#22c55e' }}>
+              <div className={styles.trialCardEmoji}>✅</div>
+              <div className={styles.trialCardBody}>
+                <h3 className={styles.trialCardTitle}>Prueba activa — {trialDaysLeft} día{trialDaysLeft !== 1 ? 's' : ''} restante{trialDaysLeft !== 1 ? 's' : ''}</h3>
+                <p className={styles.trialCardDesc}>Estás usando Elixe con acceso completo. Elige un plan antes de que expire.</p>
+                <button className={styles.btnChangePlan} onClick={() => setShowChangePlan(true)}>Ver planes</button>
+              </div>
+            </div>
+          ) : trialExpired ? (
+            <div className={styles.trialCard} style={{ '--trial-color': '#f87171' }}>
+              <div className={styles.trialCardEmoji}>⏰</div>
+              <div className={styles.trialCardBody}>
+                <h3 className={styles.trialCardTitle}>Tu prueba gratuita expiró</h3>
+                <p className={styles.trialCardDesc}>Contrata un plan para seguir usando Elixe y no perder tu información.</p>
+                <button className={styles.btnChangePlan} onClick={() => setShowChangePlan(true)}>Ver planes →</button>
+              </div>
+            </div>
+          ) : (
+            <div className={styles.noPlan}>
+              <p>No tienes un plan activo. Elige uno para comenzar.</p>
+              <button className={styles.btnChangePlan} onClick={() => setShowChangePlan(true)}>Ver planes</button>
+            </div>
+          )}
         </section>
       )}
 

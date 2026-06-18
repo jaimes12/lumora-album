@@ -96,6 +96,16 @@ export function AuthProvider({ children }) {
     return res.url
   }
 
+  const startTrial = async () => {
+    const res = await api.post('/api/auth/start-trial', {})
+    setUser(prev => {
+      const next = { ...prev, trialStartedAt: res.trialStartedAt }
+      localStorage.setItem('elixe_user', JSON.stringify(next))
+      return next
+    })
+    return res.trialStartedAt
+  }
+
   const logout = () => {
     localStorage.removeItem('elixe_token')
     localStorage.removeItem('elixe_user')
@@ -103,7 +113,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, updatePlan, updateProfile, updateEmail, updatePassword, updatePhoto, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, updatePlan, updateProfile, updateEmail, updatePassword, updatePhoto, startTrial, logout }}>
       {children}
     </AuthContext.Provider>
   )

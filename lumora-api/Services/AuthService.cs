@@ -21,6 +21,7 @@ public interface IAuthService
     Task UpdateEmailAsync(string userId, UpdateEmailRequest req);
     Task UpdatePasswordAsync(string userId, UpdatePasswordRequest req);
     Task<string> UpdatePhotoAsync(string userId, string photoBase64, IR2Service r2);
+    Task<DateTime> StartTrialAsync(string orgId);
 }
 
 public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r2) : IAuthService
@@ -140,6 +141,17 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
         user.ProfilePhoto = url;
         await db.SaveChangesAsync();
         return url ?? string.Empty;
+    }
+
+    public async Task<DateTime> StartTrialAsync(string orgId)
+    {
+        var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == orgId)
+            ?? throw new InvalidOperationException("Organización no encontrada");
+        if (org.TrialStartedAt.HasValue)
+            return org.TrialStartedAt.Value;
+        org.TrialStartedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+        return org.TrialStartedAt.Value;
     }
 
     private static string HashPassword(string password)

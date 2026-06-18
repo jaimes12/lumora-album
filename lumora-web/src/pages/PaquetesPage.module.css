@@ -120,6 +120,54 @@
   font-size: 14px; color: var(--text-muted);
 }
 
+/* ── Trial card ── */
+.trialCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  background: var(--bg-1);
+  border: 1.5px solid var(--trial-color, var(--accent));
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+}
+
+.trialCardEmoji { font-size: 36px; line-height: 1; flex-shrink: 0; }
+
+.trialCardBody { display: flex; flex-direction: column; gap: 8px; }
+
+.trialCardTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.trialCardDesc {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.trialCardBtn {
+  margin-top: 6px;
+  align-self: flex-start;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 11px 24px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.trialCardBtn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+.trialCardBtn:disabled { opacity: 0.5; cursor: default; }
+
 /* ── Plans grid ── */
 .plansGrid {
   display: grid;
