@@ -5,8 +5,12 @@
   min-height: 100vh;
   display: grid;
   grid-template-columns: 1fr 1.2fr;
-  align-items: center;
-  gap: 80px;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "top    mockup"
+    "bot    mockup";
+  column-gap: 80px;
+  row-gap: 28px;
   padding: 150px 72px 100px;
   max-width: 1400px;
   margin: 0 auto;
@@ -89,12 +93,24 @@
 }
 
 /* ── Copy ── */
-.content {
+.contentTop {
+  grid-area: top;
   display: flex;
   flex-direction: column;
   gap: 28px;
   position: relative;
   z-index: 1;
+  align-self: end;
+}
+
+.contentBot {
+  grid-area: bot;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  position: relative;
+  z-index: 1;
+  align-self: start;
 }
 
 .badge {
@@ -259,10 +275,10 @@
 
 /* ── 3D Mockup ── */
 .mockupWrap {
+  grid-area: mockup;
   position: relative;
   z-index: 1;
-  align-self: flex-start;
-  margin-top: -40px;
+  align-self: center;
 }
 
 /* Floating notification pills */
@@ -373,46 +389,41 @@
 @media (max-width: 1120px) {
   .hero {
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "top"
+      "mockup"
+      "bot";
     padding: 130px 48px 80px;
-    gap: 80px;
+    column-gap: 0;
+    row-gap: 48px;
   }
   .glowLeft, .glowRight { display: none; }
   .device {
     transform: none !important;
     animation: none;
   }
-  .mockupWrap { position: relative; }
-
-  /* Hide only the side-floating pill on tablet */
   .notifMid { display: none; }
 }
 
 @media (max-width: 768px) {
-  .hero { padding: 110px 24px 60px; gap: 60px; }
+  .hero { padding: 110px 24px 60px; row-gap: 36px; }
   .title { font-size: clamp(32px, 8vw, 52px); }
   .sub { font-size: 15px; }
   .stats { gap: 20px; flex-wrap: wrap; }
-  .evtBody { grid-template-columns: 1fr; }
   .device { border-radius: 14px; }
   .btns { flex-direction: column; align-items: flex-start; }
   .btnPrimary, .btnSecondary { width: 100%; text-align: center; padding: 14px 24px; }
-
-  /* Reposition floating pills for mobile */
   .notifTop { top: -20px; right: 16px; left: auto; }
   .notifBot { bottom: -16px; right: 16px; left: auto; }
 }
 
 @media (max-width: 480px) {
-  .hero { padding: 90px 16px 48px; gap: 48px; }
+  .hero { padding: 90px 16px 48px; row-gap: 28px; }
   .badge { font-size: 11.5px; padding: 5px 12px; }
   .stats { gap: 14px; }
   .statVal { font-size: 20px; }
   .device { border-radius: 12px; }
-  .evtHeader { padding: 10px 14px; gap: 8px; }
-  .evtEmoji { font-size: 18px; }
-  .evtName { font-size: 13px; }
-  .evtBody { padding: 8px; gap: 8px; }
-  .evtCard { padding: 9px; gap: 7px; }
   .notif { font-size: 11.5px; padding: 7px 14px; gap: 6px; }
   .notifTop { top: -16px; right: 10px; }
   .notifBot { bottom: -12px; right: 10px; }

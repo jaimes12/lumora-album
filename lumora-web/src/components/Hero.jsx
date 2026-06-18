@@ -71,8 +71,8 @@ export default function Hero() {
         <div className={styles.glowLeft} />
         <div className={styles.glowRight} />
 
-        {/* ── Left: copy ── */}
-        <div className={styles.content}>
+        {/* ── Left top: badge + title + sub ── */}
+        <div className={styles.contentTop}>
           <div className={styles.badge}>
             <span className={styles.dot} />
             Plataforma todo-en-uno para organizadores de eventos
@@ -92,7 +92,10 @@ export default function Hero() {
             Controla clientes, pagos, proveedores y eventos desde un solo lugar.
             Organiza todo tu negocio en minutos.
           </p>
+        </div>
 
+        {/* ── Left bottom: pain points + CTA + stats ── */}
+        <div className={styles.contentBot}>
           <div className={styles.painPoints}>
             <p className={styles.painTitle}>¿Te pasa esto?</p>
             <ul className={styles.painList}>
