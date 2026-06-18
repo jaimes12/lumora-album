@@ -214,8 +214,8 @@ export default function Hero() {
           </div>
 
           <h1 className={styles.title}>
-            Gestiona tus eventos<br />
-            <span className={styles.grad}>como un profesional.</span>
+            El CRM para organizadores<br />
+            <span className={styles.grad}>que reemplaza Excel y WhatsApp.</span>
           </h1>
 
           <div className={styles.roleWrap}>
@@ -229,8 +229,8 @@ export default function Hero() {
           </div>
 
           <p className={styles.sub}>
-            CRM de clientes, proveedores, WhatsApp, calendario, tareas y cotizaciones
-            en un solo lugar. Olvídate del Excel.
+            Controla clientes, pagos, proveedores y eventos desde un solo lugar.
+            Organiza todo tu negocio en minutos.
           </p>
 
           <div className={styles.btns}>
