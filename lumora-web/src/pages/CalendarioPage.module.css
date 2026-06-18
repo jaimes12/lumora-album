@@ -492,6 +492,135 @@
 /* ── day header full/short variants ── */
 .dayShort { display: none; }
 
+/* Cell count badge — only visible on mobile */
+.cellCount { display: none; }
+
+/* Cell with events — pointer on desktop too */
+.cellHasEvs { cursor: pointer; }
+
+/* ── Day sheet (bottom drawer) ── */
+.sheetOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 300;
+  display: flex;
+  align-items: flex-end;
+}
+
+.sheet {
+  background: var(--bg-1);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  padding: 12px 20px 40px;
+  max-height: 72vh;
+  overflow-y: auto;
+  animation: sheetUp 0.22s ease;
+}
+
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.sheetHandle {
+  width: 36px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+.sheetHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.sheetDate {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 2px;
+}
+
+.sheetCount {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.sheetClose {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.sheetClose:hover { color: var(--text); border-color: var(--border-hover); }
+
+.sheetList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sheetRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.sheetRow:hover { border-color: var(--border-hover); background: var(--bg-3, var(--bg-2)); }
+
+.sheetRowInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.sheetRowName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sheetRowSub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.sheetRowBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 /* Mobile */
 @media (max-width: 768px) {
   .page { padding: 20px 14px; }
@@ -533,25 +662,27 @@
     margin-bottom: 3px;
   }
 
-  /* Event dots instead of pills */
-  .eventList {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 3px;
-    padding: 0 1px;
-  }
+  /* Hide pills entirely — show count badge instead */
+  .eventList { display: none; }
+  .morePill  { display: none; }
 
-  .eventPill {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    padding: 0;
-    gap: 0;
-    border-left: none !important;
-    flex-shrink: 0;
+  /* Count badge */
+  .cellCount {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent, #2B6FD4);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    padding: 0 4px;
+    line-height: 1;
   }
-
-  .pillIco  { display: none; }
-  .pillText { display: none; }
-  .morePill { display: none; }
 }

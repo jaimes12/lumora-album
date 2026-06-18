@@ -12,6 +12,48 @@ const MONTHS_ES = [
 const DAYS_ES    = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 const DAYS_SHORT = ['Do',  'Lu',  'Ma',  'Mi',  'Ju',  'Vi',  'Sa']
 
+function DaySheet({ day, month, year, evs, onClose, onSelectEvent }) {
+  useEffect(() => {
+    const onKey = e => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  return (
+    <div className={styles.sheetOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className={styles.sheet}>
+        <div className={styles.sheetHandle} />
+        <div className={styles.sheetHeader}>
+          <div>
+            <p className={styles.sheetDate}>{day} de {MONTHS_ES[month]} {year}</p>
+            <p className={styles.sheetCount}>{evs.length} evento{evs.length !== 1 ? 's' : ''}</p>
+          </div>
+          <button className={styles.sheetClose} onClick={onClose} aria-label="Cerrar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div className={styles.sheetList}>
+          {evs.map(ev => {
+            const meta = ESTADO_META[ev.estado] || ESTADO_META.lead
+            return (
+              <button key={ev.id} className={styles.sheetRow} onClick={() => { onClose(); onSelectEvent(ev) }}>
+                <EventoTipoIcon tipo={ev.tipo} size={18} />
+                <div className={styles.sheetRowInfo}>
+                  <span className={styles.sheetRowName}>{ev.nombre}</span>
+                  <span className={styles.sheetRowSub}>{ev.hora} · {ev.venue || 'Por confirmar'}</span>
+                </div>
+                <span className={styles.sheetRowBadge} style={{ color: meta.color, background: meta.bg }}>{meta.label}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function EventModal({ ev, onClose, onDetalle }) {
   const meta = ESTADO_META[ev.estado] || ESTADO_META.lead
 
@@ -80,6 +122,7 @@ export default function CalendarioPage() {
   const today = new Date()
   const [eventos,       setEventos]       = useState([])
   const [selectedEvent, setSelectedEvent] = useState(null)
+  const [selectedDay,   setSelectedDay]   = useState(null)
   const [current, setCurrent] = useState({
     year: today.getFullYear(),
     month: today.getMonth(),
@@ -146,6 +189,16 @@ export default function CalendarioPage() {
           onDetalle={() => navigate(`/app/eventos/${selectedEvent.id}`)}
         />
       )}
+      {selectedDay && (
+        <DaySheet
+          day={selectedDay.day}
+          month={month}
+          year={year}
+          evs={selectedDay.evs}
+          onClose={() => setSelectedDay(null)}
+          onSelectEvent={ev => setSelectedEvent(ev)}
+        />
+      )}
 
       <div className={styles.header}>
         <div>
@@ -181,7 +234,11 @@ export default function CalendarioPage() {
             const evs = eventsByDate[key] || []
             const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear()
             return (
-              <div key={day} className={`${styles.cell} ${isToday ? styles.cellToday : ''}`}>
+              <div
+                key={day}
+                className={`${styles.cell} ${isToday ? styles.cellToday : ''} ${evs.length > 0 ? styles.cellHasEvs : ''}`}
+                onClick={() => evs.length > 0 && setSelectedDay({ day, evs })}
+              >
                 <span className={`${styles.dayNum} ${isToday ? styles.dayNumToday : ''}`}>{day}</span>
                 <div className={styles.eventList}>
                   {evs.slice(0, 3).map(ev => {
@@ -189,7 +246,7 @@ export default function CalendarioPage() {
                     return (
                       <button key={ev.id} className={styles.eventPill}
                         style={{ background: meta.bg, borderLeft: `3px solid ${meta.color}`, color: meta.color }}
-                        onClick={() => setSelectedEvent(ev)} title={ev.nombre}>
+                        onClick={e => { e.stopPropagation(); setSelectedEvent(ev) }} title={ev.nombre}>
                         <span className={styles.pillIco}><EventoTipoIcon tipo={ev.tipo} size={9} /></span>
                         <span className={styles.pillText}>{ev.nombre}</span>
                       </button>
@@ -197,6 +254,10 @@ export default function CalendarioPage() {
                   })}
                   {evs.length > 3 && <span className={styles.morePill}>+{evs.length - 3} más</span>}
                 </div>
+                {/* Mobile: show count badge */}
+                {evs.length > 0 && (
+                  <span className={styles.cellCount}>{evs.length}</span>
+                )}
               </div>
             )
           })}
