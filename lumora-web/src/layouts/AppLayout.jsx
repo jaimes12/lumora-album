@@ -654,6 +654,11 @@ export default function AppLayout() {
                   </>
                 )}
               </div>
+            ) : isLocked ? (
+              <button className={styles.waLockedBtn} onClick={() => navigate('/app/paquetes')} title="Requiere plan activo">
+                <WhatsAppIcon />
+                Conectar WhatsApp
+              </button>
             ) : (
               <div className={`${styles.waDisconnectedWrap} ${!waDisconnectedAt ? styles.waDisconnectedWrapClean : ''}`}>
                 {waDisconnectedAt && (
