@@ -1,6 +1,7 @@
 import styles from './Hero.module.css'
 import { useState } from 'react'
 import RegisterModal from './RegisterModal'
+import heroVideo from '../assets/elixe_landing.mp4'
 
 const BG_ICONS = [
   { emoji: '💍', top: '7%',  left: '4%',  size: 32, delay: '0s',   dur: '9s'  },
@@ -39,130 +40,9 @@ const NOTIFS = [
   { text: 'Pago registrado — $5,000',      sub: 'Transferencia', color: '#a78bfa', delay: '3.4s', pos: 'bot' },
 ]
 
-/* Icons */
-const IcoCalendar = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-  </svg>
-)
-const IcoPin = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-  </svg>
-)
-const IcoGuests = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-  </svg>
-)
-const IcoChat = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-  </svg>
-)
 const IcoDot = ({ color }) => (
   <span style={{ width: 7, height: 7, borderRadius: '50%', background: color, display: 'inline-block', flexShrink: 0 }} />
 )
-
-/* Event detail mock */
-function EventDetailMock() {
-  return (
-    <div className={styles.evtMock}>
-      {/* Event header */}
-      <div className={styles.evtHeader}>
-        <div className={styles.evtHeaderLeft}>
-          <div className={styles.evtEmoji}>🌸</div>
-          <div>
-            <div className={styles.evtName}>XV Años Naomi</div>
-            <div className={styles.evtMeta}>
-              <span className={styles.evtMetaItem}><IcoCalendar /> 13 Dic 2026</span>
-              <span className={styles.evtMetaItem}><IcoPin /> Salón Real</span>
-              <span className={styles.evtMetaItem}><IcoGuests /> 150 invitados</span>
-            </div>
-          </div>
-        </div>
-        <span className={styles.evtTypePill}>XV Años</span>
-      </div>
-
-      <div className={styles.evtBody}>
-        {/* Left column */}
-        <div className={styles.evtCol}>
-          {/* Finances */}
-          <div className={styles.evtCard}>
-            <div className={styles.evtCardLabel}>Resumen financiero</div>
-            <div className={styles.finRow}>
-              <div className={styles.finItem}>
-                <span className={styles.finItemLabel}>Total</span>
-                <span className={styles.finItemVal}>$20,000</span>
-              </div>
-              <div className={styles.finItem}>
-                <span className={styles.finItemLabel}>Abonado</span>
-                <span className={styles.finItemVal} style={{ color: '#34d399' }}>$5,000</span>
-              </div>
-              <div className={styles.finItem}>
-                <span className={styles.finItemLabel}>Por liquidar</span>
-                <span className={styles.finItemVal} style={{ color: '#fb923c' }}>$15,000</span>
-              </div>
-            </div>
-            <div className={styles.progressWrap}>
-              <div className={styles.progressBar}>
-                <div className={styles.progressFill} style={{ width: '25%' }} />
-              </div>
-              <span className={styles.progressLabel}>25% cobrado</span>
-            </div>
-            <div className={styles.paymentRow}>
-              <div>
-                <div className={styles.paymentName}>Anticipo</div>
-                <div className={styles.paymentMeta}>06 Jun · Transferencia</div>
-              </div>
-              <span className={styles.paymentAmt}>+$5,000</span>
-            </div>
-          </div>
-
-          {/* Notes */}
-          <div className={styles.evtCard}>
-            <div className={styles.evtCardLabel}>Notas del evento</div>
-            <p className={styles.notesText}>3 mesas de 50 sillas, todo rosa. Arco de flores en entrada.</p>
-          </div>
-        </div>
-
-        {/* Right column */}
-        <div className={styles.evtCol}>
-          {/* Client */}
-          <div className={styles.evtCard}>
-            <div className={styles.evtCardLabel}>Cliente</div>
-            <div className={styles.clientRow}>
-              <div className={styles.clientAvatar}>N</div>
-              <div className={styles.clientInfo}>
-                <span className={styles.clientName}>Naomi López</span>
-                <span className={styles.clientEmail}>naomi@mail.com</span>
-              </div>
-              <button className={styles.chatBtn}><IcoChat /></button>
-            </div>
-          </div>
-
-          {/* Providers */}
-          <div className={styles.evtCard}>
-            <div className={styles.evtCardLabel}>Proveedores</div>
-            {[
-              { name: 'Flores Cristal', role: 'Decoración', color: '#f472b6' },
-              { name: 'Foto Estudio MX', role: 'Fotografía', color: '#38bdf8' },
-              { name: 'DJ Kevin Sound', role: 'Entretenimiento', color: '#a78bfa' },
-            ].map(p => (
-              <div key={p.name} className={styles.provRow}>
-                <IcoDot color={p.color} />
-                <div className={styles.provInfo}>
-                  <span className={styles.provName}>{p.name}</span>
-                  <span className={styles.provRole}>{p.role}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 export default function Hero() {
   const [showRegister, setShowRegister] = useState(false)
@@ -265,10 +145,17 @@ export default function Hero() {
               <div className={styles.dots}>
                 <span /><span /><span />
               </div>
-              <span className={styles.deviceTitle}>Elixe — Detalle del evento</span>
+              <span className={styles.deviceTitle}>app.elixe.mx</span>
               <div className={styles.devicePill}>En vivo</div>
             </div>
-            <EventDetailMock />
+            <video
+              className={styles.deviceVideo}
+              src={heroVideo}
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
           </div>
         </div>
       </section>
