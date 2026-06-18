@@ -64,6 +64,9 @@ export default function RegisterModal({ onClose }) {
     setLoading(true)
     try {
       await register(orgName.trim(), name.trim(), email, pass)
+      if (window.fbq) {
+        fbq('track', 'CompleteRegistration', { content_name: 'Elixe', currency: 'MXN', value: 0 })
+      }
       onClose()
       navigate('/app/paquetes')
     } catch (err) {
@@ -79,6 +82,9 @@ export default function RegisterModal({ onClose }) {
     setLoading(true)
     try {
       const user = await login(email, pass)
+      if (window.fbq) {
+        fbq('track', 'Lead', { content_name: 'Elixe Login' })
+      }
       onClose()
       navigate(user.plan === 'free' ? '/app/paquetes' : '/app/dashboard')
     } catch {
