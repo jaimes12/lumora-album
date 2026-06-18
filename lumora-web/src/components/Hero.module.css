@@ -139,26 +139,15 @@
   -webkit-text-fill-color: #2B6FD4;
 }
 
-.roleWrap {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  font-size: clamp(18px, 1.6vw, 24px);
-  font-weight: 700;
-  margin-bottom: 10px;
-  letter-spacing: -0.02em;
-  gap: 0;
+.professions {
+  font-size: clamp(15px, 1.3vw, 18px);
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 4px;
 }
-.rolePrefix {
-  color: #0A1628;
+.professions strong {
+  color: var(--text);
   font-weight: 700;
-}
-.roleWord {
-  color: #2B6FD4;
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  transition: opacity 0.35s ease, transform 0.35s ease;
-  display: inline-block;
 }
 
 .sub {
@@ -166,6 +155,46 @@
   color: var(--text-muted);
   line-height: 1.75;
   max-width: 490px;
+}
+
+.painPoints {
+  background: rgba(0,0,0,0.03);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 22px;
+  max-width: 490px;
+}
+[data-theme="dark"] .painPoints {
+  background: rgba(255,255,255,0.04);
+}
+.painTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.painList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.painItem {
+  font-size: 14px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.4;
+}
+.painX { font-size: 13px; flex-shrink: 0; }
+.painCta {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-2);
+  margin: 0;
 }
 
 .btns { display: flex; gap: 12px; flex-wrap: wrap; }

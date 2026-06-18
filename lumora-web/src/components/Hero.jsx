@@ -1,5 +1,5 @@
 import styles from './Hero.module.css'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import RegisterModal from './RegisterModal'
 
 const BG_ICONS = [
@@ -19,14 +19,12 @@ const BG_ICONS = [
   { emoji: '🎶', top: '28%', left: '10%', size: 20, delay: '3.5s', dur: '11s' },
 ]
 
-const ROLES = [
-  'Wedding Planners',
-  'Dueños de salones',
-  'Decoradores',
-  'Fotógrafos',
-  'DJs y músicos',
-  'Coordinadores de eventos',
-  'Bufetes y banqueteros',
+const PAIN_POINTS = [
+  'Clientes perdidos en WhatsApp',
+  'Anticipos sin registrar',
+  'Eventos en Excel',
+  'Proveedores en diferentes chats',
+  'Pagos pendientes olvidados',
 ]
 
 const STATS = [
@@ -168,19 +166,6 @@ function EventDetailMock() {
 
 export default function Hero() {
   const [showRegister, setShowRegister] = useState(false)
-  const [roleIdx, setRoleIdx]   = useState(0)
-  const [visible, setVisible]   = useState(true)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setVisible(false)
-      setTimeout(() => {
-        setRoleIdx(i => (i + 1) % ROLES.length)
-        setVisible(true)
-      }, 350)
-    }, 2500)
-    return () => clearInterval(interval)
-  }, [])
 
   return (
     <>
@@ -218,24 +203,31 @@ export default function Hero() {
             <span className={styles.grad}>que reemplaza Excel y WhatsApp.</span>
           </h1>
 
-          <div className={styles.roleWrap}>
-            <span className={styles.rolePrefix}>Esta plataforma es para&nbsp;</span>
-            <span
-              className={styles.roleWord}
-              style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(8px)' }}
-            >
-              {ROLES[roleIdx]}.
-            </span>
-          </div>
+          <p className={styles.professions}>
+            Ideal para <strong>Wedding Planners</strong>, <strong>Salones</strong>,{' '}
+            <strong>Fotógrafos</strong>, <strong>DJs</strong> y <strong>Banquetes</strong>.
+          </p>
 
           <p className={styles.sub}>
             Controla clientes, pagos, proveedores y eventos desde un solo lugar.
             Organiza todo tu negocio en minutos.
           </p>
 
+          <div className={styles.painPoints}>
+            <p className={styles.painTitle}>¿Te pasa esto?</p>
+            <ul className={styles.painList}>
+              {PAIN_POINTS.map(p => (
+                <li key={p} className={styles.painItem}>
+                  <span className={styles.painX}>❌</span> {p}
+                </li>
+              ))}
+            </ul>
+            <p className={styles.painCta}>Elixe centraliza todo en una sola plataforma.</p>
+          </div>
+
           <div className={styles.btns}>
             <button className={styles.btnPrimary} onClick={() => setShowRegister(true)}>
-              Crear cuenta →
+              Crear cuenta gratis →
             </button>
             <button className={styles.btnSecondary} onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}>
               Ver demo en vivo
