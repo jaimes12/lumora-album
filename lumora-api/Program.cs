@@ -425,6 +425,7 @@ try
         "ALTER TABLE users ADD COLUMN phone varchar(50) NULL",
         "ALTER TABLE organizations ADD COLUMN stripe_customer_id varchar(255) NULL",
         "ALTER TABLE organizations ADD COLUMN stripe_subscription_id varchar(255) NULL",
+        "ALTER TABLE organizations ADD COLUMN trial_started_at datetime(6) NULL",
 
         @"CREATE TABLE IF NOT EXISTS `org_products` (
             `id`          varchar(255) NOT NULL,

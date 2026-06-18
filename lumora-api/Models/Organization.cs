@@ -25,6 +25,9 @@ public class Organization
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    [Column("trial_started_at")]
+    public DateTime? TrialStartedAt { get; set; }
+
     public ICollection<Client> Clients { get; set; } = [];
     public ICollection<Event> Events { get; set; } = [];
 }

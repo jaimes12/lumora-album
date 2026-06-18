@@ -36,7 +36,8 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
             Id = Guid.NewGuid().ToString(),
             Name = req.OrgName,
             Plan = "free",
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            TrialStartedAt = DateTime.UtcNow
         };
         await db.Organizations.AddAsync(org);
 
@@ -60,7 +61,8 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
             user.Name,
             user.Email,
             "free",
-            user.Role
+            user.Role,
+            org.TrialStartedAt
         );
     }
 
@@ -80,7 +82,8 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
             user.Name,
             user.Email,
             user.Organization?.Plan ?? "free",
-            user.Role
+            user.Role,
+            user.Organization?.TrialStartedAt
         );
     }
 
@@ -97,7 +100,7 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
     {
         var user = await db.Users.Include(u => u.Organization).FirstOrDefaultAsync(u => u.Id == userId)
             ?? throw new InvalidOperationException("Usuario no encontrado");
-        return new UserProfileResponse(user.Id, user.Name, user.Email, user.ProfilePhoto, user.Organization?.Plan ?? "free", user.Role);
+        return new UserProfileResponse(user.Id, user.Name, user.Email, user.ProfilePhoto, user.Organization?.Plan ?? "free", user.Role, user.Organization?.TrialStartedAt);
     }
 
     public async Task UpdateProfileAsync(string userId, UpdateProfileRequest req)

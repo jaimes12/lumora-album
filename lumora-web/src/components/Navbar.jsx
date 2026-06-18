@@ -32,7 +32,7 @@ export default function Navbar() {
             Acceder
           </button>
           <button className={styles.btnCta} onClick={() => setShowRegister(true)}>
-            Comenzar gratis
+            Comenzar gratis — 5 días
           </button>
         </div>
       </nav>

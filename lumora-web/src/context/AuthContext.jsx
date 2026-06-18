@@ -27,7 +27,7 @@ export function AuthProvider({ children }) {
         if (res?.plan !== undefined) {
           setUser(prev => {
             if (!prev) return prev
-            const next = { ...prev, plan: res.plan ?? 'free', role: res.role ?? prev.role ?? 'admin' }
+            const next = { ...prev, plan: res.plan ?? 'free', role: res.role ?? prev.role ?? 'admin', trialStartedAt: res.trialStartedAt ?? prev.trialStartedAt ?? null }
             localStorage.setItem('elixe_user', JSON.stringify(next))
             return next
           })
@@ -38,7 +38,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   const saveUser = (res) => {
-    const u = { userId: res.userId, orgId: res.orgId, name: res.name, email: res.email, plan: res.plan ?? 'free', role: res.role ?? 'admin' }
+    const u = { userId: res.userId, orgId: res.orgId, name: res.name, email: res.email, plan: res.plan ?? 'free', role: res.role ?? 'admin', trialStartedAt: res.trialStartedAt ?? null }
     localStorage.setItem('elixe_token', res.token)
     localStorage.setItem('elixe_user', JSON.stringify(u))
     setUser(u)

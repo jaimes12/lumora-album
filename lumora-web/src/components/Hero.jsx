@@ -110,12 +110,13 @@ export default function Hero() {
 
           <div className={styles.btns}>
             <button className={styles.btnPrimary} onClick={() => setShowRegister(true)}>
-              Crear cuenta gratis →
+              Comenzar 5 días gratis →
             </button>
             <button className={styles.btnSecondary} onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}>
               Ver demo en vivo
             </button>
           </div>
+          <p className={styles.trialNote}>Sin tarjeta de crédito · Cancela cuando quieras</p>
 
           <div className={styles.stats}>
             {STATS.map(s => (

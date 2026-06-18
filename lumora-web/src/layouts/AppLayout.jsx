@@ -415,7 +415,16 @@ export default function AppLayout() {
   const { theme, lang, toggleTheme, toggleLang, i18n } = useSettings()
   const { user, logout } = useAuth()
   const VALID_PLANS = ['solo', 'negocio', 'agencia']
-  const isLocked  = !user?.plan || !VALID_PLANS.includes(user.plan)
+  const hasPlan   = VALID_PLANS.includes(user?.plan)
+  const TRIAL_DAYS = 5
+  const trialDaysLeft = (() => {
+    if (hasPlan || !user?.trialStartedAt) return 0
+    const started = new Date(user.trialStartedAt)
+    const elapsed = Math.floor((Date.now() - started.getTime()) / 86_400_000)
+    return Math.max(0, TRIAL_DAYS - elapsed)
+  })()
+  const inTrial   = !hasPlan && trialDaysLeft > 0
+  const isLocked  = !hasPlan && !inTrial
   const isAdmin   = (user?.role ?? 'admin') === 'admin'
 
   // WhatsApp — null = cargando, false = desconectado, true = conectado
@@ -825,6 +834,19 @@ export default function AppLayout() {
             </div>
           </div>
         </div>
+
+        {inTrial && (
+          <div className={styles.trialBanner}>
+            <span>
+              🎉 Estás en tu prueba gratuita —{' '}
+              <strong>{trialDaysLeft} día{trialDaysLeft !== 1 ? 's' : ''} restante{trialDaysLeft !== 1 ? 's' : ''}</strong>.
+              Elige tu plan para seguir usando Elixe.
+            </span>
+            <button className={styles.trialBannerBtn} onClick={() => navigate('/app/paquetes')}>
+              Ver planes →
+            </button>
+          </div>
+        )}
 
         <div className={styles.mainInner}>
           <Outlet />

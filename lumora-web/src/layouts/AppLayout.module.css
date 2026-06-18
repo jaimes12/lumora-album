@@ -1460,6 +1460,35 @@
   flex: 1;
 }
 
+/* ── Trial banner ── */
+.trialBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 28px;
+  background: linear-gradient(90deg, #2B6FD4 0%, #7c6af7 100%);
+  color: #fff;
+  font-size: 13.5px;
+  flex-shrink: 0;
+}
+
+.trialBannerBtn {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.35);
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.trialBannerBtn:hover { background: rgba(255,255,255,0.3); }
+
 /* ── Mobile top bar (legacy — hidden, replaced by AppBar) ── */
 .topBar {
   display: none;
