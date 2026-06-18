@@ -278,7 +278,8 @@
   grid-area: mockup;
   position: relative;
   z-index: 1;
-  align-self: center;
+  align-self: start;
+  padding-top: 16px;
 }
 
 /* Floating notification pills */
