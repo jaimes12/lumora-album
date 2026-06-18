@@ -261,6 +261,8 @@
 .mockupWrap {
   position: relative;
   z-index: 1;
+  align-self: flex-start;
+  margin-top: -40px;
 }
 
 /* Floating notification pills */

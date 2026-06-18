@@ -145,7 +145,7 @@ export default function Hero() {
               <div className={styles.dots}>
                 <span /><span /><span />
               </div>
-              <span className={styles.deviceTitle}>app.elixe.mx</span>
+              <span className={styles.deviceTitle}>elixe.mx</span>
               <div className={styles.devicePill}>En vivo</div>
             </div>
             <video
