@@ -9,7 +9,8 @@ const MONTHS_ES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ]
-const DAYS_ES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+const DAYS_ES    = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+const DAYS_SHORT = ['Do',  'Lu',  'Ma',  'Mi',  'Ju',  'Vi',  'Sa']
 
 function EventModal({ ev, onClose, onDetalle }) {
   const meta = ESTADO_META[ev.estado] || ESTADO_META.lead
@@ -168,7 +169,12 @@ export default function CalendarioPage() {
         </div>
 
         <div className={styles.grid}>
-          {DAYS_ES.map(d => <div key={d} className={styles.dayHead}>{d}</div>)}
+          {DAYS_ES.map((d, i) => (
+            <div key={d} className={styles.dayHead}>
+              <span className={styles.dayFull}>{d}</span>
+              <span className={styles.dayShort}>{DAYS_SHORT[i]}</span>
+            </div>
+          ))}
           {cells.map((day, i) => {
             if (day === null) return <div key={`e-${i}`} className={styles.cellEmpty} />
             const key = `${year}-${month}-${day}`
@@ -184,7 +190,7 @@ export default function CalendarioPage() {
                       <button key={ev.id} className={styles.eventPill}
                         style={{ background: meta.bg, borderLeft: `3px solid ${meta.color}`, color: meta.color }}
                         onClick={() => setSelectedEvent(ev)} title={ev.nombre}>
-                        <EventoTipoIcon tipo={ev.tipo} size={9} />
+                        <span className={styles.pillIco}><EventoTipoIcon tipo={ev.tipo} size={9} /></span>
                         <span className={styles.pillText}>{ev.nombre}</span>
                       </button>
                     )

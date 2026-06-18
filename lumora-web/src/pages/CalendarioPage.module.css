@@ -489,39 +489,69 @@
   opacity: 0.88;
 }
 
+/* ── day header full/short variants ── */
+.dayShort { display: none; }
+
 /* Mobile */
 @media (max-width: 768px) {
-  .page {
-    padding: 20px 16px;
+  .page { padding: 20px 14px; }
+
+  .monthLabel {
+    font-size: 15px;
+    min-width: 0;
+    flex: 1;
+    text-align: center;
   }
 
-  .cell {
-    min-height: 64px;
-    padding: 4px 2px;
-  }
+  .calNav { padding: 12px 14px; }
+
+  .upcomingCard { padding: 12px 14px; }
+}
+
+/* ── Compact calendar grid on small screens ── */
+@media (max-width: 600px) {
+  /* Switch day headers to 2-letter abbreviations */
+  .dayFull  { display: none; }
+  .dayShort { display: block; }
 
   .dayHead {
-    font-size: 10px;
+    font-size: 11px;
     padding: 8px 0;
+    letter-spacing: 0;
+  }
+
+  /* Smaller cells */
+  .cell {
+    min-height: 58px;
+    padding: 5px 3px 3px;
   }
 
   .dayNum {
     width: 22px;
     height: 22px;
     font-size: 11px;
+    margin-bottom: 3px;
+  }
+
+  /* Event dots instead of pills */
+  .eventList {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 3px;
+    padding: 0 1px;
   }
 
   .eventPill {
-    font-size: 9px;
-    padding: 2px 4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    padding: 0;
+    gap: 0;
+    border-left: none !important;
+    flex-shrink: 0;
   }
 
-  .monthLabel {
-    font-size: 15px;
-    min-width: 140px;
-  }
-
-  .upcomingCard {
-    padding: 12px 14px;
-  }
+  .pillIco  { display: none; }
+  .pillText { display: none; }
+  .morePill { display: none; }
 }
