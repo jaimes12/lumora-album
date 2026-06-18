@@ -418,8 +418,8 @@ export default function AppLayout() {
   const isLocked  = !user?.plan || !VALID_PLANS.includes(user.plan)
   const isAdmin   = (user?.role ?? 'admin') === 'admin'
 
-  // WhatsApp
-  const [waConnected,        setWaConnected]        = useState(false)
+  // WhatsApp — null = cargando, false = desconectado, true = conectado
+  const [waConnected,        setWaConnected]        = useState(null)
   const [waDisconnectedAt,   setWaDisconnectedAt]   = useState(null)  // Date when disconnect detected
   const [waNow,              setWaNow]              = useState(Date.now())
   const [showWaModal,        setShowWaModal]        = useState(false)
@@ -447,8 +447,8 @@ export default function AppLayout() {
       whatsappApi.getStatus()
         .then(s => {
           setWaConnected(prev => {
-            if (s.connected && !prev) setWaDisconnectedAt(null)
-            if (!s.connected && prev) setWaDisconnectedAt(Date.now())
+            if (s.connected && prev === false) setWaDisconnectedAt(null)
+            if (!s.connected && prev === true) setWaDisconnectedAt(Date.now())
             return s.connected
           })
         })
@@ -621,7 +621,7 @@ export default function AppLayout() {
             <div className={styles.waSectionHead}>
               <span className={styles.waSectionLabel}>WhatsApp</span>
             </div>
-            {waConnected ? (
+            {waConnected === null ? null : waConnected ? (
               <div className={styles.waConnected}>
                 {confirmDisconnect ? (
                   <div className={styles.waConfirm}>
