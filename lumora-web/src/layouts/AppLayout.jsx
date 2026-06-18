@@ -412,7 +412,7 @@ function SupportModal({ onClose }) {
 /* ── Layout ── */
 export default function AppLayout() {
   const navigate = useNavigate()
-  const { theme, lang, currency, toggleTheme, toggleLang, cycleCurrency, i18n } = useSettings()
+  const { theme, lang, toggleTheme, toggleLang, i18n } = useSettings()
   const { user, logout } = useAuth()
   const VALID_PLANS = ['solo', 'negocio', 'agencia']
   const isLocked  = !user?.plan || !VALID_PLANS.includes(user.plan)
@@ -677,13 +677,6 @@ export default function AppLayout() {
               <span className={styles.langFlag}>{lang === 'es' ? '🇲🇽' : '🇺🇸'}</span>
               <span>{lang === 'es' ? 'English' : 'Español'}</span>
               <span className={styles.langBadge}>{lang.toUpperCase()}</span>
-            </button>
-            <button className={styles.toggleBtn} onClick={cycleCurrency} title="Cambiar moneda (solo visualización)">
-              <span className={styles.langFlag}>
-                {currency === 'MXN' ? '🇲🇽' : currency === 'USD' ? '🇺🇸' : '🇪🇺'}
-              </span>
-              <span>Moneda</span>
-              <span className={styles.langBadge}>{currency}</span>
             </button>
           </div>
 

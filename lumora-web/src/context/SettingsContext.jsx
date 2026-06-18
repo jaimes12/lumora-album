@@ -68,7 +68,7 @@ export function SettingsProvider({ children }) {
   const fmtMoney       = (n) => fmtBase(n, currency)
 
   return (
-    <SettingsContext.Provider value={{ theme, lang, currency, toggleTheme, toggleLang, cycleCurrency, fmtMoney, i18n: t[lang] }}>
+    <SettingsContext.Provider value={{ theme, lang, currency, setCurrency, toggleTheme, toggleLang, cycleCurrency, fmtMoney, i18n: t[lang] }}>
       {children}
     </SettingsContext.Provider>
   )

@@ -1,8 +1,29 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useSettings } from '../context/SettingsContext'
 import { paymentsApi } from '../api/paymentsApi'
 import { getPublicPlans } from '../api/plansApi'
+import { CURRENCY_RATES, CURRENCY_SYMBOLS } from '../data/eventosData'
 import styles from './PaquetesPage.module.css'
+
+const CURRENCY_OPTIONS = [
+  { code: 'MXN', flag: '🇲🇽', label: 'MXN' },
+  { code: 'USD', flag: '🇺🇸', label: 'USD' },
+  { code: 'EUR', flag: '🇪🇺', label: 'EUR' },
+]
+
+function fmtPlanPrice(mxnPrice, currency) {
+  const rate      = CURRENCY_RATES[currency]   ?? 1
+  const symbol    = CURRENCY_SYMBOLS[currency] ?? '$'
+  const converted = mxnPrice * rate
+  const decimals  = currency === 'MXN' ? 0 : 2
+  const locale    = currency === 'USD' ? 'en-US' : currency === 'EUR' ? 'de-DE' : 'es-MX'
+  return `${symbol}${converted.toLocaleString(locale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`
+}
+
+function periodLabel(currency) {
+  return currency === 'MXN' ? 'MXN/mes' : currency === 'USD' ? 'USD/mes' : 'EUR/mes'
+}
 
 const PLANS_FALLBACK = [
   {
@@ -49,6 +70,7 @@ const CheckIcon = () => (
 
 export default function PaquetesPage() {
   const { user, updatePlan } = useAuth()
+  const { currency, setCurrency } = useSettings()
   const [plans,          setPlans]          = useState(PLANS_FALLBACK)
   const [loading,        setLoading]        = useState(null)
   const [showChangePlan, setShowChangePlan] = useState(false)
@@ -140,8 +162,8 @@ export default function PaquetesPage() {
               </div>
               <div className={styles.currentPlanDesc}>{activePlan.desc}</div>
               <div className={styles.currentPriceRow}>
-                <span className={styles.currentPrice}>${activePlan.price.toLocaleString('es-MX')}</span>
-                <span className={styles.currentPeriod}> MXN/mes</span>
+                <span className={styles.currentPrice}>{fmtPlanPrice(activePlan.price, currency)}</span>
+                <span className={styles.currentPeriod}> {periodLabel(currency)}</span>
               </div>
               <div className={styles.currentNextBill}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -184,9 +206,27 @@ export default function PaquetesPage() {
       {/* ── Cambiar plan ── */}
       {(showChangePlan || currentPlan === 'free') && (
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>
-            {currentPlan === 'free' ? 'Elige tu plan' : 'Cambiar plan'}
-          </h2>
+          <div className={styles.plansSectionHead}>
+            <h2 className={styles.sectionTitle}>
+              {currentPlan === 'free' ? 'Elige tu plan' : 'Cambiar plan'}
+            </h2>
+            <div className={styles.currencyPicker}>
+              {CURRENCY_OPTIONS.map(opt => (
+                <button
+                  key={opt.code}
+                  className={`${styles.currencyBtn} ${currency === opt.code ? styles.currencyBtnActive : ''}`}
+                  onClick={() => setCurrency(opt.code)}
+                >
+                  {opt.flag} {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {currency !== 'MXN' && (
+            <p className={styles.currencyNote}>
+              🔒 Los pagos con Stripe se procesan siempre en pesos mexicanos (MXN)
+            </p>
+          )}
           <div className={styles.plansGrid}>
             {plans.map(plan => {
               const isActive  = currentPlan === plan.id
@@ -205,8 +245,8 @@ export default function PaquetesPage() {
                   <div className={styles.planCardName} style={{ color: plan.color }}>{plan.name}</div>
                   <p className={styles.planCardDesc}>{plan.desc}</p>
                   <div className={styles.planCardPrice}>
-                    <span className={styles.planCardPriceNum}>${plan.price.toLocaleString('es-MX')}</span>
-                    <span className={styles.planCardPricePer}> MXN/mes</span>
+                    <span className={styles.planCardPriceNum}>{fmtPlanPrice(plan.price, currency)}</span>
+                    <span className={styles.planCardPricePer}> {periodLabel(currency)}</span>
                   </div>
                   <ul className={styles.planCardFeatures}>
                     {plan.features.map(f => (
