@@ -48,11 +48,15 @@ public class WorkersController(LumoraDbContext db) : ControllerBase
 
         var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == OrgId);
         var plan = org?.Plan ?? "free";
-        var maxWorkers = PlanMaxWorkers.GetValueOrDefault(plan, 0);
-
-        var currentWorkers = await db.Users.CountAsync(u => u.OrgId == OrgId && u.Role == "member");
-        if (currentWorkers >= maxWorkers)
-            return StatusCode(402, new { error = "plan_limit", message = $"Tu plan permite máximo {maxWorkers} trabajador(es). Actualiza tu plan para agregar más." });
+        bool inTrial = org?.TrialStartedAt.HasValue == true &&
+                       (DateTime.UtcNow - org!.TrialStartedAt!.Value).TotalDays < 5;
+        if (!inTrial)
+        {
+            var maxWorkers = PlanMaxWorkers.GetValueOrDefault(plan, 0);
+            var currentWorkers = await db.Users.CountAsync(u => u.OrgId == OrgId && u.Role == "member");
+            if (currentWorkers >= maxWorkers)
+                return StatusCode(402, new { error = "plan_limit", message = $"Tu plan permite máximo {maxWorkers} trabajador(es). Actualiza tu plan para agregar más." });
+        }
 
         var exists = await db.Users.AnyAsync(u => u.Email == req.Email);
         if (exists) return Conflict(new { message = "El correo ya está registrado" });
