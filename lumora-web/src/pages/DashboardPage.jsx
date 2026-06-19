@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { dashboardApi } from '../api/dashboardApi'
 import { ESTADO_META } from '../data/eventosData'
@@ -33,8 +34,50 @@ const ICONS = {
 
 const MES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 
+const STEPS = [
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+    ),
+    color: '#7c6af7',
+    title: 'Crea tu primer evento',
+    desc: 'Registra los datos del evento: tipo, fecha, cliente y precio.',
+    href: '/app/eventos',
+    cta: 'Crear evento →',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+    ),
+    color: '#34d399',
+    title: 'Genera el contrato',
+    desc: 'Desde el evento puedes crear el contrato con las cláusulas listas.',
+    href: '/app/contratos',
+    cta: 'Ver contratos →',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+    ),
+    color: '#25D366',
+    title: 'Conecta WhatsApp',
+    desc: 'Envía recordatorios y mensajes a tus clientes directo desde Elixe.',
+    href: null,
+    cta: 'Conectar en el menú lateral →',
+  },
+]
+
 export default function DashboardPage() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [stats, setStats]   = useState(null)
   const [loading, setLoading] = useState(true)
   const now = new Date()
@@ -46,7 +89,13 @@ export default function DashboardPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const nombre = user?.name?.split(' ')[0] ?? 'de vuelta'
+  const nombre = user?.name?.split(' ')[0] ?? 'allí'
+
+  const isNewUser = !loading && stats !== null
+    && (stats.eventsThisMonth ?? 0) === 0
+    && (stats.revenueThisMonth ?? 0) === 0
+    && (stats.pendingSales ?? 0) === 0
+    && (!stats.upcomingEvents || stats.upcomingEvents.length === 0)
 
   const statCards = stats ? [
     { label: 'Eventos este mes', value: String(stats.eventsThisMonth ?? 0), trendUp: true,  color: '#7c6af7', icon: ICONS.eventos,      trend: 'este mes' },
@@ -54,6 +103,41 @@ export default function DashboardPage() {
     { label: 'Clientes nuevos',  value: String(stats.newClientsThisMonth ?? 0), trendUp: true,  color: '#a78bfa', icon: ICONS.clientes,    trend: 'este mes' },
     { label: 'Ventas pendientes',value: String(stats.pendingSales ?? 0),         trendUp: false, color: '#fb923c', icon: ICONS.cotizaciones, trend: 'sin cerrar' },
   ] : []
+
+  if (isNewUser) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.welcomeWrap}>
+          <div className={styles.welcomeTop}>
+            <span className={styles.welcomeEmoji}>👋</span>
+            <div>
+              <h1 className={styles.welcomeTitle}>¡Bienvenido, {nombre}!</h1>
+              <p className={styles.welcomeSub}>Tu cuenta está lista. Sigue estos pasos para aprovechar Elixe al máximo.</p>
+            </div>
+          </div>
+          <div className={styles.stepsGrid}>
+            {STEPS.map((s, i) => (
+              <div key={i} className={styles.stepCard}>
+                <div className={styles.stepNum} style={{ background: `${s.color}1a`, color: s.color }}>{i + 1}</div>
+                <div className={styles.stepIconWrap} style={{ background: `${s.color}15`, color: s.color }}>{s.icon}</div>
+                <h3 className={styles.stepTitle}>{s.title}</h3>
+                <p className={styles.stepDesc}>{s.desc}</p>
+                {s.href && (
+                  <button className={styles.stepBtn} style={{ background: s.color }} onClick={() => navigate(s.href)}>
+                    {s.cta}
+                  </button>
+                )}
+                {!s.href && <p className={styles.stepHint}>{s.cta}</p>}
+              </div>
+            ))}
+          </div>
+          <button className={styles.welcomeCta} onClick={() => navigate('/app/eventos')}>
+            Crear mi primer evento →
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.page}>
