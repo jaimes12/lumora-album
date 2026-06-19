@@ -32,7 +32,14 @@ export function AuthProvider({ children }) {
             return next
           })
         }
-      }).catch(() => {})
+      }).catch((err) => {
+        const msg = String(err?.message ?? '')
+        if (msg.includes('401') || msg.includes('404') || msg.includes('403')) {
+          localStorage.removeItem('elixe_token')
+          localStorage.removeItem('elixe_user')
+          setUser(null)
+        }
+      })
     }
     setIsLoading(false)
   }, [])
