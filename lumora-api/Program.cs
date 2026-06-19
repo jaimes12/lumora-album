@@ -426,6 +426,7 @@ try
         "ALTER TABLE organizations ADD COLUMN stripe_customer_id varchar(255) NULL",
         "ALTER TABLE organizations ADD COLUMN stripe_subscription_id varchar(255) NULL",
         "ALTER TABLE organizations ADD COLUMN trial_started_at datetime(6) NULL",
+        "ALTER TABLE organizations ADD COLUMN disabled tinyint(1) NOT NULL DEFAULT 0",
 
         @"CREATE TABLE IF NOT EXISTS `org_products` (
             `id`          varchar(255) NOT NULL,

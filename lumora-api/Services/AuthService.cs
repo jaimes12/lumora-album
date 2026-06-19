@@ -76,6 +76,9 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
         if (!VerifyPassword(req.Password, user.PasswordHash))
             return null;
 
+        if (user.Organization?.Disabled == true)
+            throw new InvalidOperationException("ACCOUNT_DISABLED");
+
         return new AuthResponse(
             GenerateToken(user),
             user.Id,

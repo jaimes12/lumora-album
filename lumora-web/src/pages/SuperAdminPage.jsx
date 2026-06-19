@@ -372,6 +372,7 @@ function PlansTab() {
   const [newPlan,    setNewPlan]    = useState('')
   const [saving,     setSaving]     = useState(false)
   const [q,          setQ]          = useState('')
+  const [delConf,    setDelConf]    = useState(null) // orgId pending delete
 
   useEffect(() => {
     superadminApi.getPlans().then(setRows).catch(() => setRows([]))
@@ -389,6 +390,18 @@ function PlansTab() {
 
   const startEdit = (row) => { setEditing(row.id); setNewPlan(row.plan) }
   const cancelEdit = ()   => setEditing(null)
+
+  const toggleDisable = async (orgId) => {
+    const res = await superadminApi.disableOrg(orgId).catch(() => null)
+    if (res) setRows(prev => prev.map(r => r.id === orgId ? { ...r, disabled: res.disabled } : r))
+  }
+
+  const confirmDelete = async (orgId) => {
+    await superadminApi.deleteOrg(orgId).catch(() => {})
+    setRows(prev => prev.filter(r => r.id !== orgId))
+    setDelConf(null)
+    if (expanded === orgId) setExpanded(null)
+  }
 
   const savePlan = async (orgId) => {
     setSaving(true)
@@ -454,8 +467,11 @@ function PlansTab() {
             <tbody>
               {filtered.map(row => (
                 <>
-                  <tr key={row.id} className={expanded === row.id ? styles.trExpanded : ''}>
-                    <td><strong>{row.name}</strong></td>
+                  <tr key={row.id} className={expanded === row.id ? styles.trExpanded : ''} style={row.disabled ? { opacity: 0.5 } : {}}>
+                    <td>
+                      <strong>{row.name}</strong>
+                      {row.disabled && <span style={{ marginLeft: 6, fontSize: 10, color: '#ef4444', background: 'rgba(239,68,68,0.12)', padding: '2px 6px', borderRadius: 4 }}>Deshabilitada</span>}
+                    </td>
                     <td>
                       {editing === row.id ? (
                         <div className={styles.planEditRow}>
@@ -490,6 +506,25 @@ function PlansTab() {
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                           </button>
                         )}
+                        <button
+                          className={styles.actionBtn}
+                          title={row.disabled ? 'Habilitar cuenta' : 'Deshabilitar cuenta'}
+                          onClick={() => toggleDisable(row.id)}
+                        >
+                          {row.disabled
+                            ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                          }
+                        </button>
+                        {delConf === row.id
+                          ? <span className={styles.delConfirm}>
+                              <button className={styles.delYes} onClick={() => confirmDelete(row.id)}>Sí</button>
+                              <button className={styles.delNo} onClick={() => setDelConf(null)}>No</button>
+                            </span>
+                          : <button className={styles.actionBtn} title="Eliminar cuenta" onClick={() => setDelConf(row.id)}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                            </button>
+                        }
                         <button
                           className={styles.actionBtn}
                           title={expanded === row.id ? 'Ocultar historial' : 'Ver historial'}

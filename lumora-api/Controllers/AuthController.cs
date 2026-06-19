@@ -38,6 +38,10 @@ public class AuthController(IAuthService auth, IR2Service r2) : ControllerBase
             var result = await auth.LoginAsync(req);
             return result is null ? Unauthorized(new { message = "Credenciales incorrectas" }) : Ok(result);
         }
+        catch (InvalidOperationException ex) when (ex.Message == "ACCOUNT_DISABLED")
+        {
+            return StatusCode(403, new { message = "Esta cuenta ha sido deshabilitada. Contacta a soporte." });
+        }
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "Error al iniciar sesión", detail = ex.Message });

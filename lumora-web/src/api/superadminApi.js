@@ -54,6 +54,9 @@ export const superadminApi = {
   togglePromoCode:  (id)     => saRequest(`/api/superadmin/promo-codes/${id}/toggle`, { method: 'PATCH' }),
   deletePromoCode:  (id)     => saRequest(`/api/superadmin/promo-codes/${id}`, { method: 'DELETE' }),
 
+  disableOrg: (orgId) => saRequest(`/api/superadmin/orgs/${orgId}/disable`, { method: 'PATCH' }),
+  deleteOrg:  (orgId) => saRequest(`/api/superadmin/orgs/${orgId}`, { method: 'DELETE' }),
+
   getSupportTickets:      ()           => saRequest('/api/superadmin/support'),
   getSupportTicket:       (id)         => saRequest(`/api/superadmin/support/${id}`),
   updateSupportStatus:    (id, status) => saRequest(`/api/superadmin/support/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),

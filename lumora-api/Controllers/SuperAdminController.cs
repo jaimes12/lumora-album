@@ -139,6 +139,7 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
             workerCount = users.Count(u => u.OrgId == o.Id && u.Role == "member"),
             eventCount = events.Count(e => e.OrgId == o.Id),
             clientCount = clients.Count(c => c.OrgId == o.Id),
+            o.Disabled,
         }).ToList();
 
         return Ok(result);
@@ -284,6 +285,7 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
                 totalPaid             = orgHistory.Sum(h => h.Amount),
                 history               = orgHistory,
                 createdAt             = o.CreatedAt.ToString("dd/MM/yyyy"),
+                o.Disabled,
             };
         }).ToList();
 
@@ -318,6 +320,32 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
 
         await db.SaveChangesAsync();
         return Ok(new { plan = req.Plan, planLabel = PlanLabel(req.Plan) });
+    }
+
+    [Authorize]
+    [HttpPatch("orgs/{orgId}/disable")]
+    public async Task<IActionResult> ToggleDisableOrg(string orgId)
+    {
+        if (!IsSuperAdmin) return Forbid();
+        var org = await db.Organizations.FindAsync(orgId);
+        if (org is null) return NotFound();
+        org.Disabled = !org.Disabled;
+        await db.SaveChangesAsync();
+        return Ok(new { disabled = org.Disabled });
+    }
+
+    [Authorize]
+    [HttpDelete("orgs/{orgId}")]
+    public async Task<IActionResult> DeleteOrg(string orgId)
+    {
+        if (!IsSuperAdmin) return Forbid();
+        var org = await db.Organizations.FindAsync(orgId);
+        if (org is null) return NotFound();
+        var users = db.Users.Where(u => u.OrgId == orgId);
+        db.Users.RemoveRange(users);
+        db.Organizations.Remove(org);
+        await db.SaveChangesAsync();
+        return Ok(new { ok = true });
     }
 
     // ── Promo codes CRUD ──────────────────────────────────────────────────────

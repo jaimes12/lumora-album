@@ -28,6 +28,9 @@ public class Organization
     [Column("trial_started_at")]
     public DateTime? TrialStartedAt { get; set; }
 
+    [Column("disabled")]
+    public bool Disabled { get; set; } = false;
+
     public ICollection<Client> Clients { get; set; } = [];
     public ICollection<Event> Events { get; set; } = [];
 }
