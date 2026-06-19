@@ -68,7 +68,7 @@ export default function RegisterModal({ onClose }) {
         fbq('track', 'CompleteRegistration', { content_name: 'Elixe', currency: 'MXN', value: 0 })
       }
       onClose()
-      navigate('/app/paquetes')
+      navigate('/app/dashboard')
     } catch (err) {
       setError(err.message || 'Error al crear la cuenta.')
     } finally {
