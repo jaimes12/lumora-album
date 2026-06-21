@@ -286,6 +286,7 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
                 history               = orgHistory,
                 createdAt             = o.CreatedAt.ToString("dd/MM/yyyy"),
                 o.Disabled,
+                trialStartedAt        = o.TrialStartedAt?.ToString("dd/MM/yyyy HH:mm"),
             };
         }).ToList();
 

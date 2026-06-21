@@ -455,6 +455,7 @@ function PlansTab() {
               <tr>
                 <th>Organización</th>
                 <th>Plan actual</th>
+                <th>Trial</th>
                 <th>Admins</th>
                 <th>Total pagado</th>
                 <th>Último pago</th>
@@ -493,6 +494,14 @@ function PlansTab() {
                         </span>
                       )}
                     </td>
+                    <td>{(() => {
+                      if (!row.trialStartedAt) return <span className={styles.muted} style={{ fontSize: 11 }}>Sin trial</span>
+                      const started = new Date(row.trialStartedAt.split('/').reverse().join('-'))
+                      const daysLeft = Math.max(0, 5 - Math.floor((Date.now() - started.getTime()) / 86_400_000))
+                      return daysLeft > 0
+                        ? <span style={{ fontSize: 11, fontWeight: 700, color: '#34d399', background: 'rgba(52,211,153,0.12)', padding: '2px 8px', borderRadius: 4 }}>✓ Activo — {daysLeft}d</span>
+                        : <span style={{ fontSize: 11, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '2px 8px', borderRadius: 4 }}>Vencido</span>
+                    })()}</td>
                     <td className={styles.muted}>{row.adminCount}</td>
                     <td><strong>${Number(row.totalPaid ?? 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}</strong></td>
                     <td className={styles.muted}>{row.lastActivatedAt}</td>
@@ -537,7 +546,7 @@ function PlansTab() {
                   </tr>
                   {expanded === row.id && (
                     <tr key={`${row.id}-history`} className={styles.historyRow}>
-                      <td colSpan={9}>
+                      <td colSpan={10}>
                         <div className={styles.historyWrap}>
                           <div className={styles.historyTitle}>Historial de plan — {row.name}</div>
                           {row.history.length === 0
