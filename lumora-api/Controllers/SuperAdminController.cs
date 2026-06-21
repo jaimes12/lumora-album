@@ -13,7 +13,7 @@ namespace lumora_api.Controllers;
 
 [ApiController]
 [Route("api/superadmin")]
-public class SuperAdminController(LumoraDbContext db, IConfiguration config) : ControllerBase
+public class SuperAdminController(LumoraDbContext db, IConfiguration config, IWaServerService wa) : ControllerBase
 {
     private bool IsSuperAdmin =>
         (User.FindFirst("role")?.Value ??
@@ -258,9 +258,10 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
     {
         if (!IsSuperAdmin) return Forbid();
 
-        var orgs    = await db.Organizations.OrderByDescending(o => o.CreatedAt).ToListAsync();
-        var users   = await db.Users.ToListAsync();
-        var history = await db.PlanHistories.ToListAsync();
+        var orgs       = await db.Organizations.OrderByDescending(o => o.CreatedAt).ToListAsync();
+        var users      = await db.Users.ToListAsync();
+        var history    = await db.PlanHistories.ToListAsync();
+        var waOrgIds   = await wa.GetConnectedOrgIdsAsync();
 
         var result = orgs.Select(o => {
             var orgHistory = history
@@ -286,7 +287,8 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config) : C
                 history               = orgHistory,
                 createdAt             = o.CreatedAt.ToString("dd/MM/yyyy"),
                 o.Disabled,
-                trialStartedAt        = o.TrialStartedAt?.ToString("dd/MM/yyyy HH:mm"),
+                trialStartedAt        = o.TrialStartedAt?.ToString("O"),
+                waConnected           = waOrgIds.Contains(o.Id),
             };
         }).ToList();
 

@@ -8,6 +8,7 @@ namespace lumora_api.Services;
 public interface IWaServerService
 {
     Task<WaConnectionStatus> GetStatusAsync(string orgId);
+    Task<HashSet<string>> GetConnectedOrgIdsAsync();
     Task ConnectAsync(string orgId);
     Task DisconnectAsync(string orgId);
     Task<bool> SendAsync(string orgId, string phone, string message, string? mediaUrl = null, string? mediaType = null);
@@ -42,6 +43,22 @@ public class WaServerService(IHttpClientFactory factory, ILogger<WaServerService
             log.LogWarning(ex, "WA server status check failed");
             return new("disconnected", null, false);
         }
+    }
+
+    public async Task<HashSet<string>> GetConnectedOrgIdsAsync()
+    {
+        try
+        {
+            var res = await Http.GetAsync("/api/whatsapp/status?prefix=lm_");
+            if (!res.IsSuccessStatusCode) return [];
+            var json = await res.Content.ReadAsStringAsync();
+            var payload = JsonSerializer.Deserialize<WaStatusPayload>(json, Opts);
+            return (payload?.Clients ?? [])
+                .Where(c => c.State == "ready")
+                .Select(c => c.Name.Replace("lm_", "").Replace('_', '-'))
+                .ToHashSet();
+        }
+        catch { return []; }
     }
 
     public async Task ConnectAsync(string orgId)
