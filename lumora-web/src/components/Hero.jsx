@@ -79,8 +79,8 @@ export default function Hero() {
           </div>
 
           <h1 className={styles.title}>
-            El CRM para organizadores<br />
-            <span className={styles.grad}>que reemplaza Excel y WhatsApp.</span>
+            Tu negocio de eventos,<br />
+            <span className={styles.grad}>ordenado y en un solo lugar.</span>
           </h1>
 
           <p className={styles.professions}>
