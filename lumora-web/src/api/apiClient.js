@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_URL ?? 'https://lumora-api-production.up.railway.app'
+const BASE = import.meta.env.VITE_API_URL ?? 'https://api.elixe.mx'
 
 async function request(path, options = {}) {
   const token = localStorage.getItem('elixe_token')

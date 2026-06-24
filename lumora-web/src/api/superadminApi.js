@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_URL ?? 'https://lumora-api-production.up.railway.app'
+const BASE = import.meta.env.VITE_API_URL ?? 'https://api.elixe.mx'
 const SA_KEY = 'sa_token'
 
 async function saRequest(path, options = {}) {
