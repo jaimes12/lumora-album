@@ -123,6 +123,13 @@
 
 .heroMetaItem svg { flex-shrink: 0; }
 
+.createdBy {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.65;
+  margin-top: 2px;
+}
+
 /* ── Main grid ── */
 .mainGrid {
   display: grid;

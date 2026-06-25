@@ -10,7 +10,8 @@ namespace lumora_api.Controllers;
 [Authorize]
 public class EventsController(IEventService events, IR2Service r2) : ControllerBase
 {
-    private string OrgId => User.FindFirst("org_id")?.Value ?? User.FindFirst("user_id")?.Value ?? User.FindFirst("sub")?.Value ?? string.Empty;
+    private string OrgId    => User.FindFirst("org_id")?.Value ?? User.FindFirst("user_id")?.Value ?? User.FindFirst("sub")?.Value ?? string.Empty;
+    private string? UserId  => User.FindFirst("user_id")?.Value;
 
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] string? status, [FromQuery] string? clientId) =>
@@ -28,7 +29,7 @@ public class EventsController(IEventService events, IR2Service r2) : ControllerB
     {
         try
         {
-            var ev = await events.CreateAsync(OrgId, req);
+            var ev = await events.CreateAsync(OrgId, UserId, req);
             return CreatedAtAction(nameof(GetById), new { id = ev.Id }, ev);
         }
         catch (InvalidOperationException ex) when (ex.Message.StartsWith("PLAN_LIMIT"))

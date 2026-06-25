@@ -371,6 +371,9 @@ export default function EventoDetallePage() {
               {evento.invitados} invitados
             </span>
           </div>
+          {evento.createdByName && (
+            <span className={styles.createdBy}>Agregado por {evento.createdByName}</span>
+          )}
         </div>
       </div>
 

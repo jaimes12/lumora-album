@@ -7,7 +7,7 @@ namespace lumora_api.Services;
 
 public interface IEventService
 {
-    Task<EventResponse> CreateAsync(string orgId, CreateEventRequest req);
+    Task<EventResponse> CreateAsync(string orgId, string? userId, CreateEventRequest req);
     Task<EventResponse?> GetByIdAsync(string orgId, string id);
     Task<IEnumerable<EventResponse>> GetByOrgAsync(string orgId, string? status = null, string? clientId = null);
     Task<EventResponse?> UpdateAsync(string orgId, string id, UpdateEventRequest req);
@@ -20,6 +20,19 @@ public interface IEventService
 
 public class EventService(LumoraDbContext db) : IEventService
 {
+    private async Task<string?> GetUserName(string? userId)
+    {
+        if (userId is null) return null;
+        try
+        {
+            return await db.Users
+                .Where(u => u.Id == userId)
+                .Select(u => u.Name)
+                .FirstOrDefaultAsync();
+        }
+        catch { return null; }
+    }
+
     // Fetch client name separately to avoid Pomelo GUID-to-binary cast issues with Include
     private async Task<(string? Name, string? Phone)> GetClientInfo(string clientId)
     {
@@ -54,7 +67,7 @@ public class EventService(LumoraDbContext db) : IEventService
         ["agencia"] = int.MaxValue,
     };
 
-    public async Task<EventResponse> CreateAsync(string orgId, CreateEventRequest req)
+    public async Task<EventResponse> CreateAsync(string orgId, string? userId, CreateEventRequest req)
     {
         // Plan limit check (skipped during active trial)
         var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == orgId);
@@ -80,12 +93,14 @@ public class EventService(LumoraDbContext db) : IEventService
             Budget = req.Budget,
             GuestCount = req.GuestCount,
             EventDate = req.EventDate.ToUniversalTime(),
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            CreatedById = userId,
         };
         await db.Events.AddAsync(ev);
         await db.SaveChangesAsync();
         var (clientName, clientPhone) = await GetClientInfo(req.ClientId);
-        return ToResponse(ev, clientName, clientPhone, []);
+        var createdByName = await GetUserName(userId);
+        return ToResponse(ev, clientName, clientPhone, [], createdByName);
     }
 
     public async Task<EventResponse?> GetByIdAsync(string orgId, string id)
@@ -95,7 +110,8 @@ public class EventService(LumoraDbContext db) : IEventService
         if (ev is null) return null;
         var (clientName, clientPhone) = await GetClientInfo(ev.ClientId);
         var payments = await GetPayments(id);
-        return ToResponse(ev, clientName, clientPhone, payments);
+        var createdByName = await GetUserName(ev.CreatedById);
+        return ToResponse(ev, clientName, clientPhone, payments, createdByName);
     }
 
     public async Task<IEnumerable<EventResponse>> GetByOrgAsync(string orgId, string? status = null, string? clientId = null)
@@ -205,12 +221,13 @@ public class EventService(LumoraDbContext db) : IEventService
         return true;
     }
 
-    private static EventResponse ToResponse(Event e, string? clientName, string? clientPhone, List<EventPayment> payments) => new(
+    private static EventResponse ToResponse(Event e, string? clientName, string? clientPhone, List<EventPayment> payments, string? createdByName = null) => new(
         e.Id, e.Name, e.Type, e.Status,
         e.ClientId, clientName, clientPhone,
         e.Venue, e.Notes,
         e.Budget, e.GuestCount,
         e.EventDate, e.CreatedAt,
-        payments.Select(p => new PaymentInfo(p.Id, p.Concept, p.Amount, p.Method, p.PaidAt)).ToList()
+        payments.Select(p => new PaymentInfo(p.Id, p.Concept, p.Amount, p.Method, p.PaidAt)).ToList(),
+        createdByName
     );
 }

@@ -43,6 +43,9 @@ public class Event
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    [Column("created_by_id")]
+    public string? CreatedById { get; set; }
+
     public Client? Client { get; set; }
     public Organization? Organization { get; set; }
 }

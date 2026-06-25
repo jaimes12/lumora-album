@@ -39,7 +39,8 @@ public record EventResponse(
     string? VenueId, string? Notes,
     decimal Budget, int GuestCount,
     DateTime EventDate, DateTime CreatedAt,
-    List<PaymentInfo> Payments
+    List<PaymentInfo> Payments,
+    string? CreatedByName = null
 );
 
 public record AddEventPhotoRequest(
