@@ -65,28 +65,35 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
         </div>
         <form onSubmit={handleSubmit} className={styles.modalBody}>
           <div className={styles.field}>
-            <label>Buscar cliente</label>
+            <label>Buscar cliente {clienteSel && <span className={styles.clienteSelBadge}>✓ {clienteSel.nombre}</span>}</label>
             <input
-              placeholder="Nombre o teléfono…"
+              placeholder="Escribe nombre o teléfono…"
               value={busqueda}
               onChange={e => { setBusqueda(e.target.value); setClienteSel(null) }}
+              autoFocus
             />
           </div>
-          <div className={styles.clienteList}>
-            {clientesFiltrados.slice(0, 8).map(c => (
-              <button
-                key={c.id} type="button"
-                className={`${styles.clienteRow} ${clienteSel?.id === c.id ? styles.clienteRowSel : ''}`}
-                onClick={() => setClienteSel(c)}
-              >
-                <span className={styles.clienteNombre}>{c.nombre}</span>
-                {c.telefono && <span className={styles.clienteTel}>{c.telefono}</span>}
-              </button>
-            ))}
-            {clientes.length > 0 && clientesFiltrados.length === 0 && (
-              <p className={styles.noResults}>Sin resultados</p>
-            )}
-          </div>
+          {busqueda.length > 0 && (
+            <div className={styles.clienteList}>
+              {clientesFiltrados.slice(0, 8).map(c => (
+                <button
+                  key={c.id} type="button"
+                  className={`${styles.clienteRow} ${clienteSel?.id === c.id ? styles.clienteRowSel : ''}`}
+                  onClick={() => { setClienteSel(c); setBusqueda(c.nombre) }}
+                >
+                  <span className={styles.clienteNombre}>{c.nombre}</span>
+                  {c.telefono && <span className={styles.clienteTel}>{c.telefono}</span>}
+                </button>
+              ))}
+              {clientesFiltrados.length === 0 && (
+                <p className={styles.noResults}>
+                  {clientes.length === 0
+                    ? 'No tienes clientes aún. Agrégalos en la sección Clientes.'
+                    : `Sin resultados para "${busqueda}"`}
+                </p>
+              )}
+            </div>
+          )}
           <div className={styles.row2}>
             <div className={styles.field}>
               <label>Asientos</label>
@@ -109,7 +116,7 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
           <div className={styles.modalActions}>
             <button type="button" className={styles.btnSecondary} onClick={onClose}>Cancelar</button>
             <button type="submit" className={styles.btnPrimary} disabled={saving || !clienteSel}>
-              {saving ? 'Guardando…' : 'Agregar'}
+              {saving ? 'Guardando…' : clienteSel ? 'Agregar' : 'Selecciona un cliente'}
             </button>
           </div>
         </form>
