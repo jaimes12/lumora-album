@@ -34,7 +34,7 @@ const ICONS = {
 
 const MES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 
-const STEPS = [
+const STEPS_EVENTS = [
   {
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -75,6 +75,46 @@ const STEPS = [
   },
 ]
 
+const STEPS_TRAVEL = [
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+      </svg>
+    ),
+    color: '#7c6af7',
+    title: 'Crea tu primer viaje',
+    desc: 'Registra el destino, fechas, precio y lugares disponibles.',
+    href: '/app/viajes',
+    cta: 'Crear viaje →',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+        <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+      </svg>
+    ),
+    color: '#34d399',
+    title: 'Agrega pasajeros',
+    desc: 'Asocia clientes al viaje y registra sus abonos y pagos individuales.',
+    href: '/app/viajes',
+    cta: 'Ver viajes →',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+    ),
+    color: '#25D366',
+    title: 'Conecta WhatsApp',
+    desc: 'Envía confirmaciones y recordatorios a tus pasajeros desde Elixe.',
+    href: null,
+    cta: 'Conectar en el menú lateral →',
+  },
+]
+
 export default function DashboardPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -90,6 +130,8 @@ export default function DashboardPage() {
   }, [])
 
   const nombre = user?.name?.split(' ')[0] ?? 'allí'
+  const isTravel = user?.industry === 'travel'
+  const STEPS = isTravel ? STEPS_TRAVEL : STEPS_EVENTS
 
   const isNewUser = !loading && stats !== null
     && (stats.eventsThisMonth ?? 0) === 0
@@ -98,7 +140,7 @@ export default function DashboardPage() {
     && (!stats.upcomingEvents || stats.upcomingEvents.length === 0)
 
   const statCards = stats ? [
-    { label: 'Eventos este mes', value: String(stats.eventsThisMonth ?? 0), trendUp: true,  color: '#7c6af7', icon: ICONS.eventos,      trend: 'este mes' },
+    { label: isTravel ? 'Viajes este mes' : 'Eventos este mes', value: String(stats.eventsThisMonth ?? 0), trendUp: true,  color: '#7c6af7', icon: ICONS.eventos,      trend: 'este mes' },
     { label: 'Ingresos del mes', value: '$' + Number(stats.revenueThisMonth ?? 0).toLocaleString('es-MX'), trendUp: true,  color: '#34d399', icon: ICONS.ingresos,    trend: 'cobrado este mes' },
     { label: 'Clientes nuevos',  value: String(stats.newClientsThisMonth ?? 0), trendUp: true,  color: '#a78bfa', icon: ICONS.clientes,    trend: 'este mes' },
     { label: 'Ventas pendientes',value: String(stats.pendingSales ?? 0),         trendUp: false, color: '#fb923c', icon: ICONS.cotizaciones, trend: 'sin cerrar' },
@@ -131,8 +173,8 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
-          <button className={styles.welcomeCta} onClick={() => navigate('/app/eventos')}>
-            Crear mi primer evento →
+          <button className={styles.welcomeCta} onClick={() => navigate(isTravel ? '/app/viajes' : '/app/eventos')}>
+            {isTravel ? 'Crear mi primer viaje →' : 'Crear mi primer evento →'}
           </button>
         </div>
       </div>
