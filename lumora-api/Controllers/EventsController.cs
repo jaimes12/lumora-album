@@ -58,6 +58,17 @@ public class EventsController(IEventService events, IR2Service r2) : ControllerB
         return Ok(payment);
     }
 
+    [HttpDelete("{id}/payments/{paymentId}")]
+    public async Task<IActionResult> DeletePayment(string id, string paymentId) =>
+        await events.DeletePaymentAsync(OrgId, id, paymentId) ? NoContent() : NotFound();
+
+    [HttpPatch("{id}/payments/{paymentId}")]
+    public async Task<IActionResult> UpdatePayment(string id, string paymentId, [FromBody] UpdatePaymentRequest req)
+    {
+        var payment = await events.UpdatePaymentAsync(OrgId, id, paymentId, req);
+        return payment is null ? NotFound() : Ok(payment);
+    }
+
     // ── Photos ─────────────────────────────────────────────────────────────────
     [HttpGet("{id}/photos")]
     public async Task<IActionResult> GetPhotos(string id) =>

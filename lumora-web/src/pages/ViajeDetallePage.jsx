@@ -392,6 +392,7 @@ export default function ViajeDetallePage() {
   const [savingGasto, setSavingGasto] = useState(false)
   const [gastoError, setGastoError] = useState('')
   const [expandedPax, setExpandedPax] = useState({})
+  const [editandoPago, setEditandoPago] = useState(null) // { pasajeroId, pagoId, concepto, monto, metodo }
 
   const load = async () => {
     try {
@@ -435,6 +436,34 @@ export default function ViajeDetallePage() {
           return { ...p, pagos, pagado, pendiente: p.costoTotal - pagado }
         }),
       }))
+    } catch {}
+  }
+
+  const handleEditPayment = async (pasajero, pagoId) => {
+    if (!editandoPago) return
+    const { concepto, monto, metodo } = editandoPago
+    if (!concepto.trim() || !monto) return
+    try {
+      const updated = await viajesApi.updatePayment(id, pasajero.id, pagoId, {
+        concept: concepto.trim(),
+        amount: parseFloat(monto),
+        method: metodo,
+      })
+      setViaje(prev => ({
+        ...prev,
+        pasajerosList: prev.pasajerosList.map(p => {
+          if (p.id !== pasajero.id) return p
+          const pagos = p.pagos.map(x => x.id !== pagoId ? x : {
+            ...x,
+            concepto: updated.concept,
+            monto: updated.amount,
+            metodo: updated.method,
+          })
+          const pagado = pagos.reduce((s, x) => s + x.monto, 0)
+          return { ...p, pagos, pagado, pendiente: p.costoTotal - pagado }
+        }),
+      }))
+      setEditandoPago(null)
     } catch {}
   }
 
@@ -720,17 +749,51 @@ export default function ViajeDetallePage() {
                       </button>
                       {isExpanded && (
                         <div className={styles.pagosListInner}>
-                          {pax.pagos.map(pago => (
-                            <div key={pago.id} className={styles.pagoRow}>
-                              <span className={styles.pagoConcepto}>{pago.concepto}</span>
-                              <span className={styles.pagoMetodo}>{pago.metodo}</span>
-                              <span className={styles.pagoFecha}>{pago.fecha}</span>
-                              <span className={styles.pagoMonto}>{fmtMoney(pago.monto)}</span>
-                              <button className={styles.pagoDelete} onClick={() => handleDeletePayment(pax, pago.id)}>
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                              </button>
-                            </div>
-                          ))}
+                          {pax.pagos.map(pago => {
+                            const isEditing = editandoPago?.pagoId === pago.id && editandoPago?.pasajeroId === pax.id
+                            if (isEditing) return (
+                              <div key={pago.id} className={styles.pagoRowEdit}>
+                                <input
+                                  className={styles.pagoEditInput}
+                                  value={editandoPago.concepto}
+                                  onChange={e => setEditandoPago(p => ({ ...p, concepto: e.target.value }))}
+                                  placeholder="Concepto"
+                                />
+                                <input
+                                  className={styles.pagoEditInputSm}
+                                  type="number" min="0.01" step="0.01"
+                                  value={editandoPago.monto}
+                                  onChange={e => setEditandoPago(p => ({ ...p, monto: e.target.value }))}
+                                />
+                                <select
+                                  className={styles.pagoEditSelect}
+                                  value={editandoPago.metodo}
+                                  onChange={e => setEditandoPago(p => ({ ...p, metodo: e.target.value }))}
+                                >
+                                  <option value="transfer">Transferencia</option>
+                                  <option value="cash">Efectivo</option>
+                                  <option value="card">Tarjeta</option>
+                                  <option value="oxxo">OXXO</option>
+                                </select>
+                                <button className={styles.pagoSaveBtn} onClick={() => handleEditPayment(pax, pago.id)}>✓</button>
+                                <button className={styles.pagoDelete} onClick={() => setEditandoPago(null)}>✕</button>
+                              </div>
+                            )
+                            return (
+                              <div key={pago.id} className={styles.pagoRow}>
+                                <span className={styles.pagoConcepto}>{pago.concepto}</span>
+                                <span className={styles.pagoMetodo}>{pago.metodo}</span>
+                                <span className={styles.pagoFecha}>{pago.fecha}</span>
+                                <span className={styles.pagoMonto}>{fmtMoney(pago.monto)}</span>
+                                <button className={styles.pagoEditBtn} onClick={() => setEditandoPago({ pasajeroId: pax.id, pagoId: pago.id, concepto: pago.concepto, monto: String(pago.monto), metodo: pago.metodo })}>
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button className={styles.pagoDelete} onClick={() => handleDeletePayment(pax, pago.id)}>
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
+                              </div>
+                            )
+                          })}
                         </div>
                       )}
                     </div>

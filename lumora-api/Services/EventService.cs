@@ -13,6 +13,8 @@ public interface IEventService
     Task<EventResponse?> UpdateAsync(string orgId, string id, UpdateEventRequest req);
     Task<bool> DeleteAsync(string orgId, string id);
     Task<PaymentInfo> AddPaymentAsync(string orgId, string eventId, CreatePaymentRequest req);
+    Task<bool> DeletePaymentAsync(string orgId, string eventId, string paymentId);
+    Task<PaymentInfo?> UpdatePaymentAsync(string orgId, string eventId, string paymentId, UpdatePaymentRequest req);
     Task<IEnumerable<EventPhotoResponse>> GetPhotosAsync(string orgId, string eventId);
     Task<EventPhotoResponse?> AddPhotoAsync(string orgId, string eventId, AddEventPhotoRequest req, IR2Service r2);
     Task<bool> DeletePhotoAsync(string orgId, string eventId, string photoId);
@@ -178,6 +180,26 @@ public class EventService(LumoraDbContext db) : IEventService
             CreatedAt = DateTime.UtcNow
         };
         await db.EventPayments.AddAsync(payment);
+        await db.SaveChangesAsync();
+        return new PaymentInfo(payment.Id, payment.Concept, payment.Amount, payment.Method, payment.PaidAt);
+    }
+
+    public async Task<bool> DeletePaymentAsync(string orgId, string eventId, string paymentId)
+    {
+        var payment = await db.EventPayments.FirstOrDefaultAsync(p => p.Id == paymentId && p.EventId == eventId && p.OrgId == orgId);
+        if (payment is null) return false;
+        db.EventPayments.Remove(payment);
+        await db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<PaymentInfo?> UpdatePaymentAsync(string orgId, string eventId, string paymentId, UpdatePaymentRequest req)
+    {
+        var payment = await db.EventPayments.FirstOrDefaultAsync(p => p.Id == paymentId && p.EventId == eventId && p.OrgId == orgId);
+        if (payment is null) return null;
+        if (req.Concept is not null) payment.Concept = req.Concept;
+        if (req.Amount.HasValue) payment.Amount = req.Amount.Value;
+        if (req.Method is not null) payment.Method = req.Method;
         await db.SaveChangesAsync();
         return new PaymentInfo(payment.Id, payment.Concept, payment.Amount, payment.Method, payment.PaidAt);
     }

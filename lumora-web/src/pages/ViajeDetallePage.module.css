@@ -483,6 +483,66 @@
 }
 .pagoDelete:hover { color: #ef4444; background: #fee2e2; }
 
+.pagoEditBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  padding: 2px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+.pagoEditBtn:hover { color: var(--accent); background: var(--accent-soft, rgba(124,106,247,0.08)); }
+
+.pagoRowEdit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--bg-1);
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+}
+.pagoEditInput {
+  flex: 1;
+  font-size: 12px;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-0);
+  color: var(--text);
+  min-width: 0;
+}
+.pagoEditInputSm {
+  width: 80px;
+  font-size: 12px;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-0);
+  color: var(--text);
+}
+.pagoEditSelect {
+  font-size: 12px;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-0);
+  color: var(--text);
+}
+.pagoSaveBtn {
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 700;
+}
+.pagoSaveBtn:hover { background: #15803d; }
+
 .paxNotas { font-size: 12px; color: var(--text-muted); margin: 0; }
 
 /* Expenses Section */

@@ -388,6 +388,87 @@
   letter-spacing: -0.02em;
 }
 
+.pagoRowBtns {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.pagoRow:hover .pagoRowBtns { opacity: 1; }
+
+.pagoEditBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+.pagoEditBtn:hover { color: var(--accent); background: var(--accent-soft, rgba(124,106,247,0.08)); }
+
+.pagoDeleteBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+.pagoDeleteBtn:hover { color: #ef4444; background: #fee2e2; }
+
+.pagoSaveBtn {
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 700;
+}
+.pagoSaveBtn:hover { background: #15803d; }
+
+.pagoRowEdit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--accent);
+  background: var(--bg-1);
+}
+.pagoEditInput {
+  flex: 1;
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-0);
+  color: var(--text);
+  min-width: 0;
+}
+.pagoEditInputSm {
+  width: 90px;
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-0);
+  color: var(--text);
+}
+.pagoEditSelect {
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-0);
+  color: var(--text);
+}
+
 /* Notas */
 .notasText {
   font-size: 14px;

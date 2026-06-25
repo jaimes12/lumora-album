@@ -241,6 +241,18 @@ public class TripsController(LumoraDbContext db) : ControllerBase
         return NoContent();
     }
 
+    [HttpPatch("{tripId}/passengers/{passengerId}/payments/{paymentId}")]
+    public async Task<IActionResult> UpdatePayment(string tripId, string passengerId, string paymentId, [FromBody] UpdateTripPaymentRequest req)
+    {
+        var payment = await db.TripPayments.FirstOrDefaultAsync(p => p.Id == paymentId && p.PassengerId == passengerId && p.OrgId == OrgId);
+        if (payment is null) return NotFound();
+        if (req.Concept is not null) payment.Concept = req.Concept;
+        if (req.Amount.HasValue) payment.Amount = req.Amount.Value;
+        if (req.Method is not null) payment.Method = req.Method;
+        await db.SaveChangesAsync();
+        return Ok(new TripPaymentInfo(payment.Id, payment.PassengerId, payment.Concept, payment.Amount, payment.Method, payment.PaidAt));
+    }
+
     // ── Expenses ─────────────────────────────────────────────────────────────
 
     [HttpGet("{id}/expenses")]

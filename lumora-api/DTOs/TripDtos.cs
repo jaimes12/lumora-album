@@ -57,6 +57,10 @@ public record TripPaymentInfo(
     decimal Amount, string Method, DateTime PaidAt
 );
 
+public record UpdateTripPaymentRequest(
+    string? Concept = null, decimal? Amount = null, string? Method = null
+);
+
 public record TripDetailResponse(
     string Id, string Name, string Destination, string Status,
     DateTime DepartureDate, DateTime ReturnDate,

@@ -66,6 +66,7 @@ export const viajesApi = {
   updatePassenger: (tripId, passengerId, data) => api.patch(`/api/trips/${tripId}/passengers/${passengerId}`, data),
   removePassenger: (tripId, passengerId) => api.delete(`/api/trips/${tripId}/passengers/${passengerId}`),
   addPayment: (tripId, passengerId, data) => api.post(`/api/trips/${tripId}/passengers/${passengerId}/payments`, data),
+  updatePayment: (tripId, passengerId, paymentId, data) => api.patch(`/api/trips/${tripId}/passengers/${passengerId}/payments/${paymentId}`, data),
   deletePayment: (tripId, passengerId, paymentId) => api.delete(`/api/trips/${tripId}/passengers/${passengerId}/payments/${paymentId}`),
   getExpenses: (tripId) => api.get(`/api/trips/${tripId}/expenses`),
   addExpense: (tripId, data) => api.post(`/api/trips/${tripId}/expenses`, data),

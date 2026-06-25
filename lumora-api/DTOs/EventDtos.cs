@@ -29,6 +29,10 @@ public record CreatePaymentRequest(
     DateTime? PaidAt = null
 );
 
+public record UpdatePaymentRequest(
+    string? Concept = null, decimal? Amount = null, string? Method = null
+);
+
 public record PaymentInfo(
     string Id, string Concept, decimal Amount,
     string Method, DateTime PaidAt

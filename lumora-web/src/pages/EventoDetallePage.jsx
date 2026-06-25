@@ -186,6 +186,7 @@ export default function EventoDetallePage() {
   const [showAddPago,   setShowAddPago]   = useState(false)
   const [nuevoPago,     setNuevoPago]     = useState({ concepto: '', monto: '', metodo: 'transfer' })
   const [savingPago,    setSavingPago]    = useState(false)
+  const [editandoPago,  setEditandoPago]  = useState(null) // { pagoId, concepto, monto, metodo }
   const [linkedIds,     setLinkedIds]     = useState([])
   const [openingChat,   setOpeningChat]   = useState(false)
   const [chatLead,      setChatLead]      = useState(null)
@@ -263,6 +264,39 @@ export default function EventoDetallePage() {
       alert('Error al guardar el pago')
     } finally {
       setSavingPago(false)
+    }
+  }
+
+  const eliminarPago = async (pagoId) => {
+    if (!confirm('¿Eliminar este pago?')) return
+    try {
+      await eventosApi.deletePayment(id, pagoId)
+      setEvento(e => ({ ...e, pagos: e.pagos.filter(p => p.id !== pagoId) }))
+    } catch {
+      alert('Error al eliminar el pago')
+    }
+  }
+
+  const guardarEdicionPago = async () => {
+    if (!editandoPago || !editandoPago.concepto.trim() || !editandoPago.monto) return
+    try {
+      const updated = await eventosApi.updatePayment(id, editandoPago.pagoId, {
+        concept: editandoPago.concepto.trim(),
+        amount: parseFloat(editandoPago.monto),
+        method: editandoPago.metodo,
+      })
+      setEvento(e => ({
+        ...e,
+        pagos: e.pagos.map(p => p.id !== editandoPago.pagoId ? p : {
+          ...p,
+          concepto: updated.concept,
+          monto: updated.amount,
+          metodo: updated.method,
+        }),
+      }))
+      setEditandoPago(null)
+    } catch {
+      alert('Error al guardar el pago')
     }
   }
 
@@ -454,15 +488,54 @@ export default function EventoDetallePage() {
             {evento.pagos.length === 0
               ? <p className={styles.sinPagos}>Sin pagos registrados aún</p>
               : <div className={styles.pagosList}>
-                  {evento.pagos.map(p => (
-                    <div key={p.id} className={styles.pagoRow}>
-                      <div className={styles.pagoInfo}>
-                        <span className={styles.pagoConcepto}>{p.concepto}</span>
-                        <span className={styles.pagoFechaMetodo}>{p.fecha} · {p.metodo}</span>
+                  {evento.pagos.map(p => {
+                    const isEditing = editandoPago?.pagoId === p.id
+                    if (isEditing) return (
+                      <div key={p.id} className={styles.pagoRowEdit}>
+                        <input
+                          className={styles.pagoEditInput}
+                          value={editandoPago.concepto}
+                          onChange={e => setEditandoPago(prev => ({ ...prev, concepto: e.target.value }))}
+                          placeholder="Concepto"
+                        />
+                        <input
+                          className={styles.pagoEditInputSm}
+                          type="number" min="0.01" step="0.01"
+                          value={editandoPago.monto}
+                          onChange={e => setEditandoPago(prev => ({ ...prev, monto: e.target.value }))}
+                        />
+                        <select
+                          className={styles.pagoEditSelect}
+                          value={editandoPago.metodo}
+                          onChange={e => setEditandoPago(prev => ({ ...prev, metodo: e.target.value }))}
+                        >
+                          <option value="transfer">Transferencia</option>
+                          <option value="cash">Efectivo</option>
+                          <option value="card">Tarjeta</option>
+                          <option value="check">Cheque</option>
+                        </select>
+                        <button className={styles.pagoSaveBtn} onClick={guardarEdicionPago}>✓</button>
+                        <button className={styles.pagoDeleteBtn} onClick={() => setEditandoPago(null)}>✕</button>
                       </div>
-                      <span className={styles.pagoMonto}>{fmtMoney(p.monto)}</span>
-                    </div>
-                  ))}
+                    )
+                    return (
+                      <div key={p.id} className={styles.pagoRow}>
+                        <div className={styles.pagoInfo}>
+                          <span className={styles.pagoConcepto}>{p.concepto}</span>
+                          <span className={styles.pagoFechaMetodo}>{p.fecha} · {p.metodo}</span>
+                        </div>
+                        <span className={styles.pagoMonto}>{fmtMoney(p.monto)}</span>
+                        <div className={styles.pagoRowBtns}>
+                          <button className={styles.pagoEditBtn} onClick={() => setEditandoPago({ pagoId: p.id, concepto: p.concepto, monto: String(p.monto), metodo: p.metodo })} title="Editar">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          </button>
+                          <button className={styles.pagoDeleteBtn} onClick={() => eliminarPago(p.id)} title="Eliminar">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
             }
           </section>
