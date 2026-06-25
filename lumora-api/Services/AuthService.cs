@@ -29,7 +29,7 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
     public async Task<AuthResponse> RegisterAsync(RegisterRequest req)
     {
         if (EmailValidator.IsDisposable(req.Email))
-            throw new InvalidOperationException("Este tipo de correo temporal no está permitido.");
+            throw new InvalidOperationException("Este correo no existe. Ingresa un correo real.");
 
         var existing = await db.Users.FirstOrDefaultAsync(u => u.Email == req.Email);
         if (existing is not null)

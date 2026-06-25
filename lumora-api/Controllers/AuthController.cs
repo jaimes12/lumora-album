@@ -53,11 +53,11 @@ public class AuthController(IAuthService auth, IR2Service r2) : ControllerBase
     public async Task<IActionResult> CheckEmail([FromBody] CheckEmailRequest req)
     {
         if (EmailValidator.IsDisposable(req.Email))
-            return BadRequest("Este tipo de correo temporal no está permitido. Usa tu correo real.");
+            return BadRequest("Este correo no existe. Ingresa un correo real.");
 
         var hasMx = await EmailValidator.DomainHasMxAsync(req.Email);
         if (!hasMx)
-            return BadRequest("Este dominio no puede recibir correos. Verifica que el correo sea correcto.");
+            return BadRequest("Este correo no existe. Ingresa un correo real.");
 
         var exists = await auth.EmailExistsAsync(req.Email);
         return Ok(new { exists });
