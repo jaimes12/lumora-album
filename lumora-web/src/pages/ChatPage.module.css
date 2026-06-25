@@ -1007,6 +1007,21 @@
 .chatMediaCaption { font-size: 12px; opacity: 0.85; margin-top: 2px; }
 .chatMediaPlaceholder { font-size: 13px; opacity: 0.6; font-style: italic; }
 
+.chatDocLink {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+  background: rgba(0,0,0,0.08);
+  border-radius: 8px;
+  padding: 8px 12px;
+  transition: background 0.15s;
+}
+.chatDocLink:hover { background: rgba(0,0,0,0.15); text-decoration: underline; }
+
 .chatInputArea {
   display: flex; align-items: flex-end; gap: 8px;
   padding: 12px 14px;

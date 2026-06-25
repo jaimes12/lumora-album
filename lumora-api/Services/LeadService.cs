@@ -143,7 +143,7 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer, IR2Servi
         var mediaUrl  = await UploadMediaIfPresent(req.MediaData, req.MediaType);
         var mime      = req.MediaType?.Split(';')[0].Trim();
         var summary   = string.IsNullOrWhiteSpace(req.Body) && mediaUrl is not null
-            ? $"[{(mime?.StartsWith("image") == true ? "Imagen" : "Audio")}]"
+            ? $"[{(mime?.StartsWith("image") == true ? "Imagen" : mime?.StartsWith("audio") == true ? "Audio" : "Archivo")}]"
             : req.Body ?? "";
 
         var message = new LeadMessage
@@ -188,7 +188,7 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer, IR2Servi
 
         var mediaUrl = await UploadMediaIfPresent(mediaData, mediaType);
         var summary  = string.IsNullOrWhiteSpace(body) && mediaUrl is not null
-            ? $"[{(mediaType?.StartsWith("image") == true ? "Imagen" : "Audio")}]"
+            ? $"[{(mediaType?.StartsWith("image") == true ? "Imagen" : mediaType?.StartsWith("audio") == true ? "Audio" : "Archivo")}]"
             : body;
 
         var message = new LeadMessage
@@ -224,7 +224,7 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer, IR2Servi
 
         var mediaUrl = await UploadMediaIfPresent(mediaData, mediaType);
         var summary  = string.IsNullOrWhiteSpace(body) && mediaUrl is not null
-            ? $"[{(mediaType?.StartsWith("image") == true ? "Imagen" : "Audio")}]"
+            ? $"[{(mediaType?.StartsWith("image") == true ? "Imagen" : mediaType?.StartsWith("audio") == true ? "Audio" : "Archivo")}]"
             : body;
 
         var message = new LeadMessage

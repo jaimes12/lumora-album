@@ -712,7 +712,7 @@ export function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate, onOpe
       }
       const last = incoming[incoming.length - 1]
       if (last?.tipo === 'in') {
-        const txt = last.texto || (last.mediaType?.startsWith('image') ? '[Imagen]' : '[Audio]')
+        const txt = last.texto || (last.mediaType?.startsWith('image') ? '[Imagen]' : last.mediaType?.startsWith('audio') ? '[Audio]' : '[Archivo]')
         onLeadUpdate(lead.id, { ultimoMsg: txt, hora: last.hora, noLeidos: 0 })
       }
     } catch {}
@@ -792,9 +792,10 @@ export function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate, onOpe
       const base64   = dataUrl.split(',')[1]
       setMediaFile({ name: file.name, dataUrl, base64, mimeType: 'image/jpeg' })
     } else {
-      // Audio: 5 MB limit
-      if (file.size > 5 * 1024 * 1024) {
-        setSendError('Audio demasiado grande (máx 5 MB)')
+      // Audio / document: size limit
+      const limitMb = file.type.startsWith('audio') ? 5 : 10
+      if (file.size > limitMb * 1024 * 1024) {
+        setSendError(`Archivo demasiado grande (máx ${limitMb} MB)`)
         setTimeout(() => setSendError(''), 3000)
         return
       }
@@ -950,6 +951,7 @@ export function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate, onOpe
                 const isSaved  = !m.id.startsWith('tmp_')
                 const isImage  = m.mediaType?.startsWith('image')
                 const isAudio  = m.mediaType?.startsWith('audio')
+                const isDoc    = m.mediaType && !m.mediaType.startsWith('image') && !m.mediaType.startsWith('audio')
                 return (
                   <div key={m.id} className={`${styles.chatMsgWrap} ${m.tipo === 'out' ? styles.chatMsgOut : ''}`}>
                     <div className={`${styles.chatBubble} ${m.tipo === 'out' ? styles.chatBubbleOut : styles.chatBubbleIn}`}>
@@ -963,7 +965,14 @@ export function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate, onOpe
                         ? <AudioPlayer src={m.mediaUrl} isOut={m.tipo === 'out'} />
                         : isAudio && <span className={styles.chatMediaPlaceholder}>🎤 Nota de voz</span>
                       }
-                      {!isImage && !isAudio && m.texto && <p>{m.texto}</p>}
+                      {isDoc && m.mediaUrl
+                        ? <a href={m.mediaUrl} target="_blank" rel="noreferrer" download className={styles.chatDocLink}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            {m.texto && !m.texto.startsWith('[') ? m.texto : 'Descargar archivo'}
+                          </a>
+                        : isDoc && <span className={styles.chatMediaPlaceholder}>📄 Archivo</span>
+                      }
+                      {!isImage && !isAudio && !isDoc && m.texto && <p>{m.texto}</p>}
                       {isImage && m.mediaUrl && m.texto && m.texto !== '[Imagen]' && (
                         <p className={styles.chatMediaCaption}>{m.texto}</p>
                       )}
@@ -997,9 +1006,14 @@ export function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate, onOpe
               <div className={styles.chatMediaPreview}>
                 {mediaFile.mimeType.startsWith('image') ? (
                   <img src={mediaFile.dataUrl} className={styles.chatMediaPreviewThumb} alt="preview" />
-                ) : (
+                ) : mediaFile.mimeType.startsWith('audio') ? (
                   <div className={styles.chatMediaPreviewAudio}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                    {mediaFile.name}
+                  </div>
+                ) : (
+                  <div className={styles.chatMediaPreviewAudio}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                     {mediaFile.name}
                   </div>
                 )}
@@ -1039,7 +1053,7 @@ export function ChatModal({ lead: initLead, stages, onClose, onLeadUpdate, onOpe
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*,audio/*"
+                accept="image/*,audio/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 style={{ display: 'none' }}
                 onChange={pickFile}
               />
