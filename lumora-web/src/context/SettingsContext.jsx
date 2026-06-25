@@ -10,6 +10,7 @@ export const t = {
   es: {
     dashboard:    'Dashboard',
     eventos:      'Eventos',
+    viajes:       'Viajes',
     clientes:     'Clientes',
     chats:        'Chats',
     contactos:    'Contactos',
@@ -30,6 +31,7 @@ export const t = {
   en: {
     dashboard:    'Dashboard',
     eventos:      'Events',
+    viajes:       'Trips',
     clientes:     'Clients',
     chats:        'Chats',
     contactos:    'Contacts',

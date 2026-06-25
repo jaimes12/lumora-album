@@ -35,6 +35,9 @@ import ConfigPage        from './pages/ConfigPage'
 import TrabajadoresPage  from './pages/TrabajadoresPage'
 import SuperAdminPage    from './pages/SuperAdminPage'
 import NotasPage         from './pages/NotasPage'
+import ViajesPage        from './pages/ViajesPage'
+import ViajeDetallePage  from './pages/ViajeDetallePage'
+import ViajesLanding     from './pages/ViajesLanding'
 
 function LandingPage() {
   return (
@@ -88,6 +91,7 @@ export default function App() {
           <Routes>
             {/* Landing */}
             <Route path="/" element={<LandingPage />} />
+            <Route path="/viajes" element={<ViajesLanding />} />
 
             {/* Auth */}
             <Route path="/login" element={<LoginPage />} />
@@ -114,6 +118,8 @@ export default function App() {
               <Route path="pago-exitoso"    element={<PagoExitosoPage />} />
               <Route path="configuracion"   element={<ConfigPage />} />
               <Route path="trabajadores"   element={<TrabajadoresPage />} />
+              <Route path="viajes"         element={<ViajesPage />} />
+              <Route path="viajes/:id"     element={<ViajeDetallePage />} />
             </Route>
 
             {/* Super admin — own auth, independent of app session */}

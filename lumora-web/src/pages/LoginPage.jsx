@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useSettings } from '../context/SettingsContext'
 import styles from './LoginPage.module.css'
@@ -8,8 +8,10 @@ import logoWhite from '../assets/logo_white_elixe.jpeg'
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { login, register } = useAuth()
   const { theme } = useSettings()
+  const industryParam = new URLSearchParams(location.search).get('industry') ?? 'events'
   const [mode, setMode]     = useState('login') // 'login' | 'register'
   const [loading, setLoading] = useState(false)
   const [error, setError]   = useState('')
@@ -26,7 +28,7 @@ export default function LoginPage() {
       if (mode === 'login') {
         await login(form.email, form.password)
       } else {
-        await register(form.orgName, form.name, form.email, form.password)
+        await register(form.orgName, form.name, form.email, form.password, industryParam)
       }
       navigate('/app/dashboard')
     } catch (err) {

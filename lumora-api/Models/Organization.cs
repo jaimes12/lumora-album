@@ -31,6 +31,9 @@ public class Organization
     [Column("disabled")]
     public bool Disabled { get; set; } = false;
 
+    [Column("industry")]
+    public string Industry { get; set; } = "events";
+
     public ICollection<Client> Clients { get; set; } = [];
     public ICollection<Event> Events { get; set; } = [];
 }

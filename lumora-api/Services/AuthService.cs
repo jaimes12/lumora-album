@@ -43,6 +43,7 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
             Id = Guid.NewGuid().ToString(),
             Name = req.OrgName,
             Plan = "free",
+            Industry = req.Industry ?? "events",
             CreatedAt = DateTime.UtcNow,
             TrialStartedAt = DateTime.UtcNow
         };
@@ -62,14 +63,15 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
         await db.SaveChangesAsync();
 
         return new AuthResponse(
-            GenerateToken(user),
+            GenerateToken(user, org.Industry),
             user.Id,
             user.OrgId,
             user.Name,
             user.Email,
             "free",
             user.Role,
-            org.TrialStartedAt
+            org.TrialStartedAt,
+            org.Industry
         );
     }
 
@@ -86,14 +88,15 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
             throw new InvalidOperationException("ACCOUNT_DISABLED");
 
         return new AuthResponse(
-            GenerateToken(user),
+            GenerateToken(user, user.Organization?.Industry ?? "events"),
             user.Id,
             user.OrgId,
             user.Name,
             user.Email,
             user.Organization?.Plan ?? "free",
             user.Role,
-            user.Organization?.TrialStartedAt
+            user.Organization?.TrialStartedAt,
+            user.Organization?.Industry ?? "events"
         );
     }
 
@@ -110,7 +113,7 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
     {
         var user = await db.Users.Include(u => u.Organization).FirstOrDefaultAsync(u => u.Id == userId)
             ?? throw new InvalidOperationException("Usuario no encontrado");
-        return new UserProfileResponse(user.Id, user.Name, user.Email, user.ProfilePhoto, user.Organization?.Plan ?? "free", user.Role, user.Organization?.TrialStartedAt);
+        return new UserProfileResponse(user.Id, user.Name, user.Email, user.ProfilePhoto, user.Organization?.Plan ?? "free", user.Role, user.Organization?.TrialStartedAt, user.Organization?.Industry ?? "events");
     }
 
     public async Task UpdateProfileAsync(string userId, UpdateProfileRequest req)
@@ -203,7 +206,7 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
         return CryptographicOperations.FixedTimeEquals(actualHash, expectedHash);
     }
 
-    private string GenerateToken(User user)
+    private string GenerateToken(User user, string industry = "events")
     {
         var secret = config["Jwt:Secret"] ?? "lumora-dev-secret-key-change-in-production-32chars";
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
@@ -215,7 +218,8 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
             new Claim("org_id", user.OrgId),
             new Claim("email", user.Email),
             new Claim("name", user.Name),
-            new Claim("role", user.Role)
+            new Claim("role", user.Role),
+            new Claim("industry", industry)
         };
 
         var token = new JwtSecurityToken(

@@ -6,7 +6,8 @@ public record RegisterRequest(
     [Required, MinLength(2), MaxLength(100)] string OrgName,
     [Required, MinLength(2), MaxLength(100)] string Name,
     [Required, EmailAddress] string Email,
-    [Required, MinLength(8)] string Password
+    [Required, MinLength(8)] string Password,
+    string? Industry = null
 );
 
 public record LoginRequest(
@@ -22,7 +23,8 @@ public record AuthResponse(
     string Email,
     string Plan,
     string Role,
-    DateTime? TrialStartedAt
+    DateTime? TrialStartedAt,
+    string Industry = "events"
 );
 
 public record CheckEmailRequest([Required, EmailAddress] string Email);
@@ -32,7 +34,7 @@ public record UpdateProfileRequest([Required, MinLength(2), MaxLength(100)] stri
 public record UpdateEmailRequest([Required, EmailAddress] string NewEmail, [Required] string Password);
 public record UpdatePasswordRequest([Required] string OldPassword, [Required, MinLength(8)] string NewPassword);
 public record UpdatePhotoRequest([Required] string PhotoData); // base64
-public record UserProfileResponse(string UserId, string Name, string Email, string? PhotoUrl, string Plan, string Role, DateTime? TrialStartedAt);
+public record UserProfileResponse(string UserId, string Name, string Email, string? PhotoUrl, string Plan, string Role, DateTime? TrialStartedAt, string Industry = "events");
 
 public record CreateWorkerRequest(
     [Required, MinLength(2), MaxLength(100)] string Name,

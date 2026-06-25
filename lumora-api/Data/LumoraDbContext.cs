@@ -42,6 +42,9 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
     public DbSet<SupportMessage> SupportMessages => Set<SupportMessage>();
     public DbSet<SharedNote> SharedNotes => Set<SharedNote>();
     public DbSet<NoteReaction> NoteReactions => Set<NoteReaction>();
+    public DbSet<Trip> Trips => Set<Trip>();
+    public DbSet<TripPassenger> TripPassengers => Set<TripPassenger>();
+    public DbSet<TripPayment> TripPayments => Set<TripPayment>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {

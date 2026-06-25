@@ -622,6 +622,51 @@ try
             UNIQUE KEY `uq_note_reaction` (`note_id`, `user_id`, `emoji`),
             KEY `idx_note_reactions_note` (`note_id`)
         ) CHARACTER SET utf8mb4",
+
+        // ── Travel vertical ──────────────────────────────────────────────────
+        "ALTER TABLE organizations ADD COLUMN industry varchar(50) NOT NULL DEFAULT 'events'",
+
+        @"CREATE TABLE IF NOT EXISTS `trips` (
+          `id`               varchar(255)  NOT NULL,
+          `org_id`           varchar(255)  NOT NULL,
+          `name`             varchar(255)  NOT NULL,
+          `destination`      varchar(255)  NOT NULL,
+          `departure_date`   datetime(6)   NOT NULL,
+          `return_date`      datetime(6)   NOT NULL,
+          `price_per_person` decimal(18,2) NOT NULL DEFAULT 0,
+          `seats_total`      int           NOT NULL DEFAULT 0,
+          `status`           varchar(50)   NOT NULL DEFAULT 'borrador',
+          `notes`            text          NULL,
+          `created_at`       datetime(6)   NOT NULL,
+          `created_by_id`    varchar(255)  NULL,
+          PRIMARY KEY (`id`)
+        ) CHARACTER SET utf8mb4",
+
+        @"CREATE TABLE IF NOT EXISTS `trip_passengers` (
+          `id`         varchar(255)  NOT NULL,
+          `trip_id`    varchar(255)  NOT NULL,
+          `org_id`     varchar(255)  NOT NULL,
+          `client_id`  varchar(255)  NOT NULL,
+          `seats`      int           NOT NULL DEFAULT 1,
+          `total_cost` decimal(18,2) NOT NULL DEFAULT 0,
+          `status`     varchar(50)   NOT NULL DEFAULT 'pendiente',
+          `notes`      text          NULL,
+          `created_at` datetime(6)   NOT NULL,
+          PRIMARY KEY (`id`)
+        ) CHARACTER SET utf8mb4",
+
+        @"CREATE TABLE IF NOT EXISTS `trip_payments` (
+          `id`           varchar(255)  NOT NULL,
+          `trip_id`      varchar(255)  NOT NULL,
+          `passenger_id` varchar(255)  NOT NULL,
+          `org_id`       varchar(255)  NOT NULL,
+          `concept`      varchar(255)  NOT NULL,
+          `amount`       decimal(18,2) NOT NULL DEFAULT 0,
+          `method`       varchar(50)   NOT NULL DEFAULT 'transfer',
+          `paid_at`      datetime(6)   NOT NULL,
+          `created_at`   datetime(6)   NOT NULL,
+          PRIMARY KEY (`id`)
+        ) CHARACTER SET utf8mb4",
     };
 
     try
