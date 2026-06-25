@@ -14,7 +14,6 @@
 
   <ItemGroup>
     <!-- Firebase only for JWT auth — NOT for database -->
-    <PackageReference Include="DnsClient" Version="1.7.0" />
     <PackageReference Include="FirebaseAdmin" Version="3.5.0" />
     <!-- MySQL / EF Core -->
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" />
