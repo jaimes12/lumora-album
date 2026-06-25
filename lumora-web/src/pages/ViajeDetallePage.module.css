@@ -236,6 +236,17 @@
   font-weight: 500;
 }
 
+/* Two-column grid for passengers + expenses */
+.twoColGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 820px) {
+  .twoColGrid { grid-template-columns: 1fr; }
+}
+
 /* Section */
 .section { display: flex; flex-direction: column; gap: 12px; }
 

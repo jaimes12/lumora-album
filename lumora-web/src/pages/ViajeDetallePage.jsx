@@ -616,6 +616,7 @@ export default function ViajeDetallePage() {
         )}
       </div>
 
+      <div className={styles.twoColGrid}>
       {/* Passengers Section */}
       <div className={styles.section}>
         <div className={styles.sectionHead}>
@@ -838,6 +839,7 @@ export default function ViajeDetallePage() {
           </div>
         )}
       </div>
+      </div>{/* end twoColGrid */}
 
       {/* Modals */}
       {showAddPax && (
