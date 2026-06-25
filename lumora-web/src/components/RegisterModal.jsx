@@ -42,8 +42,9 @@ export default function RegisterModal({ onClose }) {
     try {
       const { exists } = await api.post('/api/auth/check-email', { email })
       setStep(exists ? 'login' : 'password')
-    } catch {
-      setError('Error al verificar el correo. Intenta de nuevo.')
+    } catch (err) {
+      const msg = err?.message ?? ''
+      setError(msg && !msg.startsWith('HTTP') ? msg : 'Error al verificar el correo. Intenta de nuevo.')
     } finally {
       setLoading(false)
     }
