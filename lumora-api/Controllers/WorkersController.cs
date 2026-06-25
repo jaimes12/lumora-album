@@ -105,6 +105,19 @@ public class WorkersController(LumoraDbContext db) : ControllerBase
         return NoContent();
     }
 
+    // All org users (admin + members) for assignment dropdowns
+    [HttpGet("team")]
+    public async Task<IActionResult> GetTeam()
+    {
+        var users = await db.Users
+            .Where(u => u.OrgId == OrgId)
+            .OrderBy(u => u.Role)
+            .ThenBy(u => u.Name)
+            .Select(u => new { u.Id, u.Name, u.Role })
+            .ToListAsync();
+        return Ok(users);
+    }
+
     private static string HashPassword(string password)
     {
         var saltBytes = RandomNumberGenerator.GetBytes(16);

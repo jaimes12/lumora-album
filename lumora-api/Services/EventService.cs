@@ -149,6 +149,7 @@ public class EventService(LumoraDbContext db) : IEventService
         if (req.GuestCount.HasValue)     ev.GuestCount = req.GuestCount.Value;
         if (req.EventDate.HasValue)      ev.EventDate  = req.EventDate.Value.ToUniversalTime();
         if (req.CreatedAt.HasValue)      ev.CreatedAt  = req.CreatedAt.Value.ToUniversalTime();
+        if (req.CreatedById is not null) ev.CreatedById = req.CreatedById;
 
         await db.SaveChangesAsync();
         return await GetByIdAsync(orgId, id);
@@ -228,6 +229,7 @@ public class EventService(LumoraDbContext db) : IEventService
         e.Budget, e.GuestCount,
         e.EventDate, e.CreatedAt,
         payments.Select(p => new PaymentInfo(p.Id, p.Concept, p.Amount, p.Method, p.PaidAt)).ToList(),
-        createdByName
+        createdByName,
+        e.CreatedById
     );
 }

@@ -4,6 +4,7 @@ import styles from './EventoDetallePage.module.css'
 import { eventosApi } from '../api/eventosApi'
 import { clientesApi } from '../api/clientesApi'
 import { proveedoresApi } from '../api/proveedoresApi'
+import { api } from '../api/apiClient'
 import { ESTADO_META, CAT_COLOR, fmt } from '../data/eventosData'
 import { useSettings } from '../context/SettingsContext'
 import EventoTipoIcon from '../components/EventoTipoIcon'
@@ -49,9 +50,15 @@ function EditEventModal({ evento, onSave, onClose }) {
     invitados:   String(evento.invitados),
     presupuesto: String(evento.presupuestoTotal),
     notas:       evento.notas,
+    createdById: evento.createdById ?? '',
   })
+  const [team,   setTeam]   = useState([])
   const [saving, setSaving] = useState(false)
   const [error,  setError]  = useState('')
+
+  useEffect(() => {
+    api.get('/api/workers/team').then(setTeam).catch(() => {})
+  }, [])
 
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
 
@@ -63,14 +70,15 @@ function EditEventModal({ evento, onSave, onClose }) {
       const eventDate   = new Date(`${form.fecha}T${form.hora || '00:00'}`)
       const createdDate = form.createdAt ? new Date(`${form.createdAt}T12:00:00`) : undefined
       const updated = await eventosApi.update(evento.id, {
-        name:       form.nombre.trim(),
-        type:       form.tipo,
-        venueId:    form.venue.trim() || null,
-        eventDate:  eventDate.toISOString(),
-        budget:     parseFloat(form.presupuesto) || 0,
-        guestCount: parseInt(form.invitados)     || 0,
-        notes:      form.notas.trim()            || null,
-        createdAt:  createdDate?.toISOString(),
+        name:        form.nombre.trim(),
+        type:        form.tipo,
+        venueId:     form.venue.trim() || null,
+        eventDate:   eventDate.toISOString(),
+        budget:      parseFloat(form.presupuesto) || 0,
+        guestCount:  parseInt(form.invitados)     || 0,
+        notes:       form.notas.trim()            || null,
+        createdAt:   createdDate?.toISOString(),
+        createdById: form.createdById || null,
       })
       onSave(updated)
     } catch { setError('Error al guardar los cambios.') }
@@ -117,6 +125,18 @@ function EditEventModal({ evento, onSave, onClose }) {
             <label>Fecha de registro</label>
             <input type="date" value={form.createdAt} onChange={set('createdAt')} />
           </div>
+
+          {team.length > 0 && (
+            <div className={styles.editField}>
+              <label>Agregado por</label>
+              <select value={form.createdById} onChange={set('createdById')}>
+                <option value="">— Sin asignar —</option>
+                {team.map(u => (
+                  <option key={u.id} value={u.id}>{u.name}{u.role === 'admin' ? ' (admin)' : ''}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className={styles.editField}>
             <label>Lugar / Venue</label>

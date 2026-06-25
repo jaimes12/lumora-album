@@ -18,7 +18,8 @@ public record UpdateEventRequest(
     string? ClientId, string? VenueId,
     DateTime? EventDate, decimal? Budget,
     int? GuestCount, string? Notes,
-    DateTime? CreatedAt
+    DateTime? CreatedAt,
+    string? CreatedById = null
 );
 
 public record CreatePaymentRequest(
@@ -40,7 +41,8 @@ public record EventResponse(
     decimal Budget, int GuestCount,
     DateTime EventDate, DateTime CreatedAt,
     List<PaymentInfo> Payments,
-    string? CreatedByName = null
+    string? CreatedByName = null,
+    string? CreatedById = null
 );
 
 public record AddEventPhotoRequest(
