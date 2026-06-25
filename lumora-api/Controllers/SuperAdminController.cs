@@ -259,10 +259,49 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config, IWa
     {
         if (!IsSuperAdmin) return Forbid();
 
-        var orgs       = await db.Organizations.OrderByDescending(o => o.CreatedAt).ToListAsync();
-        var users      = await db.Users.ToListAsync();
-        var history    = await db.PlanHistories.ToListAsync();
-        var waOrgIds   = await wa.GetConnectedOrgIdsAsync();
+        var orgs    = await db.Organizations.OrderByDescending(o => o.CreatedAt).ToListAsync();
+        var users   = await db.Users.ToListAsync();
+        var history = await db.PlanHistories.ToListAsync();
+        var waOrgIds = await wa.GetConnectedOrgIdsAsync();
+
+        var orgIds = orgs.Select(o => o.Id).ToList();
+
+        // Batch usage queries — no N+1
+        var eventStats = await db.Events
+            .Where(e => orgIds.Contains(e.OrgId))
+            .GroupBy(e => e.OrgId)
+            .Select(g => new { OrgId = g.Key, Count = g.Count(), LastAt = g.Max(e => (DateTime?)e.CreatedAt) })
+            .ToDictionaryAsync(x => x.OrgId);
+
+        var clientStats = await db.Clients
+            .Where(c => orgIds.Contains(c.OrgId))
+            .GroupBy(c => c.OrgId)
+            .Select(g => new { OrgId = g.Key, Count = g.Count(), LastAt = g.Max(c => (DateTime?)c.CreatedAt) })
+            .ToDictionaryAsync(x => x.OrgId);
+
+        var paymentStats = await db.EventPayments
+            .Where(p => orgIds.Contains(p.OrgId))
+            .GroupBy(p => p.OrgId)
+            .Select(g => new { OrgId = g.Key, Total = g.Sum(p => p.Amount) })
+            .ToDictionaryAsync(x => x.OrgId);
+
+        var contractStats = await db.Contracts
+            .Where(c => orgIds.Contains(c.OrgId))
+            .GroupBy(c => c.OrgId)
+            .Select(g => new { OrgId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.OrgId);
+
+        var workerStats = await db.Users
+            .Where(u => orgIds.Contains(u.OrgId) && u.Role == "member")
+            .GroupBy(u => u.OrgId)
+            .Select(g => new { OrgId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.OrgId);
+
+        var leadStats = await db.Leads
+            .Where(l => orgIds.Contains(l.OrgId))
+            .GroupBy(l => l.OrgId)
+            .Select(g => new { OrgId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.OrgId);
 
         var result = orgs.Select(o => {
             var orgHistory = history
@@ -275,21 +314,50 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config, IWa
                 })
                 .ToList();
 
+            var ev  = eventStats.GetValueOrDefault(o.Id);
+            var cl  = clientStats.GetValueOrDefault(o.Id);
+            var pay = paymentStats.GetValueOrDefault(o.Id);
+            var con = contractStats.GetValueOrDefault(o.Id);
+            var wk  = workerStats.GetValueOrDefault(o.Id);
+            var ld  = leadStats.GetValueOrDefault(o.Id);
+
+            int eCount = ev?.Count ?? 0;
+            int cCount = cl?.Count ?? 0;
+
+            // Last activity = most recent event or client creation
+            DateTime? lastActivity = null;
+            if (ev?.LastAt is not null) lastActivity = ev.LastAt;
+            if (cl?.LastAt is not null && (lastActivity is null || cl.LastAt > lastActivity)) lastActivity = cl.LastAt;
+
+            // Engagement: alto / medio / bajo
+            string engagement = eCount >= 3 && cCount >= 2 ? "alto"
+                : eCount >= 1 || cCount >= 1 ? "medio"
+                : "bajo";
+
             var last = orgHistory.FirstOrDefault();
             return new {
                 o.Id, o.Name, o.Plan,
-                planLabel             = PlanLabel(o.Plan),
-                stripeSubscriptionId  = o.StripeSubscriptionId,
-                stripeCustomerId      = o.StripeCustomerId,
-                adminCount            = users.Count(u => u.OrgId == o.Id && u.Role == "admin"),
-                lastActivatedAt       = last?.activatedAt ?? "—",
-                lastMethod            = last?.Method ?? "—",
-                totalPaid             = orgHistory.Sum(h => h.Amount),
-                history               = orgHistory,
-                createdAt             = o.CreatedAt.ToString("dd/MM/yyyy"),
+                planLabel            = PlanLabel(o.Plan),
+                stripeSubscriptionId = o.StripeSubscriptionId,
+                stripeCustomerId     = o.StripeCustomerId,
+                adminCount           = users.Count(u => u.OrgId == o.Id && u.Role == "admin"),
+                lastActivatedAt      = last?.activatedAt ?? "—",
+                lastMethod           = last?.Method ?? "—",
+                totalPaid            = orgHistory.Sum(h => h.Amount),
+                history              = orgHistory,
+                createdAt            = o.CreatedAt.ToString("dd/MM/yyyy"),
                 o.Disabled,
-                trialStartedAt        = o.TrialStartedAt?.ToString("O"),
-                waConnected           = waOrgIds.Contains(o.Id),
+                trialStartedAt       = o.TrialStartedAt?.ToString("O"),
+                waConnected          = waOrgIds.Contains(o.Id),
+                // Usage metrics
+                eventCount    = eCount,
+                clientCount   = cCount,
+                contractCount = con?.Count ?? 0,
+                workerCount   = wk?.Count ?? 0,
+                leadCount     = ld?.Count ?? 0,
+                appRevenue    = pay?.Total ?? 0,
+                lastActivityAt = lastActivity?.ToString("O"),
+                engagement,
             };
         }).ToList();
 

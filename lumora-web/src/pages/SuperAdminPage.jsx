@@ -436,6 +436,34 @@ function PlansTab() {
             <div className={styles.planStatLabel}>Total cobrado</div>
           </div>
         </div>
+        <div className={styles.planStatCard} style={{ borderColor: '#34d39940' }}>
+          <div className={styles.planStatDot} style={{ background: '#34d399' }} />
+          <div>
+            <div className={styles.planStatCount}>{rows.filter(r => r.engagement === 'alto').length}</div>
+            <div className={styles.planStatLabel}>Uso alto</div>
+          </div>
+        </div>
+        <div className={styles.planStatCard} style={{ borderColor: '#ef444440' }}>
+          <div className={styles.planStatDot} style={{ background: '#ef4444' }} />
+          <div>
+            <div className={styles.planStatCount}>{rows.filter(r => r.engagement === 'bajo').length}</div>
+            <div className={styles.planStatLabel}>Sin actividad</div>
+          </div>
+        </div>
+        <div className={styles.planStatCard} style={{ borderColor: '#38bdf840' }}>
+          <div className={styles.planStatDot} style={{ background: '#38bdf8' }} />
+          <div>
+            <div className={styles.planStatCount}>{rows.reduce((s, r) => s + (r.eventCount ?? 0), 0)}</div>
+            <div className={styles.planStatLabel}>Eventos totales</div>
+          </div>
+        </div>
+        <div className={styles.planStatCard} style={{ borderColor: '#a78bfa40' }}>
+          <div className={styles.planStatDot} style={{ background: '#a78bfa' }} />
+          <div>
+            <div className={styles.planStatCount}>${rows.reduce((s, r) => s + (r.appRevenue ?? 0), 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}</div>
+            <div className={styles.planStatLabel}>Ingresos en app</div>
+          </div>
+        </div>
       </div>
 
       {/* Search */}
@@ -455,13 +483,14 @@ function PlansTab() {
               <tr>
                 <th>Organización</th>
                 <th>Plan actual</th>
+                <th>Uso</th>
+                <th>Eventos</th>
+                <th>Clientes</th>
+                <th>Ingresos app</th>
+                <th>Última actividad</th>
                 <th>Trial</th>
                 <th>WhatsApp</th>
-                <th>Admins</th>
                 <th>Total pagado</th>
-                <th>Último pago</th>
-                <th>Método</th>
-                <th>Stripe Sub ID</th>
                 <th>Registro</th>
                 <th></th>
               </tr>
@@ -507,11 +536,30 @@ function PlansTab() {
                       ? <span style={{ fontSize: 11, fontWeight: 700, color: '#25D366', background: 'rgba(37,211,102,0.12)', padding: '2px 8px', borderRadius: 4 }}>✓ Conectado</span>
                       : <span className={styles.muted} style={{ fontSize: 11 }}>—</span>
                     }</td>
-                    <td className={styles.muted}>{row.adminCount}</td>
+                    <td>{(() => {
+                      const cfg = { alto: ['#34d399','rgba(52,211,153,0.12)','▲ Alto'], medio: ['#f59e0b','rgba(245,158,11,0.12)','◆ Medio'], bajo: ['#ef4444','rgba(239,68,68,0.12)','▼ Bajo'] }[row.engagement] ?? ['#6b7280','rgba(107,114,128,0.12)','—']
+                      return <span style={{ fontSize: 11, fontWeight: 700, color: cfg[0], background: cfg[1], padding: '2px 8px', borderRadius: 4 }}>{cfg[2]}</span>
+                    })()}</td>
+                    <td className={styles.muted} style={{ textAlign: 'center' }}>{row.eventCount ?? 0}</td>
+                    <td className={styles.muted} style={{ textAlign: 'center' }}>{row.clientCount ?? 0}</td>
+                    <td className={styles.muted}>${Number(row.appRevenue ?? 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}</td>
+                    <td className={styles.muted} style={{ fontSize: 11 }}>{row.lastActivityAt ? (() => {
+                      const d = Math.floor((Date.now() - new Date(row.lastActivityAt).getTime()) / 86_400_000)
+                      return d === 0 ? 'Hoy' : d === 1 ? 'Ayer' : d < 7 ? `Hace ${d}d` : d < 30 ? `Hace ${Math.floor(d/7)}sem` : `Hace ${Math.floor(d/30)}m`
+                    })() : <span style={{ opacity: 0.4 }}>Sin actividad</span>}</td>
+                    <td>{(() => {
+                      if (!row.trialStartedAt) return <span className={styles.muted} style={{ fontSize: 11 }}>Sin trial</span>
+                      const started = new Date(row.trialStartedAt)
+                      const daysLeft = Math.max(0, 5 - Math.floor((Date.now() - started.getTime()) / 86_400_000))
+                      return daysLeft > 0
+                        ? <span style={{ fontSize: 11, fontWeight: 700, color: '#34d399', background: 'rgba(52,211,153,0.12)', padding: '2px 8px', borderRadius: 4 }}>✓ {daysLeft}d restantes</span>
+                        : <span style={{ fontSize: 11, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '2px 8px', borderRadius: 4 }}>Vencido</span>
+                    })()}</td>
+                    <td>{row.waConnected
+                      ? <span style={{ fontSize: 11, fontWeight: 700, color: '#25D366', background: 'rgba(37,211,102,0.12)', padding: '2px 8px', borderRadius: 4 }}>✓ Conectado</span>
+                      : <span className={styles.muted} style={{ fontSize: 11 }}>—</span>
+                    }</td>
                     <td><strong>${Number(row.totalPaid ?? 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}</strong></td>
-                    <td className={styles.muted}>{row.lastActivatedAt}</td>
-                    <td className={styles.muted}>{row.lastMethod}</td>
-                    <td className={styles.muted} style={{ fontSize: 11 }}>{row.stripeSubscriptionId ? row.stripeSubscriptionId.slice(0, 20) + '…' : '—'}</td>
                     <td className={styles.muted}>{row.createdAt}</td>
                     <td>
                       <div className={styles.rowActions}>
@@ -551,8 +599,26 @@ function PlansTab() {
                   </tr>
                   {expanded === row.id && (
                     <tr key={`${row.id}-history`} className={styles.historyRow}>
-                      <td colSpan={11}>
+                      <td colSpan={12}>
                         <div className={styles.historyWrap}>
+                          {/* Usage stats grid */}
+                          <div className={styles.usageGrid}>
+                            {[
+                              { label: 'Eventos', value: row.eventCount ?? 0, icon: '📅' },
+                              { label: 'Clientes', value: row.clientCount ?? 0, icon: '👤' },
+                              { label: 'Contratos', value: row.contractCount ?? 0, icon: '📄' },
+                              { label: 'Leads', value: row.leadCount ?? 0, icon: '🎯' },
+                              { label: 'Colaboradores', value: row.workerCount ?? 0, icon: '👥' },
+                              { label: 'Ingresos en app', value: `$${Number(row.appRevenue ?? 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}`, icon: '💰' },
+                            ].map(s => (
+                              <div key={s.label} className={styles.usageStat}>
+                                <span className={styles.usageIcon}>{s.icon}</span>
+                                <span className={styles.usageVal}>{s.value}</span>
+                                <span className={styles.usageLabel}>{s.label}</span>
+                              </div>
+                            ))}
+                          </div>
+                          {/* Plan history */}
                           <div className={styles.historyTitle}>Historial de plan — {row.name}</div>
                           {row.history.length === 0
                             ? <div className={styles.historyEmpty}>Sin historial registrado</div>

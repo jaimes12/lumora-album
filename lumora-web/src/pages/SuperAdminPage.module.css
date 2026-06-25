@@ -607,6 +607,29 @@
   background: #13131d;
   border-top: 1px solid #252535;
 }
+.usageGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #252535;
+}
+.usageStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: #1c1c2e;
+  border: 1px solid #252535;
+  border-radius: 8px;
+  padding: 10px 18px;
+  min-width: 90px;
+}
+.usageIcon { font-size: 16px; }
+.usageVal  { font-size: 18px; font-weight: 700; color: #e6e6f0; }
+.usageLabel { font-size: 10px; color: #888899; text-transform: uppercase; letter-spacing: 0.06em; }
+
 .historyTitle  { font-size: 11px; font-weight: 700; color: #7c6af7; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
 .historyEmpty  { font-size: 12px; color: #888899; padding: 8px 0; }
 .historyTable  { width: 100%; border-collapse: collapse; font-size: 12px; }
