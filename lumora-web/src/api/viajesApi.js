@@ -43,6 +43,13 @@ function toFrontend(t) {
         fecha: fmtDate(x.paidAt),
       })),
     })),
+    gastos: (t.expenses ?? []).map(e => ({
+      id: e.id,
+      concepto: e.concept,
+      monto: e.amount,
+      pagado: e.paid,
+      notas: e.notes ?? '',
+    })),
   }
 }
 
@@ -60,4 +67,8 @@ export const viajesApi = {
   removePassenger: (tripId, passengerId) => api.delete(`/api/trips/${tripId}/passengers/${passengerId}`),
   addPayment: (tripId, passengerId, data) => api.post(`/api/trips/${tripId}/passengers/${passengerId}/payments`, data),
   deletePayment: (tripId, passengerId, paymentId) => api.delete(`/api/trips/${tripId}/passengers/${passengerId}/payments/${paymentId}`),
+  getExpenses: (tripId) => api.get(`/api/trips/${tripId}/expenses`),
+  addExpense: (tripId, data) => api.post(`/api/trips/${tripId}/expenses`, data),
+  updateExpense: (tripId, expenseId, data) => api.patch(`/api/trips/${tripId}/expenses/${expenseId}`, data),
+  deleteExpense: (tripId, expenseId) => api.delete(`/api/trips/${tripId}/expenses/${expenseId}`),
 }

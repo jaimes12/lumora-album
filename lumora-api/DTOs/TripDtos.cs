@@ -63,5 +63,21 @@ public record TripDetailResponse(
     decimal PricePerPerson, int SeatsTotal,
     string? Notes, DateTime CreatedAt,
     List<PassengerInfo> Passengers,
-    string? CreatedByName
+    string? CreatedByName,
+    List<TripExpenseInfo> Expenses
+);
+
+public record TripExpenseInfo(
+    string Id, string Concept, decimal Amount, bool Paid, string? Notes, DateTime CreatedAt
+);
+
+public record AddTripExpenseRequest(
+    [Required] string Concept,
+    [Required] decimal Amount,
+    bool Paid = false,
+    string? Notes = null
+);
+
+public record UpdateTripExpenseRequest(
+    string? Concept = null, decimal? Amount = null, bool? Paid = null, string? Notes = null
 );

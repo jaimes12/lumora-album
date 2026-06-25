@@ -70,6 +70,13 @@
   max-width: 480px;
 }
 
+.heroCreatedBy {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+  opacity: 0.7;
+}
+
 .heroRight { display: flex; align-items: flex-start; gap: 8px; flex-shrink: 0; }
 
 .statusWrap { position: relative; }
@@ -123,36 +130,114 @@
   padding: 2px 4px;
 }
 
-/* Stats */
-.statsRow {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 12px;
+.editBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
 }
+.editBtn:hover { border-color: var(--accent); color: var(--accent); }
 
-.statCard {
+/* Financial Summary Card */
+.summaryCard {
   background: var(--bg-2);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 16px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 16px;
 }
 
-.statNum {
-  font-size: 20px;
+.summaryStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 16px;
+}
+
+.summaryStat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.summaryStatLast {
+  border-left: 1px solid var(--border);
+  padding-left: 16px;
+}
+
+.summaryNum {
+  font-size: 18px;
   font-weight: 700;
   color: var(--text);
+  line-height: 1.2;
 }
 
-.statLbl {
-  font-size: 12px;
+.summaryLbl {
+  font-size: 11px;
   color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.miniBar {
+  margin-top: 4px;
+  height: 4px;
+  background: var(--bg-1);
+  border-radius: 99px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 80px;
+}
+.miniBarFill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.3s;
+}
+
+.summaryProgressWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.summaryProgress {
+  display: flex;
+  height: 10px;
+  border-radius: 99px;
+  overflow: hidden;
+  background: var(--bg-1);
+}
+
+.summaryProgressCobrado {
+  background: #16a34a;
+  transition: width 0.4s;
+  min-width: 0;
+}
+
+.summaryProgressPendiente {
+  background: #fed7aa;
+  transition: width 0.4s;
+  min-width: 0;
+}
+
+.summaryProgressLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 /* Section */
-.section { display: flex; flex-direction: column; gap: 16px; }
+.section { display: flex; flex-direction: column; gap: 12px; }
 
 .sectionHead {
   display: flex;
@@ -222,24 +307,66 @@
 
 .paxHeader {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
 }
 
-.paxInfo { display: flex; flex-direction: column; gap: 2px; }
-.paxNombre { font-size: 15px; font-weight: 600; color: var(--text); }
-.paxTel { font-size: 12px; color: var(--text-muted); }
+.paxInfo { display: flex; flex-direction: column; gap: 3px; }
 
-.paxActions { display: flex; gap: 6px; }
-
-.pagoBtn {
+.paxNameRow {
   display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.paxNombre { font-size: 15px; font-weight: 600; color: var(--text); }
+
+.paxEstadoBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: capitalize;
+}
+
+.paxTel { font-size: 12px; color: var(--text-muted); }
+.paxAsientos { font-size: 12px; color: var(--text-muted); }
+
+.paxActions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.waBtn {
+  display: inline-flex;
   align-items: center;
   gap: 5px;
   background: #dcfce7;
   color: #16a34a;
   border: 1px solid #86efac;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.waBtn:hover { opacity: 0.8; }
+
+.pagoBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
   border-radius: 8px;
   padding: 6px 12px;
   font-size: 12px;
@@ -261,42 +388,64 @@
 }
 .removeBtn:hover { border-color: #ef4444; color: #ef4444; }
 
-.paxMoney {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  background: var(--bg-1);
-  border-radius: 8px;
-  padding: 10px;
-}
-
-.paxMoneyItem { display: flex; flex-direction: column; gap: 2px; text-align: center; }
-.paxMoneyLabel { font-size: 11px; color: var(--text-muted); }
-.paxMoneyVal { font-size: 13px; font-weight: 700; color: var(--text); }
-
-.paxProgress {
+/* Payment progress bars */
+.paxProgressSection {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.progressBar {
-  flex: 1;
-  height: 6px;
-  background: var(--bg-1);
+.paxProgressBar {
+  display: flex;
+  height: 8px;
   border-radius: 99px;
   overflow: hidden;
+  background: var(--bg-1);
 }
-.progressFill {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 99px;
-  transition: width 0.3s;
-}
-.progressLabel { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
 
+.paxProgressCobrado {
+  background: #16a34a;
+  transition: width 0.4s;
+  min-width: 0;
+}
+
+.paxProgressPendiente {
+  background: #fed7aa;
+  transition: width 0.4s;
+  min-width: 0;
+}
+
+.paxProgressAmounts {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  flex-wrap: wrap;
+}
+
+/* Payments list */
 .pagos { display: flex; flex-direction: column; gap: 4px; }
-.pagosTitle { font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 0; }
+
+.pagosToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s;
+  width: 100%;
+  text-align: left;
+}
+.pagosToggle:hover { border-color: var(--accent); color: var(--text); }
+
+.pagosListInner { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
 
 .pagoRow {
   display: flex;
@@ -324,6 +473,131 @@
 .pagoDelete:hover { color: #ef4444; background: #fee2e2; }
 
 .paxNotas { font-size: 12px; color: var(--text-muted); margin: 0; }
+
+/* Expenses Section */
+.gastosSummary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+
+.gastosSummaryDot { color: var(--border); font-size: 16px; }
+
+.gastoForm {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gastoFormInner {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.gastoFormActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px 12px;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  user-select: none;
+  white-space: nowrap;
+}
+.checkboxLabel:hover { border-color: var(--accent); }
+.checkboxLabel input[type="checkbox"] { accent-color: var(--accent); }
+
+.emptyGastos {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px;
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.gastosList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gastoRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: background 0.1s;
+}
+
+.gastoRowPagado { opacity: 0.7; }
+
+.gastoConcepto {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.gastoMonto {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.gastoPagadoLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.gastoPagadoLabel input[type="checkbox"] { accent-color: #16a34a; }
+
+.gastoPagadoBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #dcfce7;
+  color: #16a34a;
+  white-space: nowrap;
+}
+
+.gastoPorPagarBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #fed7aa;
+  color: #ea580c;
+  white-space: nowrap;
+}
 
 /* Modals */
 .overlay {
@@ -490,3 +764,14 @@
 .modalActions { display: flex; gap: 8px; justify-content: flex-end; }
 
 .error { font-size: 13px; color: #ef4444; margin: 0; }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .hero { flex-direction: column; }
+  .heroRight { width: 100%; }
+  .summaryStats { grid-template-columns: repeat(2, 1fr); }
+  .summaryStatLast { border-left: none; padding-left: 0; }
+  .paxActions { gap: 4px; }
+  .waBtn, .pagoBtn { padding: 5px 8px; font-size: 11px; }
+  .gastoFormInner { flex-direction: column; }
+}

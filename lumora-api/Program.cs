@@ -667,6 +667,18 @@ try
           `created_at`   datetime(6)   NOT NULL,
           PRIMARY KEY (`id`)
         ) CHARACTER SET utf8mb4",
+
+        @"CREATE TABLE IF NOT EXISTS `trip_expenses` (
+          `id`         varchar(255)  NOT NULL,
+          `trip_id`    varchar(255)  NOT NULL,
+          `org_id`     varchar(255)  NOT NULL,
+          `concept`    varchar(255)  NOT NULL,
+          `amount`     decimal(18,2) NOT NULL DEFAULT 0,
+          `paid`       tinyint(1)    NOT NULL DEFAULT 0,
+          `notes`      varchar(500)  NULL,
+          `created_at` datetime(6)   NOT NULL,
+          PRIMARY KEY (`id`)
+        ) CHARACTER SET utf8mb4",
     };
 
     try

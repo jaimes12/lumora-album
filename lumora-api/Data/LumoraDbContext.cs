@@ -45,6 +45,7 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
     public DbSet<Trip> Trips => Set<Trip>();
     public DbSet<TripPassenger> TripPassengers => Set<TripPassenger>();
     public DbSet<TripPayment> TripPayments => Set<TripPayment>();
+    public DbSet<TripExpense> TripExpenses => Set<TripExpense>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -162,6 +163,13 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
             .HasOne(p => p.Passenger)
             .WithMany(t => t.Payments)
             .HasForeignKey(p => p.PassengerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // TripExpense -> Trip
+        mb.Entity<TripExpense>()
+            .HasOne(e => e.Trip)
+            .WithMany()
+            .HasForeignKey(e => e.TripId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // ── Pomelo 8.x GUID fix ──────────────────────────────────────────────

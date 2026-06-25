@@ -95,11 +95,17 @@ public class TripsController(LumoraDbContext db) : ControllerBase
             );
         }).ToList();
 
+        var expenses = await db.TripExpenses
+            .Where(e => e.TripId == id && e.OrgId == OrgId)
+            .OrderBy(e => e.CreatedAt)
+            .Select(e => new TripExpenseInfo(e.Id, e.Concept, e.Amount, e.Paid, e.Notes, e.CreatedAt))
+            .ToListAsync();
+
         return Ok(new TripDetailResponse(
             trip.Id, trip.Name, trip.Destination, trip.Status,
             trip.DepartureDate, trip.ReturnDate,
             trip.PricePerPerson, trip.SeatsTotal,
-            trip.Notes, trip.CreatedAt, passengerList, createdByName
+            trip.Notes, trip.CreatedAt, passengerList, createdByName, expenses
         ));
     }
 
@@ -231,6 +237,62 @@ public class TripsController(LumoraDbContext db) : ControllerBase
         var payment = await db.TripPayments.FirstOrDefaultAsync(p => p.Id == paymentId && p.PassengerId == passengerId && p.OrgId == OrgId);
         if (payment is null) return NotFound();
         db.TripPayments.Remove(payment);
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // ── Expenses ─────────────────────────────────────────────────────────────
+
+    [HttpGet("{id}/expenses")]
+    public async Task<IActionResult> GetExpenses(string id)
+    {
+        var expenses = await db.TripExpenses
+            .Where(e => e.TripId == id && e.OrgId == OrgId)
+            .OrderBy(e => e.CreatedAt)
+            .Select(e => new TripExpenseInfo(e.Id, e.Concept, e.Amount, e.Paid, e.Notes, e.CreatedAt))
+            .ToListAsync();
+        return Ok(expenses);
+    }
+
+    [HttpPost("{id}/expenses")]
+    public async Task<IActionResult> AddExpense(string id, [FromBody] AddTripExpenseRequest req)
+    {
+        var trip = await db.Trips.FirstOrDefaultAsync(t => t.Id == id && t.OrgId == OrgId);
+        if (trip is null) return NotFound();
+        var expense = new TripExpense {
+            Id = Guid.NewGuid().ToString(),
+            TripId = id,
+            OrgId = OrgId,
+            Concept = req.Concept,
+            Amount = req.Amount,
+            Paid = req.Paid,
+            Notes = req.Notes,
+            CreatedAt = DateTime.UtcNow,
+        };
+        await db.TripExpenses.AddAsync(expense);
+        await db.SaveChangesAsync();
+        return Ok(new TripExpenseInfo(expense.Id, expense.Concept, expense.Amount, expense.Paid, expense.Notes, expense.CreatedAt));
+    }
+
+    [HttpPatch("{id}/expenses/{expenseId}")]
+    public async Task<IActionResult> UpdateExpense(string id, string expenseId, [FromBody] UpdateTripExpenseRequest req)
+    {
+        var expense = await db.TripExpenses.FirstOrDefaultAsync(e => e.Id == expenseId && e.TripId == id && e.OrgId == OrgId);
+        if (expense is null) return NotFound();
+        if (req.Concept is not null) expense.Concept = req.Concept;
+        if (req.Amount.HasValue)    expense.Amount  = req.Amount.Value;
+        if (req.Paid.HasValue)      expense.Paid    = req.Paid.Value;
+        if (req.Notes is not null)  expense.Notes   = req.Notes;
+        await db.SaveChangesAsync();
+        return Ok(new TripExpenseInfo(expense.Id, expense.Concept, expense.Amount, expense.Paid, expense.Notes, expense.CreatedAt));
+    }
+
+    [HttpDelete("{id}/expenses/{expenseId}")]
+    public async Task<IActionResult> DeleteExpense(string id, string expenseId)
+    {
+        var expense = await db.TripExpenses.FirstOrDefaultAsync(e => e.Id == expenseId && e.TripId == id && e.OrgId == OrgId);
+        if (expense is null) return NotFound();
+        db.TripExpenses.Remove(expense);
         await db.SaveChangesAsync();
         return NoContent();
     }

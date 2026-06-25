@@ -11,10 +11,23 @@ const ESTADO_COLOR = {
   completado: { bg: '#dbeafe', color: '#1d4ed8', border: '#93c5fd' },
   cancelado:  { bg: '#fee2e2', color: '#dc2626', border: '#fca5a5' },
 }
-const ESTADOS_PASAJERO = ['pendiente', 'confirmado', 'cancelado']
+const ESTADO_PAX_COLOR = {
+  pendiente:  { bg: '#fef9c3', color: '#854d0e', border: '#fef08a' },
+  confirmado: { bg: '#dcfce7', color: '#16a34a', border: '#86efac' },
+  cancelado:  { bg: '#fee2e2', color: '#dc2626', border: '#fca5a5' },
+}
 
 const fmtMoney = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(n || 0)
 
+function whatsappUrl(phone) {
+  if (!phone) return null
+  const digits = phone.replace(/\D/g, '')
+  if (!digits) return null
+  const full = digits.length === 10 ? `52${digits}` : digits
+  return `https://wa.me/${full}`
+}
+
+// ── Agregar Pasajero Modal ─────────────────────────────────────────────────────
 function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
   const [clientes, setClientes] = useState([])
   const [busqueda, setBusqueda] = useState('')
@@ -23,7 +36,6 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
   const [costoCustom, setCostoCustom] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  // inline new-client form
   const [creandoCliente, setCreandoCliente] = useState(false)
   const [nuevoNombre, setNuevoNombre] = useState('')
   const [nuevoTel, setNuevoTel] = useState('')
@@ -94,14 +106,12 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
           </button>
         </div>
         <form onSubmit={creandoCliente ? handleCrearCliente : handleSubmit} className={styles.modalBody}>
-
-          {/* ── Búsqueda / selección de cliente ── */}
           {!creandoCliente && (
             <>
               <div className={styles.field}>
                 <label>
                   Buscar cliente
-                  {clienteSel && <span className={styles.clienteSelBadge}>✓ {clienteSel.nombre}</span>}
+                  {clienteSel && <span className={styles.clienteSelBadge}>&#10003; {clienteSel.nombre}</span>}
                 </label>
                 <input
                   placeholder="Escribe nombre o teléfono…"
@@ -139,7 +149,6 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
             </>
           )}
 
-          {/* ── Formulario inline para nuevo cliente ── */}
           {creandoCliente && (
             <div className={styles.nuevoClienteWrap}>
               <p className={styles.nuevoClienteTitle}>Nuevo cliente</p>
@@ -160,7 +169,7 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
               {error && <p className={styles.error}>{error}</p>}
               <div className={styles.modalActions}>
                 <button type="button" className={styles.btnSecondary} onClick={() => { setCreandoCliente(false); setError('') }}>
-                  ← Volver
+                  Volver
                 </button>
                 <button type="submit" className={styles.btnPrimary} disabled={savingCliente || !nuevoNombre.trim()}>
                   {savingCliente ? 'Guardando…' : 'Crear y seleccionar'}
@@ -169,7 +178,6 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
             </div>
           )}
 
-          {/* ── Asientos y costo (siempre visible cuando hay cliente seleccionado o no se está creando) ── */}
           {!creandoCliente && (
             <>
               <div className={styles.row2}>
@@ -188,7 +196,7 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
                 </div>
               </div>
               <p className={styles.costoHint}>
-                Precio por defecto: {fmtMoney(viaje.precioPorPersona)} × {asientos} = {fmtMoney(viaje.precioPorPersona * asientos)}
+                Precio por defecto: {fmtMoney(viaje.precioPorPersona)} x {asientos} = {fmtMoney(viaje.precioPorPersona * asientos)}
               </p>
               {error && <p className={styles.error}>{error}</p>}
               <div className={styles.modalActions}>
@@ -205,6 +213,7 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
   )
 }
 
+// ── Registrar Pago Modal ───────────────────────────────────────────────────────
 function RegistrarPagoModal({ viaje, pasajero, onClose, onAdded }) {
   const [form, setForm] = useState({ concepto: 'Pago viaje', monto: '', metodo: 'transfer' })
   const [saving, setSaving] = useState(false)
@@ -253,7 +262,7 @@ function RegistrarPagoModal({ viaje, pasajero, onClose, onAdded }) {
               <input type="number" min="0.01" step="0.01" value={form.monto} onChange={setF('monto')} required autoFocus />
             </div>
             <div className={styles.field}>
-              <label>Método</label>
+              <label>Metodo</label>
               <select value={form.metodo} onChange={setF('metodo')}>
                 <option value="transfer">Transferencia</option>
                 <option value="cash">Efectivo</option>
@@ -275,6 +284,99 @@ function RegistrarPagoModal({ viaje, pasajero, onClose, onAdded }) {
   )
 }
 
+// ── Edit Trip Modal ────────────────────────────────────────────────────────────
+function EditTripModal({ viaje, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    nombre: viaje.nombre,
+    destino: viaje.destino,
+    salida: viaje.salidaISO,
+    regreso: viaje.regresoISO,
+    precio: viaje.precioPorPersona,
+    asientos: viaje.asientosTotal,
+    notas: viaje.notas,
+  })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const setF = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setSaving(true); setError('')
+    try {
+      const updated = await viajesApi.update(viaje.id, {
+        name: form.nombre,
+        destination: form.destino,
+        departureDate: form.salida,
+        returnDate: form.regreso,
+        pricePerPerson: parseFloat(form.precio),
+        seatsTotal: parseInt(form.asientos),
+        notes: form.notas,
+      })
+      onSaved(updated)
+      onClose()
+    } catch (err) {
+      setError(err.message || 'Error al guardar')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className={styles.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className={styles.modal}>
+        <div className={styles.modalHead}>
+          <h3>Editar viaje</h3>
+          <button className={styles.modalClose} onClick={onClose}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className={styles.modalBody}>
+          <div className={styles.field}>
+            <label>Nombre del viaje *</label>
+            <input value={form.nombre} onChange={setF('nombre')} required autoFocus />
+          </div>
+          <div className={styles.field}>
+            <label>Destino *</label>
+            <input value={form.destino} onChange={setF('destino')} required />
+          </div>
+          <div className={styles.row2}>
+            <div className={styles.field}>
+              <label>Fecha de salida</label>
+              <input type="date" value={form.salida} onChange={setF('salida')} />
+            </div>
+            <div className={styles.field}>
+              <label>Fecha de regreso</label>
+              <input type="date" value={form.regreso} onChange={setF('regreso')} />
+            </div>
+          </div>
+          <div className={styles.row2}>
+            <div className={styles.field}>
+              <label>Precio por persona ($)</label>
+              <input type="number" min="0" step="0.01" value={form.precio} onChange={setF('precio')} />
+            </div>
+            <div className={styles.field}>
+              <label>Lugares totales</label>
+              <input type="number" min="0" value={form.asientos} onChange={setF('asientos')} />
+            </div>
+          </div>
+          <div className={styles.field}>
+            <label>Notas</label>
+            <input value={form.notas} onChange={setF('notas')} placeholder="Informacion adicional…" />
+          </div>
+          {error && <p className={styles.error}>{error}</p>}
+          <div className={styles.modalActions}>
+            <button type="button" className={styles.btnSecondary} onClick={onClose}>Cancelar</button>
+            <button type="submit" className={styles.btnPrimary} disabled={saving}>
+              {saving ? 'Guardando…' : 'Guardar cambios'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 export default function ViajeDetallePage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -283,7 +385,13 @@ export default function ViajeDetallePage() {
   const [error, setError] = useState('')
   const [editingStatus, setEditingStatus] = useState(false)
   const [showAddPax, setShowAddPax] = useState(false)
-  const [pagoModal, setPagoModal] = useState(null) // pasajero object
+  const [pagoModal, setPagoModal] = useState(null)
+  const [showEditTrip, setShowEditTrip] = useState(false)
+  const [showAddGasto, setShowAddGasto] = useState(false)
+  const [gastoForm, setGastoForm] = useState({ concepto: '', monto: '', pagado: false })
+  const [savingGasto, setSavingGasto] = useState(false)
+  const [gastoError, setGastoError] = useState('')
+  const [expandedPax, setExpandedPax] = useState({})
 
   const load = async () => {
     try {
@@ -307,7 +415,7 @@ export default function ViajeDetallePage() {
   }
 
   const handleRemovePax = async (pasajeroId) => {
-    if (!confirm('¿Eliminar este pasajero?')) return
+    if (!confirm('Eliminar este pasajero?')) return
     try {
       await viajesApi.removePassenger(id, pasajeroId)
       setViaje(prev => ({ ...prev, pasajerosList: prev.pasajerosList.filter(p => p.id !== pasajeroId) }))
@@ -315,29 +423,85 @@ export default function ViajeDetallePage() {
   }
 
   const handleDeletePayment = async (pasajero, pagoId) => {
-    if (!confirm('¿Eliminar este pago?')) return
+    if (!confirm('Eliminar este pago?')) return
     try {
       await viajesApi.deletePayment(id, pasajero.id, pagoId)
       setViaje(prev => ({
         ...prev,
-        pasajerosList: prev.pasajerosList.map(p =>
-          p.id === pasajero.id
-            ? { ...p, pagos: p.pagos.filter(x => x.id !== pagoId) }
-            : p
-        ),
+        pasajerosList: prev.pasajerosList.map(p => {
+          if (p.id !== pasajero.id) return p
+          const pagos = p.pagos.filter(x => x.id !== pagoId)
+          const pagado = pagos.reduce((s, x) => s + x.monto, 0)
+          return { ...p, pagos, pagado, pendiente: p.costoTotal - pagado }
+        }),
       }))
     } catch {}
   }
 
-  if (loading) return <div className={styles.loading}>Cargando viaje…</div>
+  const handleAddGasto = async (e) => {
+    e.preventDefault()
+    if (!gastoForm.concepto.trim() || !gastoForm.monto) { setGastoError('Completa los campos requeridos'); return }
+    setSavingGasto(true); setGastoError('')
+    try {
+      const nuevo = await viajesApi.addExpense(id, {
+        concept: gastoForm.concepto.trim(),
+        amount: parseFloat(gastoForm.monto),
+        paid: gastoForm.pagado,
+      })
+      setViaje(prev => ({
+        ...prev,
+        gastos: [...(prev.gastos ?? []), {
+          id: nuevo.id,
+          concepto: nuevo.concept,
+          monto: nuevo.amount,
+          pagado: nuevo.paid,
+          notas: nuevo.notes ?? '',
+        }],
+      }))
+      setGastoForm({ concepto: '', monto: '', pagado: false })
+      setShowAddGasto(false)
+    } catch (err) {
+      setGastoError(err.message || 'Error al agregar gasto')
+    } finally {
+      setSavingGasto(false)
+    }
+  }
+
+  const handleToggleGastoPagado = async (gasto) => {
+    try {
+      await viajesApi.updateExpense(id, gasto.id, { paid: !gasto.pagado })
+      setViaje(prev => ({
+        ...prev,
+        gastos: prev.gastos.map(g => g.id === gasto.id ? { ...g, pagado: !g.pagado } : g),
+      }))
+    } catch {}
+  }
+
+  const handleDeleteGasto = async (gastoId) => {
+    if (!confirm('Eliminar este gasto?')) return
+    try {
+      await viajesApi.deleteExpense(id, gastoId)
+      setViaje(prev => ({ ...prev, gastos: prev.gastos.filter(g => g.id !== gastoId) }))
+    } catch {}
+  }
+
+  if (loading) return <div className={styles.loading}>Cargando viaje...</div>
   if (error || !viaje) return <div className={styles.loading}>{error || 'No encontrado'}</div>
 
   const ec = ESTADO_COLOR[viaje.estado] ?? ESTADO_COLOR.borrador
   const pasajerosList = viaje.pasajerosList ?? []
-  const totalEsperado = pasajerosList.reduce((s, p) => s + p.costoTotal, 0)
-  const totalCobrado  = pasajerosList.reduce((s, p) => s + p.pagado, 0)
-  const totalPendiente = totalEsperado - totalCobrado
+  const gastosList = viaje.gastos ?? []
+
+  const totalEsperado    = pasajerosList.reduce((s, p) => s + p.costoTotal, 0)
+  const totalCobrado     = pasajerosList.reduce((s, p) => s + p.pagado, 0)
+  const totalPendiente   = totalEsperado - totalCobrado
   const asientosOcupados = pasajerosList.reduce((s, p) => s + p.asientos, 0)
+  const totalGastos      = gastosList.reduce((s, g) => s + g.monto, 0)
+  const gastosPagados    = gastosList.filter(g => g.pagado).reduce((s, g) => s + g.monto, 0)
+  const gastosPorPagar   = totalGastos - gastosPagados
+  const utilidad         = totalCobrado - totalGastos
+  const pctCobrado       = totalEsperado > 0 ? Math.round((totalCobrado / totalEsperado) * 100) : 0
+  const pctOcupacion     = viaje.asientosTotal > 0 ? Math.round((asientosOcupados / viaje.asientosTotal) * 100) : 0
 
   return (
     <div className={styles.page}>
@@ -354,9 +518,10 @@ export default function ViajeDetallePage() {
           <h1 className={styles.heroTitle}>{viaje.nombre}</h1>
           <div className={styles.heroDates}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Salida: <strong>{viaje.salida}</strong> &nbsp;·&nbsp; Regreso: <strong>{viaje.regreso}</strong>
+            Salida: <strong>{viaje.salida}</strong> &nbsp;&middot;&nbsp; Regreso: <strong>{viaje.regreso}</strong>
           </div>
           {viaje.notas && <p className={styles.heroNotas}>{viaje.notas}</p>}
+          {viaje.createdByName && <p className={styles.heroCreatedBy}>Creado por {viaje.createdByName}</p>}
         </div>
         <div className={styles.heroRight}>
           <div className={styles.statusWrap}>
@@ -372,7 +537,7 @@ export default function ViajeDetallePage() {
                     {st}
                   </button>
                 ))}
-                <button className={styles.statusCancel} onClick={() => setEditingStatus(false)}>✕</button>
+                <button className={styles.statusCancel} onClick={() => setEditingStatus(false)}>x</button>
               </div>
             ) : (
               <button
@@ -386,34 +551,72 @@ export default function ViajeDetallePage() {
               </button>
             )}
           </div>
+          <button className={styles.editBtn} onClick={() => setShowEditTrip(true)} title="Editar viaje">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Editar
+          </button>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className={styles.statsRow}>
-        <div className={styles.statCard}>
-          <span className={styles.statNum}>{pasajerosList.length}</span>
-          <span className={styles.statLbl}>Pasajeros</span>
+      {/* Financial Summary Card */}
+      <div className={styles.summaryCard}>
+        <div className={styles.summaryStats}>
+          <div className={styles.summaryStat}>
+            <span className={styles.summaryNum}>{pasajerosList.length}</span>
+            <span className={styles.summaryLbl}>Pasajeros</span>
+          </div>
+          <div className={styles.summaryStat}>
+            <span className={styles.summaryNum}>{asientosOcupados} / {viaje.asientosTotal || 'inf'}</span>
+            <span className={styles.summaryLbl}>Ocupacion</span>
+            {viaje.asientosTotal > 0 && (
+              <div className={styles.miniBar}>
+                <div className={styles.miniBarFill} style={{ width: `${pctOcupacion}%`, background: 'var(--accent)' }} />
+              </div>
+            )}
+          </div>
+          <div className={styles.summaryStat}>
+            <span className={styles.summaryNum}>{fmtMoney(totalEsperado)}</span>
+            <span className={styles.summaryLbl}>Ingresos esperados</span>
+          </div>
+          <div className={styles.summaryStat}>
+            <span className={styles.summaryNum} style={{ color: '#16a34a' }}>{fmtMoney(totalCobrado)}</span>
+            <span className={styles.summaryLbl}>Cobrado</span>
+          </div>
+          <div className={styles.summaryStat}>
+            <span className={styles.summaryNum} style={{ color: totalPendiente > 0 ? '#ea580c' : '#16a34a' }}>{fmtMoney(totalPendiente)}</span>
+            <span className={styles.summaryLbl}>Pendiente</span>
+          </div>
+          <div className={styles.summaryStat}>
+            <span className={styles.summaryNum} style={{ color: 'var(--text-muted)' }}>{fmtMoney(totalGastos)}</span>
+            <span className={styles.summaryLbl}>Gastos</span>
+          </div>
+          <div className={`${styles.summaryStat} ${styles.summaryStatLast}`}>
+            <span className={styles.summaryNum} style={{ color: utilidad >= 0 ? '#16a34a' : '#dc2626' }}>{fmtMoney(utilidad)}</span>
+            <span className={styles.summaryLbl}>Utilidad</span>
+          </div>
         </div>
-        <div className={styles.statCard}>
-          <span className={styles.statNum}>{asientosOcupados} / {viaje.asientosTotal || '∞'}</span>
-          <span className={styles.statLbl}>Lugares</span>
-        </div>
-        <div className={styles.statCard}>
-          <span className={styles.statNum}>{fmtMoney(totalEsperado)}</span>
-          <span className={styles.statLbl}>Total esperado</span>
-        </div>
-        <div className={styles.statCard}>
-          <span className={styles.statNum} style={{ color: '#16a34a' }}>{fmtMoney(totalCobrado)}</span>
-          <span className={styles.statLbl}>Cobrado</span>
-        </div>
-        <div className={styles.statCard}>
-          <span className={styles.statNum} style={{ color: totalPendiente > 0 ? '#f59e0b' : '#16a34a' }}>{fmtMoney(totalPendiente)}</span>
-          <span className={styles.statLbl}>Pendiente</span>
-        </div>
+
+        {totalEsperado > 0 && (
+          <div className={styles.summaryProgressWrap}>
+            <div className={styles.summaryProgress}>
+              <div
+                className={styles.summaryProgressCobrado}
+                style={{ width: `${pctCobrado}%` }}
+              />
+              <div
+                className={styles.summaryProgressPendiente}
+                style={{ width: `${100 - pctCobrado}%` }}
+              />
+            </div>
+            <div className={styles.summaryProgressLabels}>
+              <span style={{ color: '#16a34a' }}>Cobrado {pctCobrado}%</span>
+              <span style={{ color: '#ea580c' }}>Pendiente {100 - pctCobrado}%</span>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Passengers */}
+      {/* Passengers Section */}
       <div className={styles.section}>
         <div className={styles.sectionHead}>
           <h2 className={styles.sectionTitle}>Pasajeros</h2>
@@ -425,21 +628,47 @@ export default function ViajeDetallePage() {
 
         {pasajerosList.length === 0 ? (
           <div className={styles.emptyPax}>
-            <p>No hay pasajeros registrados aún.</p>
+            <p>No hay pasajeros registrados aun.</p>
             <button className={styles.btnPrimary} onClick={() => setShowAddPax(true)}>Agregar pasajero</button>
           </div>
         ) : (
           <div className={styles.paxList}>
             {pasajerosList.map(pax => {
               const pctPagado = pax.costoTotal > 0 ? Math.round((pax.pagado / pax.costoTotal) * 100) : 0
+              const paxEc = ESTADO_PAX_COLOR[pax.estado] ?? ESTADO_PAX_COLOR.pendiente
+              const waUrl = whatsappUrl(pax.clienteTelefono)
+              const isExpanded = expandedPax[pax.id] ?? false
+
               return (
                 <div key={pax.id} className={styles.paxCard}>
+                  {/* Header row */}
                   <div className={styles.paxHeader}>
                     <div className={styles.paxInfo}>
-                      <span className={styles.paxNombre}>{pax.clienteNombre || 'Sin nombre'}</span>
+                      <div className={styles.paxNameRow}>
+                        <span className={styles.paxNombre}>{pax.clienteNombre || 'Sin nombre'}</span>
+                        <span
+                          className={styles.paxEstadoBadge}
+                          style={{ background: paxEc.bg, color: paxEc.color, border: `1px solid ${paxEc.border}` }}
+                        >
+                          {pax.estado}
+                        </span>
+                      </div>
                       {pax.clienteTelefono && <span className={styles.paxTel}>{pax.clienteTelefono}</span>}
+                      <span className={styles.paxAsientos}>{pax.asientos} asiento{pax.asientos !== 1 ? 's' : ''}</span>
                     </div>
                     <div className={styles.paxActions}>
+                      {waUrl && (
+                        <a
+                          href={waUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.waBtn}
+                          title="Enviar WhatsApp"
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+                          WhatsApp
+                        </a>
+                      )}
                       <button
                         className={styles.pagoBtn}
                         onClick={() => setPagoModal(pax)}
@@ -454,46 +683,55 @@ export default function ViajeDetallePage() {
                     </div>
                   </div>
 
-                  <div className={styles.paxMoney}>
-                    <div className={styles.paxMoneyItem}>
-                      <span className={styles.paxMoneyLabel}>Asientos</span>
-                      <span className={styles.paxMoneyVal}>{pax.asientos}</span>
+                  {/* Payment progress bar */}
+                  <div className={styles.paxProgressSection}>
+                    <div className={styles.paxProgressBar}>
+                      <div
+                        className={styles.paxProgressCobrado}
+                        style={{ width: `${pctPagado}%` }}
+                      />
+                      <div
+                        className={styles.paxProgressPendiente}
+                        style={{ width: `${100 - pctPagado}%` }}
+                      />
                     </div>
-                    <div className={styles.paxMoneyItem}>
-                      <span className={styles.paxMoneyLabel}>Total</span>
-                      <span className={styles.paxMoneyVal}>{fmtMoney(pax.costoTotal)}</span>
-                    </div>
-                    <div className={styles.paxMoneyItem}>
-                      <span className={styles.paxMoneyLabel}>Pagado</span>
-                      <span className={styles.paxMoneyVal} style={{ color: '#16a34a' }}>{fmtMoney(pax.pagado)}</span>
-                    </div>
-                    <div className={styles.paxMoneyItem}>
-                      <span className={styles.paxMoneyLabel}>Pendiente</span>
-                      <span className={styles.paxMoneyVal} style={{ color: pax.pendiente > 0 ? '#f59e0b' : '#16a34a' }}>{fmtMoney(pax.pendiente)}</span>
+                    <div className={styles.paxProgressAmounts}>
+                      <span style={{ color: '#16a34a' }}>Pagado {fmtMoney(pax.pagado)}</span>
+                      <span style={{ color: '#ea580c' }}>Pendiente {fmtMoney(pax.pendiente)}</span>
+                      <span style={{ color: 'var(--text-muted)' }}>Total {fmtMoney(pax.costoTotal)}</span>
                     </div>
                   </div>
 
-                  <div className={styles.paxProgress}>
-                    <div className={styles.progressBar}>
-                      <div className={styles.progressFill} style={{ width: `${pctPagado}%` }} />
-                    </div>
-                    <span className={styles.progressLabel}>{pctPagado}% pagado</span>
-                  </div>
-
+                  {/* Payments list collapsible */}
                   {pax.pagos.length > 0 && (
                     <div className={styles.pagos}>
-                      <p className={styles.pagosTitle}>Pagos registrados</p>
-                      {pax.pagos.map(pago => (
-                        <div key={pago.id} className={styles.pagoRow}>
-                          <span className={styles.pagoConcepto}>{pago.concepto}</span>
-                          <span className={styles.pagoMetodo}>{pago.metodo}</span>
-                          <span className={styles.pagoFecha}>{pago.fecha}</span>
-                          <span className={styles.pagoMonto}>{fmtMoney(pago.monto)}</span>
-                          <button className={styles.pagoDelete} onClick={() => handleDeletePayment(pax, pago.id)}>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                          </button>
+                      <button
+                        className={styles.pagosToggle}
+                        onClick={() => setExpandedPax(prev => ({ ...prev, [pax.id]: !isExpanded }))}
+                      >
+                        <span>{pax.pagos.length} pago{pax.pagos.length !== 1 ? 's' : ''} registrado{pax.pagos.length !== 1 ? 's' : ''}</span>
+                        <svg
+                          width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                          style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+                        >
+                          <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                      </button>
+                      {isExpanded && (
+                        <div className={styles.pagosListInner}>
+                          {pax.pagos.map(pago => (
+                            <div key={pago.id} className={styles.pagoRow}>
+                              <span className={styles.pagoConcepto}>{pago.concepto}</span>
+                              <span className={styles.pagoMetodo}>{pago.metodo}</span>
+                              <span className={styles.pagoFecha}>{pago.fecha}</span>
+                              <span className={styles.pagoMonto}>{fmtMoney(pago.monto)}</span>
+                              <button className={styles.pagoDelete} onClick={() => handleDeletePayment(pax, pago.id)}>
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                              </button>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
                   )}
 
@@ -501,6 +739,102 @@ export default function ViajeDetallePage() {
                 </div>
               )
             })}
+          </div>
+        )}
+      </div>
+
+      {/* Expenses Section */}
+      <div className={styles.section}>
+        <div className={styles.sectionHead}>
+          <h2 className={styles.sectionTitle}>Gastos del viaje</h2>
+          <button className={styles.btnPrimary} onClick={() => setShowAddGasto(v => !v)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Agregar gasto
+          </button>
+        </div>
+
+        {totalGastos > 0 && (
+          <div className={styles.gastosSummary}>
+            <span>Total gastos: <strong>{fmtMoney(totalGastos)}</strong></span>
+            <span className={styles.gastosSummaryDot}>&#183;</span>
+            <span style={{ color: '#16a34a' }}>Pagados: <strong>{fmtMoney(gastosPagados)}</strong></span>
+            <span className={styles.gastosSummaryDot}>&#183;</span>
+            <span style={{ color: '#ea580c' }}>Por pagar: <strong>{fmtMoney(gastosPorPagar)}</strong></span>
+          </div>
+        )}
+
+        {showAddGasto && (
+          <form onSubmit={handleAddGasto} className={styles.gastoForm}>
+            <div className={styles.gastoFormInner}>
+              <div className={styles.field} style={{ flex: 2 }}>
+                <label>Concepto *</label>
+                <input
+                  value={gastoForm.concepto}
+                  onChange={e => setGastoForm(f => ({ ...f, concepto: e.target.value }))}
+                  placeholder="Ej: Autobus, Hotel, Guia..."
+                  required
+                  autoFocus
+                />
+              </div>
+              <div className={styles.field} style={{ flex: 1 }}>
+                <label>Monto ($) *</label>
+                <input
+                  type="number" min="0" step="0.01"
+                  value={gastoForm.monto}
+                  onChange={e => setGastoForm(f => ({ ...f, monto: e.target.value }))}
+                  placeholder="0"
+                  required
+                />
+              </div>
+              <div className={styles.field}>
+                <label style={{ visibility: 'hidden' }}>_</label>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={gastoForm.pagado}
+                    onChange={e => setGastoForm(f => ({ ...f, pagado: e.target.checked }))}
+                  />
+                  Pagado
+                </label>
+              </div>
+            </div>
+            {gastoError && <p className={styles.error}>{gastoError}</p>}
+            <div className={styles.gastoFormActions}>
+              <button type="button" className={styles.btnSecondary} onClick={() => { setShowAddGasto(false); setGastoError('') }}>
+                Cancelar
+              </button>
+              <button type="submit" className={styles.btnPrimary} disabled={savingGasto}>
+                {savingGasto ? 'Guardando...' : 'Agregar gasto'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {gastosList.length === 0 && !showAddGasto ? (
+          <div className={styles.emptyGastos}>
+            <p>No hay gastos registrados. Agrega los costos del viaje para tu agencia.</p>
+          </div>
+        ) : (
+          <div className={styles.gastosList}>
+            {gastosList.map(gasto => (
+              <div key={gasto.id} className={`${styles.gastoRow} ${gasto.pagado ? styles.gastoRowPagado : ''}`}>
+                <span className={styles.gastoConcepto}>{gasto.concepto}</span>
+                <span className={styles.gastoMonto}>{fmtMoney(gasto.monto)}</span>
+                <label className={styles.gastoPagadoLabel}>
+                  <input
+                    type="checkbox"
+                    checked={gasto.pagado}
+                    onChange={() => handleToggleGastoPagado(gasto)}
+                  />
+                  <span className={gasto.pagado ? styles.gastoPagadoBadge : styles.gastoPorPagarBadge}>
+                    {gasto.pagado ? 'Pagado' : 'Por pagar'}
+                  </span>
+                </label>
+                <button className={styles.pagoDelete} onClick={() => handleDeleteGasto(gasto.id)}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -551,6 +885,13 @@ export default function ViajeDetallePage() {
               }),
             }))
           }}
+        />
+      )}
+      {showEditTrip && (
+        <EditTripModal
+          viaje={viaje}
+          onClose={() => setShowEditTrip(false)}
+          onSaved={(updated) => setViaje(prev => ({ ...prev, ...updated }))}
         />
       )}
     </div>
