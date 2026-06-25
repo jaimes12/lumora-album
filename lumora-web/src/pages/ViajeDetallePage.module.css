@@ -421,7 +421,49 @@
 .clienteTel { font-size: 12px; color: var(--text-muted); }
 .clienteRowSel .clienteTel { color: rgba(255,255,255,0.7); }
 
-.noResults { font-size: 12px; color: var(--text-muted); text-align: center; padding: 12px; margin: 0; }
+.noResults { font-size: 12px; color: var(--text-muted); text-align: center; padding: 8px 12px; margin: 0; }
+
+.noResultsWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0 2px;
+}
+
+.btnCrearCliente {
+  background: none;
+  border: 1.5px dashed var(--accent);
+  color: var(--accent);
+  border-radius: 7px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.15s;
+}
+.btnCrearCliente:hover { background: var(--accent-soft, rgba(124,106,247,0.08)); }
+
+.nuevoClienteWrap {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.nuevoClienteTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
 
 .costoHint { font-size: 12px; color: var(--text-muted); margin: 0; }
 

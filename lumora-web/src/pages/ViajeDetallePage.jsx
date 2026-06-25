@@ -23,6 +23,12 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
   const [costoCustom, setCostoCustom] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  // inline new-client form
+  const [creandoCliente, setCreandoCliente] = useState(false)
+  const [nuevoNombre, setNuevoNombre] = useState('')
+  const [nuevoTel, setNuevoTel] = useState('')
+  const [nuevoEmail, setNuevoEmail] = useState('')
+  const [savingCliente, setSavingCliente] = useState(false)
 
   useEffect(() => {
     clientesApi.getAll().then(setClientes).catch(() => {})
@@ -34,6 +40,28 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
   )
 
   const costoTotal = costoCustom !== '' ? parseFloat(costoCustom) : (viaje.precioPorPersona * asientos)
+
+  const handleCrearCliente = async (e) => {
+    e.preventDefault()
+    if (!nuevoNombre.trim()) return
+    setSavingCliente(true); setError('')
+    try {
+      const nuevo = await clientesApi.create({
+        name: nuevoNombre.trim(),
+        phone: nuevoTel.trim() || null,
+        email: nuevoEmail.trim() || null,
+        stage: 'client',
+      })
+      setClientes(prev => [...prev, nuevo])
+      setClienteSel(nuevo)
+      setBusqueda(nuevo.nombre)
+      setCreandoCliente(false)
+    } catch (err) {
+      setError(err.message || 'Error al crear cliente')
+    } finally {
+      setSavingCliente(false)
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -54,6 +82,8 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
     }
   }
 
+  const showNoResults = busqueda.length > 0 && clientesFiltrados.length === 0 && !creandoCliente
+
   return (
     <div className={styles.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
       <div className={styles.modal}>
@@ -63,62 +93,112 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
-        <form onSubmit={handleSubmit} className={styles.modalBody}>
-          <div className={styles.field}>
-            <label>Buscar cliente {clienteSel && <span className={styles.clienteSelBadge}>✓ {clienteSel.nombre}</span>}</label>
-            <input
-              placeholder="Escribe nombre o teléfono…"
-              value={busqueda}
-              onChange={e => { setBusqueda(e.target.value); setClienteSel(null) }}
-              autoFocus
-            />
-          </div>
-          {busqueda.length > 0 && (
-            <div className={styles.clienteList}>
-              {clientesFiltrados.slice(0, 8).map(c => (
-                <button
-                  key={c.id} type="button"
-                  className={`${styles.clienteRow} ${clienteSel?.id === c.id ? styles.clienteRowSel : ''}`}
-                  onClick={() => { setClienteSel(c); setBusqueda(c.nombre) }}
-                >
-                  <span className={styles.clienteNombre}>{c.nombre}</span>
-                  {c.telefono && <span className={styles.clienteTel}>{c.telefono}</span>}
-                </button>
-              ))}
-              {clientesFiltrados.length === 0 && (
-                <p className={styles.noResults}>
-                  {clientes.length === 0
-                    ? 'No tienes clientes aún. Agrégalos en la sección Clientes.'
-                    : `Sin resultados para "${busqueda}"`}
-                </p>
+        <form onSubmit={creandoCliente ? handleCrearCliente : handleSubmit} className={styles.modalBody}>
+
+          {/* ── Búsqueda / selección de cliente ── */}
+          {!creandoCliente && (
+            <>
+              <div className={styles.field}>
+                <label>
+                  Buscar cliente
+                  {clienteSel && <span className={styles.clienteSelBadge}>✓ {clienteSel.nombre}</span>}
+                </label>
+                <input
+                  placeholder="Escribe nombre o teléfono…"
+                  value={busqueda}
+                  onChange={e => { setBusqueda(e.target.value); setClienteSel(null) }}
+                  autoFocus
+                />
+              </div>
+              {busqueda.length > 0 && !clienteSel && (
+                <div className={styles.clienteList}>
+                  {clientesFiltrados.slice(0, 6).map(c => (
+                    <button
+                      key={c.id} type="button"
+                      className={`${styles.clienteRow} ${clienteSel?.id === c.id ? styles.clienteRowSel : ''}`}
+                      onClick={() => { setClienteSel(c); setBusqueda(c.nombre) }}
+                    >
+                      <span className={styles.clienteNombre}>{c.nombre}</span>
+                      {c.telefono && <span className={styles.clienteTel}>{c.telefono}</span>}
+                    </button>
+                  ))}
+                  {showNoResults && (
+                    <div className={styles.noResultsWrap}>
+                      <p className={styles.noResults}>Sin resultados para "{busqueda}"</p>
+                      <button
+                        type="button"
+                        className={styles.btnCrearCliente}
+                        onClick={() => { setNuevoNombre(busqueda); setCreandoCliente(true) }}
+                      >
+                        + Crear cliente "{busqueda}"
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
+            </>
+          )}
+
+          {/* ── Formulario inline para nuevo cliente ── */}
+          {creandoCliente && (
+            <div className={styles.nuevoClienteWrap}>
+              <p className={styles.nuevoClienteTitle}>Nuevo cliente</p>
+              <div className={styles.field}>
+                <label>Nombre *</label>
+                <input value={nuevoNombre} onChange={e => setNuevoNombre(e.target.value)} required autoFocus />
+              </div>
+              <div className={styles.row2}>
+                <div className={styles.field}>
+                  <label>Teléfono</label>
+                  <input type="tel" placeholder="55 1234 5678" value={nuevoTel} onChange={e => setNuevoTel(e.target.value)} />
+                </div>
+                <div className={styles.field}>
+                  <label>Email</label>
+                  <input type="email" placeholder="correo@ejemplo.com" value={nuevoEmail} onChange={e => setNuevoEmail(e.target.value)} />
+                </div>
+              </div>
+              {error && <p className={styles.error}>{error}</p>}
+              <div className={styles.modalActions}>
+                <button type="button" className={styles.btnSecondary} onClick={() => { setCreandoCliente(false); setError('') }}>
+                  ← Volver
+                </button>
+                <button type="submit" className={styles.btnPrimary} disabled={savingCliente || !nuevoNombre.trim()}>
+                  {savingCliente ? 'Guardando…' : 'Crear y seleccionar'}
+                </button>
+              </div>
             </div>
           )}
-          <div className={styles.row2}>
-            <div className={styles.field}>
-              <label>Asientos</label>
-              <input type="number" min="1" value={asientos} onChange={e => setAsientos(parseInt(e.target.value) || 1)} />
-            </div>
-            <div className={styles.field}>
-              <label>Costo total ($)</label>
-              <input
-                type="number" min="0" step="0.01"
-                placeholder={`${costoTotal}`}
-                value={costoCustom}
-                onChange={e => setCostoCustom(e.target.value)}
-              />
-            </div>
-          </div>
-          <p className={styles.costoHint}>
-            Precio por defecto: {fmtMoney(viaje.precioPorPersona)} × {asientos} = {fmtMoney(viaje.precioPorPersona * asientos)}
-          </p>
-          {error && <p className={styles.error}>{error}</p>}
-          <div className={styles.modalActions}>
-            <button type="button" className={styles.btnSecondary} onClick={onClose}>Cancelar</button>
-            <button type="submit" className={styles.btnPrimary} disabled={saving || !clienteSel}>
-              {saving ? 'Guardando…' : clienteSel ? 'Agregar' : 'Selecciona un cliente'}
-            </button>
-          </div>
+
+          {/* ── Asientos y costo (siempre visible cuando hay cliente seleccionado o no se está creando) ── */}
+          {!creandoCliente && (
+            <>
+              <div className={styles.row2}>
+                <div className={styles.field}>
+                  <label>Asientos</label>
+                  <input type="number" min="1" value={asientos} onChange={e => setAsientos(parseInt(e.target.value) || 1)} />
+                </div>
+                <div className={styles.field}>
+                  <label>Costo total ($)</label>
+                  <input
+                    type="number" min="0" step="0.01"
+                    placeholder={`${costoTotal}`}
+                    value={costoCustom}
+                    onChange={e => setCostoCustom(e.target.value)}
+                  />
+                </div>
+              </div>
+              <p className={styles.costoHint}>
+                Precio por defecto: {fmtMoney(viaje.precioPorPersona)} × {asientos} = {fmtMoney(viaje.precioPorPersona * asientos)}
+              </p>
+              {error && <p className={styles.error}>{error}</p>}
+              <div className={styles.modalActions}>
+                <button type="button" className={styles.btnSecondary} onClick={onClose}>Cancelar</button>
+                <button type="submit" className={styles.btnPrimary} disabled={saving || !clienteSel}>
+                  {saving ? 'Guardando…' : clienteSel ? 'Agregar pasajero' : 'Selecciona un cliente'}
+                </button>
+              </div>
+            </>
+          )}
         </form>
       </div>
     </div>
