@@ -1,9 +1,16 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { eventosApi } from '../api/eventosApi'
+import { viajesApi } from '../api/viajesApi'
 import { ESTADO_META, fmt } from '../data/eventosData'
 import EventoTipoIcon from '../components/EventoTipoIcon'
 import styles from './CalendarioPage.module.css'
+
+const PlaneIcon = () => (
+  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+  </svg>
+)
 
 const MONTHS_ES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -36,6 +43,20 @@ function DaySheet({ day, month, year, evs, onClose, onSelectEvent }) {
         </div>
         <div className={styles.sheetList}>
           {evs.map(ev => {
+            if (ev._type === 'viaje') {
+              return (
+                <button key={ev.id} className={styles.sheetRow} onClick={() => { onClose(); onSelectEvent(ev) }}>
+                  <span style={{ display:'flex', alignItems:'center', justifyContent:'center', width:18, height:18, color: ev.label === 'Regreso' ? '#0284c7' : '#1d4ed8' }}>
+                    <PlaneIcon />
+                  </span>
+                  <div className={styles.sheetRowInfo}>
+                    <span className={styles.sheetRowName}>{ev.label}: {ev.nombre}</span>
+                    <span className={styles.sheetRowSub}>{ev.destino} · {ev.pasajeros} pasajero{ev.pasajeros !== 1 ? 's' : ''}</span>
+                  </div>
+                  <span className={styles.sheetRowBadge} style={{ color: ev.label === 'Regreso' ? '#0284c7' : '#1d4ed8', background: ev.label === 'Regreso' ? '#e0f2fe' : '#dbeafe' }}>{ev.estado}</span>
+                </button>
+              )
+            }
             const meta = ESTADO_META[ev.estado] || ESTADO_META.lead
             return (
               <button key={ev.id} className={styles.sheetRow} onClick={() => { onClose(); onSelectEvent(ev) }}>
@@ -117,10 +138,19 @@ function EventModal({ ev, onClose, onDetalle }) {
   )
 }
 
+const MONTH_MAP = { Ene:0,Feb:1,Mar:2,Abr:3,May:4,Jun:5,Jul:6,Ago:7,Sep:8,Oct:9,Nov:10,Dic:11 }
+
+function isoToKey(iso) {
+  // iso = "2026-12-12" → key "2026-11-12" (0-indexed month)
+  const [y, m, d] = iso.split('-').map(Number)
+  return `${y}-${m - 1}-${d}`
+}
+
 export default function CalendarioPage() {
   const navigate = useNavigate()
   const today = new Date()
   const [eventos,       setEventos]       = useState([])
+  const [viajes,        setViajes]         = useState([])
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [selectedDay,   setSelectedDay]   = useState(null)
   const [current, setCurrent] = useState({
@@ -129,32 +159,54 @@ export default function CalendarioPage() {
   })
 
   useEffect(() => {
-    eventosApi.getAll()
-      .then(setEventos)
-      .catch(() => setEventos([]))
+    eventosApi.getAll().then(setEventos).catch(() => setEventos([]))
+    viajesApi.getAll().then(setViajes).catch(() => setViajes([]))
   }, [])
 
   const { year, month } = current
   const firstDayOfWeek = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
 
-  const eventsByDate = useMemo(() => {
+  // Normalize trips into calendar items (salida + regreso)
+  const tripItems = useMemo(() => {
+    const items = []
+    for (const v of viajes) {
+      if (v.salidaISO) items.push({
+        _type: 'viaje', id: v.id + '_s', tripId: v.id,
+        nombre: v.nombre, destino: v.destino, estado: v.estado,
+        label: 'Salida', isoKey: isoToKey(v.salidaISO),
+        pasajeros: v.pasajeros, fecha: v.salida,
+      })
+      if (v.regresoISO && v.regresoISO !== v.salidaISO) items.push({
+        _type: 'viaje', id: v.id + '_r', tripId: v.id,
+        nombre: v.nombre, destino: v.destino, estado: v.estado,
+        label: 'Regreso', isoKey: isoToKey(v.regresoISO),
+        pasajeros: v.pasajeros, fecha: v.regreso,
+      })
+    }
+    return items
+  }, [viajes])
+
+  const itemsByDate = useMemo(() => {
     const map = {}
     for (const ev of eventos) {
-      // ev.fecha is "14 Jun 2026" — parse from eventDate
-      const MONTH_MAP = { Ene:0,Feb:1,Mar:2,Abr:3,May:4,Jun:5,Jul:6,Ago:7,Sep:8,Oct:9,Nov:10,Dic:11 }
       const parts = ev.fecha.split(' ')
       if (parts.length < 3) continue
-      const d = parseInt(parts[0])
-      const m = MONTH_MAP[parts[1]]
-      const y = parseInt(parts[2])
+      const d = parseInt(parts[0]), m = MONTH_MAP[parts[1]], y = parseInt(parts[2])
       if (isNaN(d) || isNaN(m) || isNaN(y)) continue
       const key = `${y}-${m}-${d}`
       if (!map[key]) map[key] = []
       map[key].push(ev)
     }
+    for (const item of tripItems) {
+      if (!map[item.isoKey]) map[item.isoKey] = []
+      map[item.isoKey].push(item)
+    }
     return map
-  }, [eventos])
+  }, [eventos, tripItems])
+
+  // keep for upcomingThisMonth (events only — trips handled separately)
+  const eventsByDate = itemsByDate
 
   const prevMonth = () => setCurrent(c => c.month === 0 ? { year: c.year-1, month:11 } : { year:c.year, month:c.month-1 })
   const nextMonth = () => setCurrent(c => c.month === 11 ? { year:c.year+1, month:0 } : { year:c.year, month:c.month+1 })
@@ -166,19 +218,33 @@ export default function CalendarioPage() {
   ]
 
   const upcomingThisMonth = useMemo(() => {
-    return eventos.filter(ev => {
-      const MONTH_MAP = { Ene:0,Feb:1,Mar:2,Abr:3,May:4,Jun:5,Jul:6,Ago:7,Sep:8,Oct:9,Nov:10,Dic:11 }
+    const evItems = eventos.filter(ev => {
       const parts = ev.fecha.split(' ')
       if (parts.length < 3) return false
       const d = parseInt(parts[0]), m = MONTH_MAP[parts[1]], y = parseInt(parts[2])
-      const evDate = new Date(y, m, d)
-      return y === year && m === month && evDate >= today
-    }).sort((a, b) => {
-      const MONTH_MAP = { Ene:0,Feb:1,Mar:2,Abr:3,May:4,Jun:5,Jul:6,Ago:7,Sep:8,Oct:9,Nov:10,Dic:11 }
-      const parse = s => { const p=s.split(' '); return new Date(+p[2], MONTH_MAP[p[1]], +p[0]) }
-      return parse(a.fecha) - parse(b.fecha)
+      return y === year && m === month && new Date(y, m, d) >= today
     })
-  }, [eventos, year, month])
+    const tripSalidas = tripItems.filter(item => {
+      if (item.label !== 'Salida') return false
+      const [y, m, d] = item.isoKey.split('-').map(Number)
+      return y === year && m === month && new Date(y, m, d) >= today
+    })
+    return [...evItems, ...tripSalidas].sort((a, b) => {
+      const dateOf = x => {
+        if (x._type === 'viaje') { const [y,m,d] = x.isoKey.split('-').map(Number); return new Date(y,m,d) }
+        const p = x.fecha.split(' '); return new Date(+p[2], MONTH_MAP[p[1]], +p[0])
+      }
+      return dateOf(a) - dateOf(b)
+    })
+  }, [eventos, tripItems, year, month])
+
+  const handleSelectItem = (ev) => {
+    if (ev._type === 'viaje') {
+      navigate(`/app/viajes/${ev.tripId}`)
+    } else {
+      setSelectedEvent(ev)
+    }
+  }
 
   return (
     <div className={styles.page}>
@@ -196,14 +262,14 @@ export default function CalendarioPage() {
           year={year}
           evs={selectedDay.evs}
           onClose={() => setSelectedDay(null)}
-          onSelectEvent={ev => setSelectedEvent(ev)}
+          onSelectEvent={handleSelectItem}
         />
       )}
 
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Calendario</h1>
-          <p className={styles.sub}>Gestiona y visualiza todos tus eventos</p>
+          <p className={styles.sub}>Gestiona y visualiza tus eventos y viajes</p>
         </div>
       </div>
 
@@ -231,7 +297,7 @@ export default function CalendarioPage() {
           {cells.map((day, i) => {
             if (day === null) return <div key={`e-${i}`} className={styles.cellEmpty} />
             const key = `${year}-${month}-${day}`
-            const evs = eventsByDate[key] || []
+            const evs = itemsByDate[key] || []
             const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear()
             return (
               <div
@@ -242,6 +308,18 @@ export default function CalendarioPage() {
                 <span className={`${styles.dayNum} ${isToday ? styles.dayNumToday : ''}`}>{day}</span>
                 <div className={styles.eventList}>
                   {evs.slice(0, 3).map(ev => {
+                    if (ev._type === 'viaje') {
+                      const isR = ev.label === 'Regreso'
+                      return (
+                        <button key={ev.id} className={styles.eventPill}
+                          style={{ background: isR ? '#e0f2fe' : '#dbeafe', borderLeft: `3px solid ${isR ? '#0284c7' : '#2563eb'}`, color: isR ? '#0284c7' : '#2563eb' }}
+                          onClick={e => { e.stopPropagation(); navigate(`/app/viajes/${ev.tripId}`) }}
+                          title={`${ev.label}: ${ev.nombre} → ${ev.destino}`}>
+                          <span className={styles.pillIco}><PlaneIcon /></span>
+                          <span className={styles.pillText}>{ev.label}: {ev.nombre}</span>
+                        </button>
+                      )
+                    }
                     const meta = ESTADO_META[ev.estado] || ESTADO_META.lead
                     return (
                       <button key={ev.id} className={styles.eventPill}
@@ -254,7 +332,6 @@ export default function CalendarioPage() {
                   })}
                   {evs.length > 3 && <span className={styles.morePill}>+{evs.length - 3} más</span>}
                 </div>
-                {/* Mobile: show count badge */}
                 {evs.length > 0 && (
                   <span className={styles.cellCount}>{evs.length}</span>
                 )}
@@ -266,16 +343,44 @@ export default function CalendarioPage() {
 
       {upcomingThisMonth.length > 0 && (
         <div className={styles.upcoming}>
-          <h2 className={styles.upcomingTitle}>Próximos Eventos</h2>
+          <h2 className={styles.upcomingTitle}>Próximos este mes</h2>
           <div className={styles.upcomingList}>
-            {upcomingThisMonth.map(ev => {
-              const meta = ESTADO_META[ev.estado] || ESTADO_META.lead
-              const parts = ev.fecha.split(' ')
-              const MONTH_MAP = { Ene:0,Feb:1,Mar:2,Abr:3,May:4,Jun:5,Jul:6,Ago:7,Sep:8,Oct:9,Nov:10,Dic:11 }
+            {upcomingThisMonth.map(item => {
+              if (item._type === 'viaje') {
+                const [iy, im, id_] = item.isoKey.split('-').map(Number)
+                const itemDate = new Date(iy, im, id_)
+                const daysLeft = Math.ceil((itemDate - today) / 86400000)
+                return (
+                  <button key={item.id} className={styles.upcomingCard} onClick={() => navigate(`/app/viajes/${item.tripId}`)}>
+                    <div className={styles.upcomingLeft}>
+                      <div className={styles.upcomingDate}>
+                        <span className={styles.upcomingDay}>{itemDate.getDate()}</span>
+                        <span className={styles.upcomingMon}>{MONTHS_ES[itemDate.getMonth()].slice(0,3)}</span>
+                      </div>
+                      <div className={styles.upcomingInfo}>
+                        <div className={styles.upcomingNombreRow}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                          <span className={styles.upcomingNombre}>{item.nombre}</span>
+                        </div>
+                        <span className={styles.upcomingVenue}>Salida · {item.destino} · {item.pasajeros} pasajero{item.pasajeros !== 1 ? 's' : ''}</span>
+                      </div>
+                    </div>
+                    <div className={styles.upcomingRight}>
+                      <span className={styles.upcomingBadge} style={{ color: '#2563eb', background: '#dbeafe' }}>{item.estado}</span>
+                      {daysLeft === 0
+                        ? <span className={styles.upcomingDays} style={{ color: '#34d399' }}>Hoy</span>
+                        : <span className={styles.upcomingDays}>{daysLeft}d</span>
+                      }
+                    </div>
+                  </button>
+                )
+              }
+              const meta = ESTADO_META[item.estado] || ESTADO_META.lead
+              const parts = item.fecha.split(' ')
               const evDate = new Date(+parts[2], MONTH_MAP[parts[1]], +parts[0])
               const daysLeft = Math.ceil((evDate - today) / 86400000)
               return (
-                <button key={ev.id} className={styles.upcomingCard} onClick={() => setSelectedEvent(ev)}>
+                <button key={item.id} className={styles.upcomingCard} onClick={() => setSelectedEvent(item)}>
                   <div className={styles.upcomingLeft}>
                     <div className={styles.upcomingDate}>
                       <span className={styles.upcomingDay}>{evDate.getDate()}</span>
@@ -283,10 +388,10 @@ export default function CalendarioPage() {
                     </div>
                     <div className={styles.upcomingInfo}>
                       <div className={styles.upcomingNombreRow}>
-                        <EventoTipoIcon tipo={ev.tipo} size={13} />
-                        <span className={styles.upcomingNombre}>{ev.nombre}</span>
+                        <EventoTipoIcon tipo={item.tipo} size={13} />
+                        <span className={styles.upcomingNombre}>{item.nombre}</span>
                       </div>
-                      <span className={styles.upcomingVenue}>{ev.hora} · {ev.venue || 'Por confirmar'}</span>
+                      <span className={styles.upcomingVenue}>{item.hora} · {item.venue || 'Por confirmar'}</span>
                     </div>
                   </div>
                   <div className={styles.upcomingRight}>
