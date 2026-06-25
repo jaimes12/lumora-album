@@ -31,6 +31,9 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
         if (EmailValidator.IsDisposable(req.Email))
             throw new InvalidOperationException("Este correo no existe. Ingresa un correo real.");
 
+        if (!await EmailValidator.DomainHasMxAsync(req.Email))
+            throw new InvalidOperationException("Este correo no existe. Ingresa un correo real.");
+
         var existing = await db.Users.FirstOrDefaultAsync(u => u.Email == req.Email);
         if (existing is not null)
             throw new InvalidOperationException("El correo ya está registrado.");
