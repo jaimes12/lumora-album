@@ -23,6 +23,9 @@ public class WaServerService(IHttpClientFactory factory, ILogger<WaServerService
 
     private static readonly JsonSerializerOptions Opts = new() { PropertyNameCaseInsensitive = true };
 
+    private static bool IsConnected(WaClientEntry c) =>
+        c.State == "ready" || (c.State == "loading" && c.Phone is not null);
+
     public async Task<WaConnectionStatus> GetStatusAsync(string orgId)
     {
         try
@@ -36,7 +39,7 @@ public class WaServerService(IHttpClientFactory factory, ILogger<WaServerService
             var client = payload?.Clients?.FirstOrDefault(c => c.Name == name);
 
             if (client is null) return new("disconnected", null, false);
-            return new(client.State, client.QrCode, client.State == "ready");
+            return new(client.State, client.QrCode, IsConnected(client));
         }
         catch (Exception ex)
         {
@@ -54,7 +57,7 @@ public class WaServerService(IHttpClientFactory factory, ILogger<WaServerService
             var json = await res.Content.ReadAsStringAsync();
             var payload = JsonSerializer.Deserialize<WaStatusPayload>(json, Opts);
             return (payload?.Clients ?? [])
-                .Where(c => c.State == "ready")
+                .Where(IsConnected)
                 .Select(c => c.Name.Replace("lm_", "").Replace('_', '-'))
                 .ToHashSet();
         }
@@ -114,6 +117,7 @@ public class WaServerService(IHttpClientFactory factory, ILogger<WaServerService
     private record WaClientEntry(
         string Name,
         string State,
-        [property: JsonPropertyName("qrCode")] string? QrCode
+        [property: JsonPropertyName("qrCode")] string? QrCode,
+        string? Phone = null
     );
 }
