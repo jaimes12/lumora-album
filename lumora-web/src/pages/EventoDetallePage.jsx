@@ -10,7 +10,7 @@ import { useSettings } from '../context/SettingsContext'
 import EventoTipoIcon from '../components/EventoTipoIcon'
 import { findOrCreateLeadByPhone, findLeadByPhone, leadsApi } from '../api/leadsApi'
 import { ChatModal } from './ChatPage'
-import { useStages } from '../hooks/useStages'
+import { useStages, DEFAULT_STAGES } from '../hooks/useStages'
 import EventProductsSection from '../components/EventProductsSection'
 
 function ChatBtn({ onClick }) {
