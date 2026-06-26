@@ -12,15 +12,15 @@ import styles from './ChatPage.module.css'
 
 // ─── Phone input with country code toggle ────────────────────────────────────
 const CC = [
-  { key: 'mx', prefix: '52', flag: '🇲🇽', label: '+52', hint: '449 452 1666' },
-  { key: 'us', prefix: '1',  flag: '🇺🇸', label: '+1',  hint: '415 555 1234' },
+  { key: 'mx', prefix: '521', flag: '🇲🇽', label: '+52', hint: '449 452 1666' },
+  { key: 'us', prefix: '1',   flag: '🇺🇸', label: '+1',  hint: '415 555 1234' },
 ]
 
 function PhoneInput({ value, onChange, inputClassName }) {
   const detect = (v) => {
     const d = (v || '').replace(/\D/g, '')
-    if (d.startsWith('52') && d.length >= 12) return 0
-    if (d.startsWith('1')  && d.length >= 11) return 1
+    if ((d.startsWith('521') || d.startsWith('52')) && d.length >= 12) return 0
+    if (d.startsWith('1') && d.length >= 11) return 1
     return 0
   }
   const [idx, setIdx] = useState(() => detect(value))
@@ -28,16 +28,25 @@ function PhoneInput({ value, onChange, inputClassName }) {
 
   const localDigits = () => {
     const d = (value || '').replace(/\D/g, '')
+    if (cc.key === 'mx') {
+      if (d.startsWith('521')) return d.slice(3)
+      if (d.startsWith('52'))  return d.slice(2)
+      return d
+    }
     return d.startsWith(cc.prefix) ? d.slice(cc.prefix.length) : d
   }
 
-  const handleChange = e => onChange(cc.prefix + e.target.value.replace(/\D/g, ''))
+  const handleChange = e => {
+    const digits = e.target.value.replace(/\D/g, '')
+    onChange(cc.key === 'mx' ? '521' + digits : cc.prefix + digits)
+  }
 
   const toggle = () => {
     const next = (idx + 1) % CC.length
     const bare = localDigits()
     setIdx(next)
-    onChange(CC[next].prefix + bare)
+    const nextCc = CC[next]
+    onChange(nextCc.key === 'mx' ? '521' + bare : nextCc.prefix + bare)
   }
 
   return (
@@ -1151,6 +1160,8 @@ function ChatPageInner() {
   const [showQRManager,     setShowQRManager]     = useState(false)
   const [search,            setSearch]            = useState('')
 
+  const [clientePhones, setClientePhones] = useState(new Set())
+
   const loadLeads = useCallback(async () => {
     try { setLeads(await leadsApi.getAll()) }
     catch {}
@@ -1162,6 +1173,22 @@ function ChatPageInner() {
     const id = setInterval(loadLeads, 10000)
     return () => clearInterval(id)
   }, [loadLeads])
+
+  useEffect(() => {
+    clientesApi.getAll()
+      .then(cs => {
+        const phones = new Set(
+          cs.map(c => (c.telefono || '').replace(/\D/g, '').slice(-10)).filter(p => p.length >= 7)
+        )
+        setClientePhones(phones)
+      })
+      .catch(() => {})
+  }, [])
+
+  const isCliente = (lead) => {
+    const p = (lead.telefono || '').replace(/\D/g, '').slice(-10)
+    return p.length >= 7 && clientePhones.has(p)
+  }
 
   // Auto-open a lead when navigated from another page with state.openLeadId
   useEffect(() => {
@@ -1342,7 +1369,10 @@ function ChatPageInner() {
                       <span className={styles.mobileRowMsg}>{lead.ultimoMsg}</span>
                       {lead.noLeidos > 0 && <span className={styles.unread}>{lead.noLeidos}</span>}
                     </div>
-                    <span className={styles.mobileRowEvento}>{lead.evento || lead.telefono}</span>
+                    <div className={styles.mobileRowMeta}>
+                      <span className={styles.mobileRowEvento}>{lead.evento || lead.telefono}</span>
+                      {isCliente(lead) && <span className={styles.cardClienteBadge}>Cliente ✓</span>}
+                    </div>
                   </div>
                 </button>
               ))}
@@ -1387,6 +1417,7 @@ function ChatPageInner() {
                         <p className={styles.cardMsg}>{lead.ultimoMsg}</p>
                         <div className={styles.cardFooter}>
                           <span className={styles.cardPresupuesto}>{lead.presupuesto !== '$0' ? lead.presupuesto : ''}</span>
+                          {isCliente(lead) && <span className={styles.cardClienteBadge}>Cliente ✓</span>}
                           <span className={styles.cardHora}>{lead.hora}</span>
                         </div>
                       </div>

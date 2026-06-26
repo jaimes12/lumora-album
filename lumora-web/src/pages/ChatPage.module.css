@@ -319,6 +319,17 @@
   color: rgba(238,237,242,0.25);
 }
 
+.cardClienteBadge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  white-space: nowrap;
+}
+
 .emptyCol {
   flex: 1;
   display: flex;
@@ -747,6 +758,13 @@
     flex: 1;
   }
 
+  .mobileRowMeta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
   .mobileRowEvento {
     font-size: 11px;
     color: var(--text-muted);
@@ -754,6 +772,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex: 1;
   }
 
   /* Hide kanban on mobile unless pipeline tab */

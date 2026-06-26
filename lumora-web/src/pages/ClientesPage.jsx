@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clientesApi } from '../api/clientesApi'
+import { normalizeMxPhone } from '../utils/phone'
 import { eventosApi } from '../api/eventosApi'
 import { findOrCreateLeadByPhone } from '../api/leadsApi'
 import { useAuth } from '../context/AuthContext'
@@ -27,7 +28,7 @@ function ClienteModal({ onClose, onSaved, initial }) {
     if (!form.nombre) { setError('El nombre es obligatorio'); return }
     setSaving(true); setError('')
     try {
-      const payload = { name: form.nombre, email: form.email || null, phone: form.telefono || null, company: form.empresa || null, notes: form.notas || null }
+      const payload = { name: form.nombre, email: form.email || null, phone: form.telefono ? normalizeMxPhone(form.telefono) : null, company: form.empresa || null, notes: form.notas || null }
       const saved = editing
         ? await clientesApi.update(initial.id, payload)
         : await clientesApi.create(payload)
