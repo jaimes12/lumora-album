@@ -64,6 +64,7 @@ function DaySheet({ day, month, year, evs, onClose, onSelectEvent }) {
                 <div className={styles.sheetRowInfo}>
                   <span className={styles.sheetRowName}>{ev.nombre}</span>
                   <span className={styles.sheetRowSub}>{ev.hora} · {ev.venue || 'Por confirmar'}</span>
+                  {ev.clienteNombre && <span className={styles.sheetRowCliente}>{ev.clienteNombre}</span>}
                 </div>
                 <span className={styles.sheetRowBadge} style={{ color: meta.color, background: meta.bg }}>{meta.label}</span>
               </button>
