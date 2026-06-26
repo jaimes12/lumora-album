@@ -34,6 +34,9 @@ public class Organization
     [Column("industry")]
     public string Industry { get; set; } = "events";
 
+    [Column("wa_connected")]
+    public bool WaConnected { get; set; } = false;
+
     public ICollection<Client> Clients { get; set; } = [];
     public ICollection<Event> Events { get; set; } = [];
 }

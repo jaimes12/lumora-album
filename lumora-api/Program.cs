@@ -58,6 +58,7 @@ builder.Services.AddScoped<IVendorService, VendorService>();
 builder.Services.AddScoped<ISaleService, SaleService>();
 builder.Services.AddScoped<IWhatsappService, WhatsappService>();
 builder.Services.AddScoped<IWaServerService, WaServerService>();
+builder.Services.AddHostedService<WaAutoReconnectService>();
 builder.Services.AddScoped<IR2Service, R2Service>();
 builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<ILeadService, LeadService>();
@@ -625,6 +626,9 @@ try
 
         // ── Travel vertical ──────────────────────────────────────────────────
         "ALTER TABLE organizations ADD COLUMN industry varchar(50) NOT NULL DEFAULT 'events'",
+
+        // ── WhatsApp connection tracking ─────────────────────────────────────
+        "ALTER TABLE organizations ADD COLUMN wa_connected tinyint(1) NOT NULL DEFAULT 0",
 
         @"CREATE TABLE IF NOT EXISTS `trips` (
           `id`               varchar(255)  NOT NULL,

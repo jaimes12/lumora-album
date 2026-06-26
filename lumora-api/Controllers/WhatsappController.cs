@@ -1,14 +1,16 @@
+using lumora_api.Data;
 using lumora_api.DTOs;
 using lumora_api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace lumora_api.Controllers;
 
 [ApiController]
 [Route("api/whatsapp")]
 [Authorize]
-public class WhatsappController(IWhatsappService whatsapp, IWaServerService waServer, ILeadService leads) : ControllerBase
+public class WhatsappController(IWhatsappService whatsapp, IWaServerService waServer, ILeadService leads, LumoraDbContext db) : ControllerBase
 {
     private string OrgId => User.FindFirst("org_id")?.Value ?? User.FindFirst("user_id")?.Value ?? User.FindFirst("sub")?.Value ?? string.Empty;
 
@@ -45,6 +47,8 @@ public class WhatsappController(IWhatsappService whatsapp, IWaServerService waSe
     public async Task<IActionResult> Connect()
     {
         await waServer.ConnectAsync(OrgId);
+        var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == OrgId);
+        if (org is not null) { org.WaConnected = true; await db.SaveChangesAsync(); }
         return Accepted();
     }
 
@@ -52,6 +56,8 @@ public class WhatsappController(IWhatsappService whatsapp, IWaServerService waSe
     public async Task<IActionResult> Disconnect()
     {
         await waServer.DisconnectAsync(OrgId);
+        var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == OrgId);
+        if (org is not null) { org.WaConnected = false; await db.SaveChangesAsync(); }
         return Ok(new { ok = true });
     }
 
