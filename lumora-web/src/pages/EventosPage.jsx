@@ -277,16 +277,23 @@ export default function EventosPage() {
   const { user } = useAuth()
   const [eventos,     setEventos]     = useState([])
   const [loading,     setLoading]     = useState(true)
-  const [filter,      setFilter]      = useState('todos')
-  const [search,      setSearch]      = useState('')
+  const [filter,      setFilter]      = useState(() => sessionStorage.getItem('ev_filter') || 'todos')
+  const [search,      setSearch]      = useState(() => sessionStorage.getItem('ev_search') || '')
   const [showCreate,  setShowCreate]  = useState(false)
   const [showGate,    setShowGate]    = useState(false)
   const [showDateFilter, setShowDateFilter] = useState(false)
-  const [dateField,   setDateField]   = useState('event') // 'event' | 'created'
-  const [dateFrom,    setDateFrom]    = useState('')
-  const [dateTo,      setDateTo]      = useState('')
+  const [dateField,   setDateField]   = useState(() => sessionStorage.getItem('ev_dateField') || 'event')
+  const [dateFrom,    setDateFrom]    = useState(() => sessionStorage.getItem('ev_dateFrom') || '')
+  const [dateTo,      setDateTo]      = useState(() => sessionStorage.getItem('ev_dateTo') || '')
   const dateFilterRef = useRef(null)
   const navigate = useNavigate()
+
+  // Persist filters to sessionStorage whenever they change
+  useEffect(() => { sessionStorage.setItem('ev_filter',    filter)    }, [filter])
+  useEffect(() => { sessionStorage.setItem('ev_search',    search)    }, [search])
+  useEffect(() => { sessionStorage.setItem('ev_dateField', dateField) }, [dateField])
+  useEffect(() => { sessionStorage.setItem('ev_dateFrom',  dateFrom)  }, [dateFrom])
+  useEffect(() => { sessionStorage.setItem('ev_dateTo',    dateTo)    }, [dateTo])
 
   useEffect(() => {
     const handler = e => {
