@@ -504,3 +504,83 @@
 
 .loadingMore { text-align:center;padding:20px;font-size:13px;color:var(--text-muted); }
 .listEnd { text-align:center;padding:16px;font-size:12px;color:var(--text-muted);opacity:0.6; }
+
+/* ── Eventos del cliente en drawer ── */
+.eventosSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.eventosSectionLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.eventosEmpty {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+  padding: 4px 0;
+}
+
+.eventosList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eventoRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.eventoRow:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-3, var(--bg-2));
+}
+
+.eventoRowInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.eventoRowNombre {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eventoRowFecha {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.eventoRowBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}

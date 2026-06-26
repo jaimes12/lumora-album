@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clientesApi } from '../api/clientesApi'
+import { eventosApi } from '../api/eventosApi'
 import { findOrCreateLeadByPhone } from '../api/leadsApi'
 import { useAuth } from '../context/AuthContext'
 import { PlanGateModal } from '../components/PlanGate'
 import { underLimit } from '../config/planConfig'
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll'
+import { ESTADO_META } from '../data/eventosData'
+import EventoTipoIcon from '../components/EventoTipoIcon'
 import styles from './ClientesPage.module.css'
 
 function ClienteModal({ onClose, onSaved, initial }) {
@@ -93,9 +96,11 @@ export default function ClientesPage() {
   const [filterEtapa,  setFilterEtapa]  = useState('todos')
   const [showCreate,   setShowCreate]   = useState(false)
   const [editing,      setEditing]      = useState(null)
-  const [delConfirm,   setDelConfirm]   = useState(false)
-  const [showGate,     setShowGate]     = useState(false)
-  const [openingChat,  setOpeningChat]  = useState(false)
+  const [delConfirm,      setDelConfirm]      = useState(false)
+  const [showGate,        setShowGate]        = useState(false)
+  const [openingChat,     setOpeningChat]     = useState(false)
+  const [clienteEventos,  setClienteEventos]  = useState([])
+  const [loadingEventos,  setLoadingEventos]  = useState(false)
 
   const handleDelete = async () => {
     if (!selected) return
@@ -129,6 +134,16 @@ export default function ClientesPage() {
       .catch(() => setClientes([]))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (!selected) { setClienteEventos([]); return }
+    setLoadingEventos(true)
+    eventosApi.getAll(null, selected.id)
+      .then(evs => evs.sort((a, b) => a.dateISO.localeCompare(b.dateISO)))
+      .then(setClienteEventos)
+      .catch(() => setClienteEventos([]))
+      .finally(() => setLoadingEventos(false))
+  }, [selected?.id])
 
   const filtered = clientes.filter(c => {
     const q = search.toLowerCase()
@@ -306,6 +321,39 @@ export default function ClientesPage() {
                   <p className={styles.notas}>{selected.notas}</p>
                 </div>
               )}
+
+              {/* Eventos del cliente */}
+              <div className={styles.eventosSection}>
+                <span className={styles.eventosSectionLabel}>Eventos</span>
+                {loadingEventos ? (
+                  <p className={styles.eventosEmpty}>Cargando…</p>
+                ) : clienteEventos.length === 0 ? (
+                  <p className={styles.eventosEmpty}>Sin eventos registrados</p>
+                ) : (
+                  <div className={styles.eventosList}>
+                    {clienteEventos.map(ev => {
+                      const meta = ESTADO_META[ev.estado] ?? ESTADO_META.lead
+                      return (
+                        <button
+                          key={ev.id}
+                          className={styles.eventoRow}
+                          onClick={() => navigate(`/app/eventos/${ev.id}`)}
+                        >
+                          <EventoTipoIcon tipo={ev.tipo} size={14} />
+                          <div className={styles.eventoRowInfo}>
+                            <span className={styles.eventoRowNombre}>{ev.nombre}</span>
+                            <span className={styles.eventoRowFecha}>{ev.fecha} · {ev.hora}</span>
+                          </div>
+                          <span className={styles.eventoRowBadge} style={{ color: meta.color, background: meta.bg }}>
+                            {meta.label}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+
               <div className={styles.drawerActions}>
                 <button
                   className={styles.btnPrimary}
