@@ -8,8 +8,9 @@ import { api } from '../api/apiClient'
 import { ESTADO_META, CAT_COLOR, fmt } from '../data/eventosData'
 import { useSettings } from '../context/SettingsContext'
 import EventoTipoIcon from '../components/EventoTipoIcon'
-import { findOrCreateLeadByPhone } from '../api/leadsApi'
-import { ChatModal, DEFAULT_STAGES } from './ChatPage'
+import { findOrCreateLeadByPhone, findLeadByPhone, leadsApi } from '../api/leadsApi'
+import { ChatModal } from './ChatPage'
+import { useStages } from '../hooks/useStages'
 import EventProductsSection from '../components/EventProductsSection'
 
 function ChatBtn({ onClick }) {
@@ -190,6 +191,8 @@ export default function EventoDetallePage() {
   const [linkedIds,     setLinkedIds]     = useState([])
   const [openingChat,   setOpeningChat]   = useState(false)
   const [chatLead,      setChatLead]      = useState(null)
+  const [clienteLead,   setClienteLead]   = useState(null)
+  const [stages]                          = useStages()
   // Photos
   const [fotos,         setFotos]         = useState([])
   const [uploadingFoto, setUploadingFoto] = useState(false)
@@ -210,6 +213,13 @@ export default function EventoDetallePage() {
     }).catch(() => setEvento(null))
       .finally(() => setLoading(false))
   }, [id])
+
+  // Find WhatsApp lead for the client (no create)
+  useEffect(() => {
+    const phone = cliente?.telefono
+    if (!phone) return
+    findLeadByPhone(phone).then(setClienteLead).catch(() => {})
+  }, [cliente?.telefono])
 
   // Hooks must all be before any conditional returns
   useEffect(() => {
@@ -612,6 +622,26 @@ export default function EventoDetallePage() {
               </div>
               <ChatBtn onClick={abrirChatCliente} />
             </div>
+            {clienteLead && (() => {
+              const stageColor = stages.find(s => s.id === clienteLead.stage)?.color ?? '#64748b'
+              return (
+                <div className={styles.leadStageRow}>
+                  <span className={styles.leadStageLabel}>Embudo</span>
+                  <select
+                    className={styles.leadStageSelect}
+                    value={clienteLead.stage}
+                    style={{ borderColor: stageColor, color: stageColor }}
+                    onChange={async e => {
+                      const newStage = e.target.value
+                      setClienteLead(prev => ({ ...prev, stage: newStage }))
+                      await leadsApi.update(clienteLead.id, { stage: newStage }).catch(() => {})
+                    }}
+                  >
+                    {stages.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                  </select>
+                </div>
+              )
+            })()}
           </section>
 
           <section className={styles.card}>

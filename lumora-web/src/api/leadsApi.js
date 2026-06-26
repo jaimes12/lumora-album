@@ -43,6 +43,15 @@ export function toFrontendMsg(m) {
   }
 }
 
+// Finds an existing lead by phone number. Returns null if not found.
+export async function findLeadByPhone(phone) {
+  const digits = (phone || '').replace(/\D/g, '')
+  const last10 = digits.length >= 10 ? digits.slice(-10) : digits
+  if (last10.length < 7) return null
+  const all = await leadsApi.getAll()
+  return all.find(l => (l.telefono || '').replace(/\D/g, '').endsWith(last10)) ?? null
+}
+
 // Finds an existing lead by phone number or creates a new one.
 // Returns a frontend-shaped lead ready to display in ChatModal.
 export async function findOrCreateLeadByPhone(phone, name) {
