@@ -66,6 +66,12 @@ export default function RegisterModal({ onClose }) {
     try {
       await register(orgName.trim(), name.trim(), email, pass)
       if (window.fbq) {
+        const nameParts = name.trim().split(' ')
+        fbq('init', '2249835215846908', {
+          em: email.toLowerCase().trim(),
+          fn: nameParts[0]?.toLowerCase() ?? '',
+          ln: nameParts.slice(1).join(' ').toLowerCase() || undefined,
+        })
         fbq('track', 'CompleteRegistration', { content_name: 'Elixe', currency: 'MXN', value: 0 })
       }
       onClose()
