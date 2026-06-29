@@ -26,7 +26,7 @@ public class GastosController(LumoraDbContext db) : ControllerBase
         // Avoid navigation property access in projection (Pomelo GUID cast issue)
         var gastos = await q
             .OrderByDescending(g => g.Fecha)
-            .Select(g => new { g.Id, g.EventId, g.Descripcion, g.Monto, g.Categoria, fecha = g.Fecha, g.Notas, g.CreatedAt })
+            .Select(g => new { g.Id, g.EventId, g.Descripcion, g.Monto, g.Categoria, g.Fecha, g.Notas, g.CreatedAt })
             .ToListAsync();
 
         // Batch-fetch event names separately
@@ -36,13 +36,11 @@ public class GastosController(LumoraDbContext db) : ControllerBase
             .Select(e => new { e.Id, e.Name })
             .ToDictionaryAsync(e => e.Id, e => e.Name);
 
-        var result = gastos.Select(g => new {
+        return Ok(gastos.Select(g => new {
             g.Id, g.EventId, g.Descripcion, g.Monto, g.Categoria,
-            fecha = g.Fecha, g.Notas, g.CreatedAt,
+            g.Fecha, g.Notas, g.CreatedAt,
             eventoNombre = g.EventId != null && eventNames.TryGetValue(g.EventId, out var n) ? n : null,
-        });
-
-        return Ok(result);
+        }));
     }
 
     [HttpGet("ingresos")]
