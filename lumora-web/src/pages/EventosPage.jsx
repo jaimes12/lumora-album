@@ -517,7 +517,12 @@ export default function EventosPage() {
                   </div>
                   <div className={styles.cardFooter}>
                     <span className={styles.cardRegistro}>Registrado: {ev.createdAtISO}</span>
-                    <span className={styles.presupuesto}>${Number(ev.presupuestoTotal).toLocaleString('es-MX')}</span>
+                    <div className={styles.cardMontos}>
+                      <span className={styles.presupuesto}>${Number(ev.presupuestoTotal).toLocaleString('es-MX')}</span>
+                      {ev.anticipo > 0 && (
+                        <span className={styles.cardAbonado}>Abonado: ${Number(ev.anticipo).toLocaleString('es-MX')}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               )
