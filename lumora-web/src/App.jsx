@@ -38,6 +38,7 @@ import NotasPage         from './pages/NotasPage'
 import ViajesPage        from './pages/ViajesPage'
 import ViajeDetallePage  from './pages/ViajeDetallePage'
 import ViajesLanding     from './pages/ViajesLanding'
+import FinanzasPage      from './pages/FinanzasPage'
 
 function LandingPage() {
   return (
@@ -120,6 +121,7 @@ export default function App() {
               <Route path="trabajadores"   element={<TrabajadoresPage />} />
               <Route path="viajes"         element={<ViajesPage />} />
               <Route path="viajes/:id"     element={<ViajeDetallePage />} />
+              <Route path="finanzas"       element={<FinanzasPage />} />
             </Route>
 
             {/* Super admin — own auth, independent of app session */}

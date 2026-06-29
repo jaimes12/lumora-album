@@ -683,6 +683,20 @@ try
           `created_at` datetime(6)   NOT NULL,
           PRIMARY KEY (`id`)
         ) CHARACTER SET utf8mb4",
+
+        @"CREATE TABLE IF NOT EXISTS `gastos` (
+          `id`          varchar(255)  NOT NULL,
+          `org_id`      varchar(255)  NOT NULL,
+          `event_id`    varchar(255)  NULL,
+          `descripcion` varchar(500)  NOT NULL,
+          `monto`       decimal(18,2) NOT NULL DEFAULT 0,
+          `categoria`   varchar(100)  NOT NULL DEFAULT 'general',
+          `fecha`       datetime(6)   NOT NULL,
+          `notas`       varchar(1000) NULL,
+          `created_at`  datetime(6)   NOT NULL,
+          PRIMARY KEY (`id`),
+          KEY `idx_gastos_org` (`org_id`)
+        ) CHARACTER SET utf8mb4",
     };
 
     try

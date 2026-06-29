@@ -12,6 +12,7 @@ import { findOrCreateLeadByPhone, findLeadByPhone, leadsApi } from '../api/leads
 import { ChatModal } from './ChatPage'
 import { useStages, DEFAULT_STAGES } from '../hooks/useStages'
 import EventProductsSection from '../components/EventProductsSection'
+import { gastosApi } from '../api/gastosApi'
 
 function ChatBtn({ onClick }) {
   return (
@@ -193,6 +194,11 @@ export default function EventoDetallePage() {
   const [chatLead,      setChatLead]      = useState(null)
   const [clienteLead,   setClienteLead]   = useState(null)
   const [stages]                          = useStages()
+  // Gastos
+  const [gastos,        setGastos]        = useState([])
+  const [showAddGasto,  setShowAddGasto]  = useState(false)
+  const [nuevoGasto,    setNuevoGasto]    = useState({ descripcion: '', monto: '', categoria: 'general' })
+  const [savingGasto,   setSavingGasto]   = useState(false)
   // Photos
   const [fotos,         setFotos]         = useState([])
   const [uploadingFoto, setUploadingFoto] = useState(false)
@@ -224,6 +230,9 @@ export default function EventoDetallePage() {
   // Hooks must all be before any conditional returns
   useEffect(() => {
     if (id) eventosApi.getPhotos(id).then(setFotos).catch(() => {})
+  }, [id])
+  useEffect(() => {
+    if (id) gastosApi.getAll().then(all => setGastos(all.filter(g => g.eventId === id))).catch(() => {})
   }, [id])
 
   if (loading) return (
@@ -308,6 +317,33 @@ export default function EventoDetallePage() {
     } catch {
       alert('Error al guardar el pago')
     }
+  }
+
+  const agregarGasto = async () => {
+    if (!nuevoGasto.descripcion || !nuevoGasto.monto) return
+    setSavingGasto(true)
+    try {
+      const saved = await gastosApi.create({
+        descripcion: nuevoGasto.descripcion,
+        monto: parseFloat(nuevoGasto.monto),
+        categoria: nuevoGasto.categoria,
+        eventId: id,
+        fecha: new Date().toISOString(),
+        notas: null,
+      })
+      setGastos(prev => [...prev, saved])
+      setNuevoGasto({ descripcion: '', monto: '', categoria: 'general' })
+      setShowAddGasto(false)
+    } catch { alert('Error al guardar el gasto') }
+    finally { setSavingGasto(false) }
+  }
+
+  const eliminarGasto = async (gastoId) => {
+    if (!confirm('¿Eliminar este gasto?')) return
+    try {
+      await gastosApi.delete(gastoId)
+      setGastos(prev => prev.filter(g => g.id !== gastoId))
+    } catch { alert('Error al eliminar el gasto') }
   }
 
   const cambiarEstado = async (nuevoEstado) => {
@@ -546,6 +582,58 @@ export default function EventoDetallePage() {
                       </div>
                     )
                   })}
+                </div>
+            }
+          </section>
+
+          {/* ── Gastos del evento ── */}
+          <section className={styles.card}>
+            <div className={styles.pagosHeader}>
+              <span className={styles.pagosTitle}>Gastos del evento</span>
+              <button className={styles.btnLink} onClick={() => setShowAddGasto(v => !v)}>
+                + Registrar gasto
+              </button>
+            </div>
+            {showAddGasto && (
+              <div className={styles.pagoForm}>
+                <input className={styles.pagoInput} placeholder="Descripción"
+                  value={nuevoGasto.descripcion}
+                  onChange={e => setNuevoGasto(g => ({ ...g, descripcion: e.target.value }))} />
+                <input className={styles.pagoInput} type="number" placeholder="Monto en $"
+                  value={nuevoGasto.monto}
+                  onChange={e => setNuevoGasto(g => ({ ...g, monto: e.target.value }))} />
+                <select className={styles.pagoSelect} value={nuevoGasto.categoria}
+                  onChange={e => setNuevoGasto(g => ({ ...g, categoria: e.target.value }))}>
+                  <option value="general">General</option>
+                  <option value="proveedor">Proveedor</option>
+                  <option value="renta">Renta</option>
+                  <option value="personal">Personal</option>
+                  <option value="marketing">Marketing</option>
+                  <option value="otro">Otro</option>
+                </select>
+                <button className={styles.pagoAddBtn} onClick={agregarGasto} disabled={savingGasto}>
+                  {savingGasto ? '…' : 'Guardar'}
+                </button>
+                <button className={styles.pagoDeleteBtn} onClick={() => setShowAddGasto(false)}>✕</button>
+              </div>
+            )}
+            {gastos.length === 0
+              ? <p className={styles.sinPagos}>Sin gastos registrados para este evento</p>
+              : <div className={styles.pagosList}>
+                  {gastos.map(g => (
+                    <div key={g.id} className={styles.pagoRow}>
+                      <div className={styles.pagoInfo}>
+                        <span className={styles.pagoConcepto}>{g.descripcion}</span>
+                        <span className={styles.pagoFechaMetodo}>{new Date(g.fecha).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })} · {g.categoria}</span>
+                      </div>
+                      <span className={styles.pagoMonto}>−{new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(g.monto)}</span>
+                      <div className={styles.pagoRowBtns}>
+                        <button className={styles.pagoDeleteBtn} onClick={() => eliminarGasto(g.id)} title="Eliminar">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
             }
           </section>
