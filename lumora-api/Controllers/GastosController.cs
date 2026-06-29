@@ -23,52 +23,73 @@ public class GastosController(LumoraDbContext db) : ControllerBase
         if (!string.IsNullOrEmpty(hasta) && DateTime.TryParse(hasta, out var h))
             q = q.Where(g => g.Fecha < h.AddDays(1));
 
+        // Avoid navigation property access in projection (Pomelo GUID cast issue)
         var gastos = await q
             .OrderByDescending(g => g.Fecha)
-            .Select(g => new {
-                g.Id,
-                g.EventId,
-                g.Descripcion,
-                g.Monto,
-                g.Categoria,
-                fecha = g.Fecha,
-                g.Notas,
-                g.CreatedAt,
-                eventoNombre = g.Event != null ? g.Event.Name : (string?)null,
-            })
+            .Select(g => new { g.Id, g.EventId, g.Descripcion, g.Monto, g.Categoria, fecha = g.Fecha, g.Notas, g.CreatedAt })
             .ToListAsync();
 
-        return Ok(gastos);
+        // Batch-fetch event names separately
+        var eventIds = gastos.Select(g => g.EventId).Where(id => id != null).Distinct().ToList();
+        var eventNames = await db.Events
+            .Where(e => eventIds.Contains(e.Id))
+            .Select(e => new { e.Id, e.Name })
+            .ToDictionaryAsync(e => e.Id, e => e.Name);
+
+        var result = gastos.Select(g => new {
+            g.Id, g.EventId, g.Descripcion, g.Monto, g.Categoria,
+            fecha = g.Fecha, g.Notas, g.CreatedAt,
+            eventoNombre = g.EventId != null && eventNames.TryGetValue(g.EventId, out var n) ? n : null,
+        });
+
+        return Ok(result);
     }
 
     [HttpGet("ingresos")]
     public async Task<IActionResult> GetIngresos([FromQuery] string? desde, [FromQuery] string? hasta)
     {
-        var q = db.EventPayments
-            .Where(p => p.OrgId == OrgId)
-            .Include(p => p.Event)
-                .ThenInclude(e => e!.Client);
-
-        var payments = await q.OrderByDescending(p => p.PaidAt).ToListAsync();
-
-        var result = payments.Select(p => new {
-            p.Id,
-            p.EventId,
-            eventoNombre = p.Event?.Name ?? "",
-            clienteNombre = p.Event?.Client?.Name ?? "",
-            concepto = p.Concept,
-            monto = p.Amount,
-            metodo = p.Method,
-            fecha = p.PaidAt,
-            p.CreatedAt,
-        });
+        // Avoid Include/ThenInclude — Pomelo GUID cast issues (same pattern as EventService)
+        var q = db.EventPayments.Where(p => p.OrgId == OrgId);
 
         if (!string.IsNullOrEmpty(desde) && DateTime.TryParse(desde, out var d))
-            result = result.Where(p => p.fecha >= d);
+            q = q.Where(p => p.PaidAt >= d);
         if (!string.IsNullOrEmpty(hasta) && DateTime.TryParse(hasta, out var h))
-            result = result.Where(p => p.fecha < h.AddDays(1));
+            q = q.Where(p => p.PaidAt < h.AddDays(1));
 
-        return Ok(result.ToList());
+        var payments = await q
+            .OrderByDescending(p => p.PaidAt)
+            .Select(p => new { p.Id, p.EventId, p.Concept, p.Amount, p.Method, p.PaidAt, p.CreatedAt })
+            .ToListAsync();
+
+        // Batch-fetch event and client info separately
+        var evIds = payments.Select(p => p.EventId).Distinct().ToList();
+        var events = await db.Events
+            .Where(e => evIds.Contains(e.Id))
+            .Select(e => new { e.Id, e.Name, e.ClientId })
+            .ToDictionaryAsync(e => e.Id);
+
+        var clientIds = events.Values.Select(e => e.ClientId).Distinct().ToList();
+        var clients = await db.Clients
+            .Where(c => clientIds.Contains(c.Id))
+            .Select(c => new { c.Id, c.Name })
+            .ToDictionaryAsync(c => c.Id, c => c.Name);
+
+        var result = payments.Select(p => {
+            events.TryGetValue(p.EventId, out var ev);
+            var clientName = ev != null && clients.TryGetValue(ev.ClientId, out var cn) ? cn : "";
+            return new {
+                p.Id, p.EventId,
+                eventoNombre  = ev?.Name ?? "",
+                clienteNombre = clientName,
+                concepto = p.Concept,
+                monto    = p.Amount,
+                metodo   = p.Method,
+                fecha    = p.PaidAt,
+                p.CreatedAt,
+            };
+        });
+
+        return Ok(result);
     }
 
     [HttpPost]
@@ -92,8 +113,10 @@ public class GastosController(LumoraDbContext db) : ControllerBase
         string? eventoNombre = null;
         if (gasto.EventId != null)
         {
-            var ev = await db.Events.FindAsync(gasto.EventId);
-            eventoNombre = ev?.Name;
+            eventoNombre = await db.Events
+                .Where(e => e.Id == gasto.EventId)
+                .Select(e => e.Name)
+                .FirstOrDefaultAsync();
         }
 
         return Ok(new {
@@ -109,20 +132,22 @@ public class GastosController(LumoraDbContext db) : ControllerBase
         var gasto = await db.Gastos.FirstOrDefaultAsync(g => g.Id == id && g.OrgId == OrgId);
         if (gasto is null) return NotFound();
 
-        if (req.Descripcion is not null) gasto.Descripcion = req.Descripcion;
-        if (req.Monto != 0) gasto.Monto = req.Monto;
-        if (req.Categoria is not null) gasto.Categoria = req.Categoria;
-        if (req.Fecha.HasValue) gasto.Fecha = req.Fecha.Value;
-        if (req.Notas is not null) gasto.Notas = req.Notas;
-        if (req.EventId is not null) gasto.EventId = string.IsNullOrEmpty(req.EventId) ? null : req.EventId;
+        if (!string.IsNullOrEmpty(req.Descripcion)) gasto.Descripcion = req.Descripcion;
+        if (req.Monto != 0)                         gasto.Monto       = req.Monto;
+        if (req.Categoria is not null)              gasto.Categoria   = req.Categoria;
+        if (req.Fecha.HasValue)                     gasto.Fecha       = req.Fecha.Value;
+        if (req.Notas is not null)                  gasto.Notas       = req.Notas;
+        if (req.EventId is not null)                gasto.EventId     = string.IsNullOrEmpty(req.EventId) ? null : req.EventId;
 
         await db.SaveChangesAsync();
 
         string? eventoNombre = null;
         if (gasto.EventId != null)
         {
-            var ev = await db.Events.FindAsync(gasto.EventId);
-            eventoNombre = ev?.Name;
+            eventoNombre = await db.Events
+                .Where(e => e.Id == gasto.EventId)
+                .Select(e => e.Name)
+                .FirstOrDefaultAsync();
         }
 
         return Ok(new {
@@ -145,7 +170,7 @@ public class GastosController(LumoraDbContext db) : ControllerBase
 
 public record GastoRequest(
     string? EventId,
-    string Descripcion,
+    string? Descripcion,
     decimal Monto,
     string? Categoria,
     DateTime? Fecha,

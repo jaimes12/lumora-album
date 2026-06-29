@@ -179,7 +179,7 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
             .WithMany()
             .HasForeignKey(g => g.EventId)
             .IsRequired(false)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Restrict);
 
         // ── Pomelo 8.x GUID fix ──────────────────────────────────────────────
         // HasConversion<string>() on a string property is a no-op in EF Core (identity
