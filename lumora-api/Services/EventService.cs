@@ -130,9 +130,17 @@ public class EventService(LumoraDbContext db) : IEventService
             .Select(c => new { c.Id, c.Name, c.Phone })
             .ToDictionaryAsync(c => c.Id, c => (c.Name, c.Phone));
 
+        var eventIds = list.Select(e => e.Id).ToList();
+        var allPayments = await db.EventPayments
+            .Where(p => eventIds.Contains(p.EventId))
+            .ToListAsync();
+        var paymentsByEvent = allPayments.GroupBy(p => p.EventId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
         return list.Select(e => {
-            var info = clientInfo.TryGetValue(e.ClientId, out var ci) ? ci : (null, null);
-            return ToResponse(e, info.Name, info.Phone, []);
+            var info     = clientInfo.TryGetValue(e.ClientId, out var ci) ? ci : (null, null);
+            var payments = paymentsByEvent.TryGetValue(e.Id, out var pp) ? pp : [];
+            return ToResponse(e, info.Name, info.Phone, payments);
         });
     }
 
