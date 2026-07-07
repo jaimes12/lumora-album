@@ -59,6 +59,9 @@ builder.Services.AddScoped<ISaleService, SaleService>();
 builder.Services.AddScoped<IWhatsappService, WhatsappService>();
 builder.Services.AddScoped<IWaServerService, WaServerService>();
 builder.Services.AddHostedService<WaAutoReconnectService>();
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IEmailService, ResendEmailService>();
+builder.Services.AddHostedService<TrialReminderService>();
 builder.Services.AddScoped<IR2Service, R2Service>();
 builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<ILeadService, LeadService>();
@@ -682,6 +685,15 @@ try
           `notes`      varchar(500)  NULL,
           `created_at` datetime(6)   NOT NULL,
           PRIMARY KEY (`id`)
+        ) CHARACTER SET utf8mb4",
+
+        @"CREATE TABLE IF NOT EXISTS `trial_email_log` (
+          `id`         varchar(255) NOT NULL,
+          `org_id`     varchar(255) NOT NULL,
+          `email_type` varchar(50)  NOT NULL,
+          `sent_at`    datetime(6)  NOT NULL,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `uq_trial_email` (`org_id`, `email_type`)
         ) CHARACTER SET utf8mb4",
 
         @"CREATE TABLE IF NOT EXISTS `gastos` (

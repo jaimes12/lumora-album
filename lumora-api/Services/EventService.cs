@@ -74,7 +74,7 @@ public class EventService(LumoraDbContext db) : IEventService
         // Plan limit check (skipped during active trial)
         var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == orgId);
         bool inTrial = org?.TrialStartedAt.HasValue == true &&
-                       (DateTime.UtcNow - org.TrialStartedAt!.Value).TotalDays < 5;
+                       (DateTime.UtcNow - org.TrialStartedAt!.Value).TotalDays < 3;
         if (!inTrial && org is not null && EventLimits.TryGetValue(org.Plan, out int limit) && limit != int.MaxValue)
         {
             var count = await db.Events.CountAsync(e => e.OrgId == orgId);

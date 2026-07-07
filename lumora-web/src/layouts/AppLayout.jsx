@@ -436,7 +436,7 @@ export default function AppLayout() {
   const navItems = getNavItems(user?.industry)
   const VALID_PLANS = ['solo', 'negocio', 'agencia']
   const hasPlan   = VALID_PLANS.includes(user?.plan)
-  const TRIAL_DAYS = 5
+  const TRIAL_DAYS = 3
   const trialDaysLeft = (() => {
     if (hasPlan || !user?.trialStartedAt) return 0
     const started = new Date(user.trialStartedAt)
@@ -877,6 +877,33 @@ export default function AppLayout() {
           <Outlet />
         </div>
       </main>
+
+      {/* ── Trial expired — blocking overlay ── */}
+      {isLocked && (
+        <div className={styles.trialExpiredOverlay}>
+          <div className={styles.trialExpiredCard}>
+            <span className={styles.trialExpiredIcon}>⏰</span>
+            <h2 className={styles.trialExpiredTitle}>Tu prueba gratuita ha terminado</h2>
+            <p className={styles.trialExpiredSub}>
+              Elige un plan para seguir gestionando tus eventos, clientes y más sin interrupciones.
+            </p>
+            <ul className={styles.trialExpiredPerks}>
+              <li>Eventos, clientes y calendario ilimitados</li>
+              <li>WhatsApp CRM y pipeline de ventas</li>
+              <li>Cotizaciones, contratos y firma digital</li>
+              <li>Reportes e ingresos del negocio</li>
+            </ul>
+            <div className={styles.trialExpiredActions}>
+              <button className={styles.trialExpiredBtn} onClick={() => navigate('/app/paquetes')}>
+                Ver planes y precios →
+              </button>
+              <button className={styles.trialExpiredLogout} onClick={logout}>
+                Cerrar sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

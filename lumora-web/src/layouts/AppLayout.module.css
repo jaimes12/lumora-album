@@ -1507,6 +1507,109 @@
 
 .trialBannerBtn:hover { background: rgba(255,255,255,0.3); }
 
+/* ── Trial expired blocking overlay ── */
+.trialExpiredOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.trialExpiredCard {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px 44px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.35);
+}
+
+.trialExpiredIcon {
+  font-size: 44px;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.trialExpiredTitle {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 8px;
+  letter-spacing: -0.4px;
+}
+
+.trialExpiredSub {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+.trialExpiredPerks {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.trialExpiredPerks li {
+  font-size: 13.5px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trialExpiredPerks li::before {
+  content: '✓';
+  color: #22c55e;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.trialExpiredActions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.trialExpiredBtn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 13px 24px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  width: 100%;
+}
+.trialExpiredBtn:hover { opacity: 0.88; }
+
+.trialExpiredLogout {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 24px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s;
+  width: 100%;
+}
+.trialExpiredLogout:hover { color: var(--text); }
+
 /* ── Mobile top bar (legacy — hidden, replaced by AppBar) ── */
 .topBar {
   display: none;
