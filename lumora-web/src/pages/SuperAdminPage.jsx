@@ -227,7 +227,7 @@ const EMAIL_TEMPLATES = [
     html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#1a1a2e">
   <h2 style="margin:0 0 12px;font-size:22px">¡Hola, {{nombre}}!</h2>
   <p style="color:#555;line-height:1.6">Escribe tu mensaje aquí.</p>
-  <a href="https://elixe.mx/app/paquetes" style="display:inline-block;background:#7c6af7;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Ver planes →</a>
+  <a href="https://www.elixe.mx/app/paquetes" style="display:inline-block;background:#7c6af7;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Ver planes →</a>
   <p style="color:#999;font-size:12px;margin-top:32px">Elixe · elixe.mx</p>
 </div>`,
   },
@@ -239,8 +239,8 @@ const EMAIL_TEMPLATES = [
   <h2 style="margin:0 0 12px;font-size:22px">¡{{nombre}}, todavía estás a tiempo!</h2>
   <p style="color:#555;line-height:1.6">Tu prueba gratuita en <strong>Elixe</strong> venció hace unos días. Tus eventos y clientes siguen guardados.</p>
   <p style="color:#555;line-height:1.6">Activa tu plan desde <strong>$399/mes</strong> y retoma el control de tu negocio.</p>
-  <a href="https://elixe.mx/app/paquetes" style="display:inline-block;background:#7c6af7;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Ver planes →</a>
-  <p style="color:#999;font-size:12px;margin-top:32px">Elixe · elixe.mx · <a href="https://elixe.mx" style="color:#999">Darse de baja</a></p>
+  <a href="https://www.elixe.mx/app/paquetes" style="display:inline-block;background:#7c6af7;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Ver planes →</a>
+  <p style="color:#999;font-size:12px;margin-top:32px">Elixe · elixe.mx · <a href="https://www.elixe.mx" style="color:#999">Darse de baja</a></p>
 </div>`,
   },
   {
@@ -255,7 +255,7 @@ const EMAIL_TEMPLATES = [
     <p style="margin:8px 0 0;font-size:28px;font-weight:800;color:#7c6af7;letter-spacing:3px">ELIXE2026</p>
   </div>
   <p style="color:#555;line-height:1.6">Úsalo al contratar cualquier plan y obtén acceso completo.</p>
-  <a href="https://elixe.mx/app/paquetes" style="display:inline-block;background:#7c6af7;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Activar ahora →</a>
+  <a href="https://www.elixe.mx/app/paquetes" style="display:inline-block;background:#7c6af7;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Activar ahora →</a>
   <p style="color:#999;font-size:12px;margin-top:32px">Elixe · elixe.mx</p>
 </div>`,
   },
@@ -270,7 +270,7 @@ const EMAIL_TEMPLATES = [
     <li>✨ <strong>Describe aquí la nueva función</strong></li>
   </ul>
   <p style="color:#555;line-height:1.6">Entra a tu cuenta y descúbrela.</p>
-  <a href="https://elixe.mx/app" style="display:inline-block;background:#7c6af7;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Ir a Elixe →</a>
+  <a href="https://www.elixe.mx/app" style="display:inline-block;background:#7c6af7;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Ir a Elixe →</a>
   <p style="color:#999;font-size:12px;margin-top:32px">Elixe · elixe.mx</p>
 </div>`,
   },
@@ -407,21 +407,44 @@ function CampañasTab() {
         <div className={styles.campañasSection}>
           <div className={styles.campañasBodyHeader}>
             <label className={styles.campañasLabel}>Cuerpo HTML</label>
-            <button className={styles.campañasPreviewBtn} onClick={() => setPreviewMode(p => !p)}>
-              {previewMode ? 'Editar' : 'Vista previa'}
+            <button className={styles.campañasPreviewBtn} onClick={() => setPreviewMode(true)}>
+              Vista previa
             </button>
           </div>
-          {previewMode
-            ? <div className={styles.campañasPreview} dangerouslySetInnerHTML={{ __html: previewHtml }} />
-            : <textarea
-                className={styles.campañasTextarea}
-                value={htmlBody}
-                onChange={e => setHtmlBody(e.target.value)}
-                placeholder="<div>Tu email en HTML…</div>"
-                rows={14}
-              />
-          }
+          <textarea
+            className={styles.campañasTextarea}
+            value={htmlBody}
+            onChange={e => setHtmlBody(e.target.value)}
+            placeholder="<div>Tu email en HTML…</div>"
+            rows={14}
+          />
         </div>
+
+        {/* Email preview modal */}
+        {previewMode && (
+          <div className={styles.previewOverlay} onClick={() => setPreviewMode(false)}>
+            <div className={styles.previewModal} onClick={e => e.stopPropagation()}>
+              <div className={styles.previewChrome}>
+                <div className={styles.previewChromeBar}>
+                  <span className={styles.previewDot} style={{ background: '#ef4444' }} />
+                  <span className={styles.previewDot} style={{ background: '#f59e0b' }} />
+                  <span className={styles.previewDot} style={{ background: '#34d399' }} />
+                  <span className={styles.previewChromeTitle}>Vista previa del correo</span>
+                  <button className={styles.previewClose} onClick={() => setPreviewMode(false)}>✕</button>
+                </div>
+                <div className={styles.previewMeta}>
+                  <div className={styles.previewMetaRow}><span className={styles.previewMetaLabel}>De:</span> Elixe {'<noreply@elixe.mx>'}</div>
+                  <div className={styles.previewMetaRow}><span className={styles.previewMetaLabel}>Para:</span> Juan García {'<juan@ejemplo.com>'}</div>
+                  <div className={styles.previewMetaRow}><span className={styles.previewMetaLabel}>Asunto:</span> {subject.replace(/\{\{nombre\}\}/g, 'Juan').replace(/\{\{org\}\}/g, 'Mi Empresa') || '(sin asunto)'}</div>
+                </div>
+                <div className={styles.previewBody}>
+                  <div className={styles.previewEmailWrap} dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                </div>
+              </div>
+              <p className={styles.previewNote}>Variables reemplazadas con datos de ejemplo · Haz clic fuera para cerrar</p>
+            </div>
+          </div>
+        )}
 
         {error && <p className={styles.campañasError}>{error}</p>}
         {result && (

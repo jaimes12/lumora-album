@@ -1328,3 +1328,116 @@
 .campañasRecSelected { background: #1e1a3a !important; border-color: #7c6af7 !important; }
 .campañasCheckbox { margin-top: 3px; accent-color: #7c6af7; flex-shrink: 0; cursor: pointer; }
 .campañasRecInfo { flex: 1; min-width: 0; }
+
+/* ── Email preview modal ──────────────────────────────────────────────────── */
+.previewOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.previewModal {
+  width: 100%;
+  max-width: 620px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 90vh;
+}
+
+.previewChrome {
+  background: #f1f3f4;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(90vh - 40px);
+}
+
+.previewChromeBar {
+  background: #e0e0e0;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.previewDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.previewChromeTitle {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  color: #555;
+  font-weight: 500;
+  margin-left: -30px;
+}
+
+.previewClose {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  margin-left: auto;
+}
+.previewClose:hover { color: #333; }
+
+.previewMeta {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.previewMetaRow {
+  font-size: 12px;
+  color: #374151;
+  display: flex;
+  gap: 6px;
+}
+
+.previewMetaLabel {
+  font-weight: 600;
+  color: #6b7280;
+  min-width: 50px;
+}
+
+.previewBody {
+  background: #f9fafb;
+  overflow-y: auto;
+  padding: 24px 16px;
+  flex: 1;
+}
+
+.previewEmailWrap {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.previewNote {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  text-align: center;
+  margin: 0;
+}

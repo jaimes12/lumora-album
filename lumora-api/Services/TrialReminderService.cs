@@ -111,7 +111,7 @@ public class TrialReminderService(IServiceScopeFactory scopeFactory, ILogger<Tri
                     <li>WhatsApp CRM y pipeline de ventas</li>
                     <li>Cotizaciones, contratos y firma digital</li>
                   </ul>
-                  <a href="https://elixe.mx/app/paquetes" style="display:inline-block;background:#7c6af7;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Ver planes →</a>
+                  <a href="https://www.elixe.mx/app/paquetes" style="display:inline-block;background:#7c6af7;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Ver planes →</a>
                   <p style="color:#999;font-size:12px;margin-top:32px">Elixe · elixe.mx</p>
                 </div>
                 """
@@ -122,7 +122,7 @@ public class TrialReminderService(IServiceScopeFactory scopeFactory, ILogger<Tri
                 <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#1a1a2e">
                   <h2 style="margin:0 0 12px;font-size:22px">{firstName}, tu prueba vence mañana</h2>
                   <p style="color:#555;line-height:1.6">A partir de mañana tu cuenta de <strong>Elixe</strong> quedará bloqueada. No pierdas acceso a tus eventos, clientes y herramientas.</p>
-                  <a href="https://elixe.mx/app/paquetes" style="display:inline-block;background:#ef4444;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Elige tu plan ahora →</a>
+                  <a href="https://www.elixe.mx/app/paquetes" style="display:inline-block;background:#ef4444;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Elige tu plan ahora →</a>
                   <p style="color:#999;font-size:12px;margin-top:32px">Elixe · elixe.mx</p>
                 </div>
                 """
@@ -134,7 +134,7 @@ public class TrialReminderService(IServiceScopeFactory scopeFactory, ILogger<Tri
                   <h2 style="margin:0 0 12px;font-size:22px">{firstName}, tu prueba ha terminado</h2>
                   <p style="color:#555;line-height:1.6">Tu período de prueba gratuita de <strong>Elixe</strong> ha vencido. Elige un plan para seguir gestionando tus eventos sin interrupciones.</p>
                   <p style="color:#555;line-height:1.6">Tus datos siguen guardados — solo necesitas activar tu plan.</p>
-                  <a href="https://elixe.mx/app/paquetes" style="display:inline-block;background:#7c6af7;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Reactivar cuenta →</a>
+                  <a href="https://www.elixe.mx/app/paquetes" style="display:inline-block;background:#7c6af7;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Reactivar cuenta →</a>
                   <p style="color:#999;font-size:12px;margin-top:32px">Elixe · elixe.mx</p>
                 </div>
                 """
@@ -146,7 +146,7 @@ public class TrialReminderService(IServiceScopeFactory scopeFactory, ILogger<Tri
                   <h2 style="margin:0 0 12px;font-size:22px">¡{firstName}, todavía estás a tiempo!</h2>
                   <p style="color:#555;line-height:1.6">Tu prueba en <strong>Elixe</strong> venció hace unos días. Tus eventos y clientes siguen ahí esperándote.</p>
                   <p style="color:#555;line-height:1.6">Activa tu plan desde <strong>$399/mes</strong> y retoma el control de tu negocio.</p>
-                  <a href="https://elixe.mx/app/paquetes" style="display:inline-block;background:#7c6af7;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Ver planes →</a>
+                  <a href="https://www.elixe.mx/app/paquetes" style="display:inline-block;background:#7c6af7;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Ver planes →</a>
                   <p style="color:#999;font-size:12px;margin-top:32px">Elixe · elixe.mx</p>
                 </div>
                 """
