@@ -206,6 +206,239 @@ function DataTable({ columns, rows, empty = 'Sin registros' }) {
   )
 }
 
+// ── Campañas tab ────────────────────────────────────────────────────────────
+const SEGMENTS = [
+  { value: 'all',           label: 'Todos los usuarios' },
+  { value: 'trial_active',  label: 'Trial activo (últimos 7 días)' },
+  { value: 'trial_expired', label: 'Trial vencido (sin plan)' },
+  { value: 'free',          label: 'Sin plan (free)' },
+  { value: 'paid',          label: 'Con plan activo' },
+  { value: 'solo',          label: 'Plan Solo' },
+  { value: 'negocio',       label: 'Plan Negocio' },
+  { value: 'agencia',       label: 'Plan Agencia' },
+]
+
+const EMAIL_TEMPLATES = [
+  {
+    id: 'blank',
+    label: 'En blanco',
+    subject: '',
+    html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#1a1a2e">
+  <h2 style="margin:0 0 12px;font-size:22px">¡Hola, {{nombre}}!</h2>
+  <p style="color:#555;line-height:1.6">Escribe tu mensaje aquí.</p>
+  <a href="https://elixe.mx/app/paquetes" style="display:inline-block;background:#7c6af7;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Ver planes →</a>
+  <p style="color:#999;font-size:12px;margin-top:32px">Elixe · elixe.mx</p>
+</div>`,
+  },
+  {
+    id: 'trial_expired',
+    label: 'Trial vencido — reactiva',
+    subject: '{{nombre}}, tu prueba de Elixe ha terminado',
+    html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#1a1a2e">
+  <h2 style="margin:0 0 12px;font-size:22px">¡{{nombre}}, todavía estás a tiempo!</h2>
+  <p style="color:#555;line-height:1.6">Tu prueba gratuita en <strong>Elixe</strong> venció hace unos días. Tus eventos y clientes siguen guardados.</p>
+  <p style="color:#555;line-height:1.6">Activa tu plan desde <strong>$399/mes</strong> y retoma el control de tu negocio.</p>
+  <a href="https://elixe.mx/app/paquetes" style="display:inline-block;background:#7c6af7;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Ver planes →</a>
+  <p style="color:#999;font-size:12px;margin-top:32px">Elixe · elixe.mx · <a href="https://elixe.mx" style="color:#999">Darse de baja</a></p>
+</div>`,
+  },
+  {
+    id: 'promo',
+    label: 'Oferta especial',
+    subject: '{{nombre}}, tenemos algo especial para ti 🎁',
+    html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#1a1a2e">
+  <h2 style="margin:0 0 12px;font-size:22px">¡{{nombre}}, oferta exclusiva!</h2>
+  <p style="color:#555;line-height:1.6">Queremos ayudarte a crecer tu negocio de eventos. Por eso tenemos una oferta especial para ti.</p>
+  <div style="background:#f3f0ff;border-radius:12px;padding:20px;margin:16px 0;text-align:center">
+    <p style="margin:0;font-size:14px;color:#7c6af7;font-weight:600">CÓDIGO DE DESCUENTO</p>
+    <p style="margin:8px 0 0;font-size:28px;font-weight:800;color:#7c6af7;letter-spacing:3px">ELIXE2026</p>
+  </div>
+  <p style="color:#555;line-height:1.6">Úsalo al contratar cualquier plan y obtén acceso completo.</p>
+  <a href="https://elixe.mx/app/paquetes" style="display:inline-block;background:#7c6af7;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Activar ahora →</a>
+  <p style="color:#999;font-size:12px;margin-top:32px">Elixe · elixe.mx</p>
+</div>`,
+  },
+  {
+    id: 'feature',
+    label: 'Nueva función',
+    subject: '{{nombre}}, nueva función en Elixe 🚀',
+    html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#1a1a2e">
+  <h2 style="margin:0 0 12px;font-size:22px">¡Hola, {{nombre}}!</h2>
+  <p style="color:#555;line-height:1.6">Hemos lanzado una nueva función en <strong>Elixe</strong> que te va a encantar:</p>
+  <ul style="color:#555;line-height:2">
+    <li>✨ <strong>Describe aquí la nueva función</strong></li>
+  </ul>
+  <p style="color:#555;line-height:1.6">Entra a tu cuenta y descúbrela.</p>
+  <a href="https://elixe.mx/app" style="display:inline-block;background:#7c6af7;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">Ir a Elixe →</a>
+  <p style="color:#999;font-size:12px;margin-top:32px">Elixe · elixe.mx</p>
+</div>`,
+  },
+]
+
+function CampañasTab() {
+  const [segment,     setSegment]     = useState('trial_expired')
+  const [subject,     setSubject]     = useState('')
+  const [htmlBody,    setHtmlBody]    = useState('')
+  const [templateId,  setTemplateId]  = useState('blank')
+  const [recipients,  setRecipients]  = useState(null)
+  const [loadingRec,  setLoadingRec]  = useState(false)
+  const [sending,     setSending]     = useState(false)
+  const [result,      setResult]      = useState(null)
+  const [previewMode, setPreviewMode] = useState(false)
+  const [error,       setError]       = useState('')
+
+  const loadRecipients = async (seg) => {
+    setLoadingRec(true)
+    setRecipients(null)
+    try {
+      const data = await superadminApi.getCampaignRecipients(seg)
+      setRecipients(data)
+    } catch { setRecipients([]) }
+    finally { setLoadingRec(false) }
+  }
+
+  useEffect(() => { loadRecipients(segment) }, [segment])
+
+  const applyTemplate = (id) => {
+    const t = EMAIL_TEMPLATES.find(t => t.id === id)
+    if (!t) return
+    setTemplateId(id)
+    setSubject(t.subject)
+    setHtmlBody(t.html)
+    setResult(null)
+  }
+
+  const handleSend = async () => {
+    if (!subject.trim() || !htmlBody.trim()) { setError('Completa el asunto y el cuerpo del email.'); return }
+    if (!recipients?.length) { setError('No hay destinatarios para este segmento.'); return }
+    setError('')
+    setSending(true)
+    setResult(null)
+    try {
+      const r = await superadminApi.sendCampaign(segment, subject, htmlBody)
+      setResult(r)
+    } catch (e) { setError(e.message || 'Error al enviar') }
+    finally { setSending(false) }
+  }
+
+  const previewHtml = htmlBody
+    .replace(/\{\{nombre\}\}/g, 'Juan')
+    .replace(/\{\{org\}\}/g, 'Mi Empresa Eventos')
+
+  return (
+    <div className={styles.campañasWrap}>
+      {/* Left: compose */}
+      <div className={styles.campañasCompose}>
+        <div className={styles.campañasSection}>
+          <label className={styles.campañasLabel}>Segmento de destinatarios</label>
+          <select className={styles.campañasSelect} value={segment} onChange={e => { setSegment(e.target.value); setResult(null) }}>
+            {SEGMENTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+          <div className={styles.campañasRecCount}>
+            {loadingRec
+              ? 'Calculando destinatarios…'
+              : recipients === null
+                ? ''
+                : recipients.length === 0
+                  ? 'Sin destinatarios para este segmento'
+                  : `${recipients.length} destinatario${recipients.length !== 1 ? 's' : ''}`
+            }
+          </div>
+          {recipients?.length > 0 && (
+            <div className={styles.campañasRecList}>
+              {recipients.slice(0, 5).map((r, i) => (
+                <span key={i} className={styles.campañasRecPill}>{r.name || r.email} · {r.org}</span>
+              ))}
+              {recipients.length > 5 && <span className={styles.campañasMuted}>+{recipients.length - 5} más</span>}
+            </div>
+          )}
+        </div>
+
+        <div className={styles.campañasSection}>
+          <label className={styles.campañasLabel}>Plantilla</label>
+          <div className={styles.campañasTemplates}>
+            {EMAIL_TEMPLATES.map(t => (
+              <button
+                key={t.id}
+                className={`${styles.campañasTplBtn} ${templateId === t.id ? styles.campañasTplActive : ''}`}
+                onClick={() => applyTemplate(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.campañasSection}>
+          <label className={styles.campañasLabel}>Asunto</label>
+          <input
+            className={styles.campañasInput}
+            value={subject}
+            onChange={e => setSubject(e.target.value)}
+            placeholder="Ej: {{nombre}}, tu prueba de Elixe ha terminado"
+          />
+          <p className={styles.campañasHint}>Variables disponibles: <code>{'{{nombre}}'}</code> · <code>{'{{org}}'}</code></p>
+        </div>
+
+        <div className={styles.campañasSection}>
+          <div className={styles.campañasBodyHeader}>
+            <label className={styles.campañasLabel}>Cuerpo HTML</label>
+            <button className={styles.campañasPreviewBtn} onClick={() => setPreviewMode(p => !p)}>
+              {previewMode ? 'Editar' : 'Vista previa'}
+            </button>
+          </div>
+          {previewMode
+            ? <div className={styles.campañasPreview} dangerouslySetInnerHTML={{ __html: previewHtml }} />
+            : <textarea
+                className={styles.campañasTextarea}
+                value={htmlBody}
+                onChange={e => setHtmlBody(e.target.value)}
+                placeholder="<div>Tu email en HTML…</div>"
+                rows={14}
+              />
+          }
+        </div>
+
+        {error && <p className={styles.campañasError}>{error}</p>}
+
+        {result && (
+          <div className={styles.campañasResult}>
+            <span className={styles.campañasResultSent}>✓ {result.sent} enviados</span>
+            {result.failed > 0 && <span className={styles.campañasResultFailed}>✗ {result.failed} fallaron</span>}
+          </div>
+        )}
+
+        <button
+          className={styles.campañasSendBtn}
+          onClick={handleSend}
+          disabled={sending || !recipients?.length}
+        >
+          {sending ? 'Enviando…' : `Enviar a ${recipients?.length ?? 0} destinatarios`}
+        </button>
+      </div>
+
+      {/* Right: recipient list */}
+      <div className={styles.campañasSidebar}>
+        <h3 className={styles.campañasSidebarTitle}>Destinatarios</h3>
+        {loadingRec
+          ? <p className={styles.campañasMuted}>Cargando…</p>
+          : !recipients?.length
+            ? <p className={styles.campañasMuted}>Sin destinatarios</p>
+            : <div className={styles.campañasRecTable}>
+                {recipients.map((r, i) => (
+                  <div key={i} className={styles.campañasRecRow}>
+                    <div className={styles.campañasRecName}>{r.name || '—'}</div>
+                    <div className={styles.campañasRecEmail}>{r.email}</div>
+                    <div className={styles.campañasRecOrg}>{r.org}</div>
+                  </div>
+                ))}
+              </div>
+        }
+      </div>
+    </div>
+  )
+}
+
 // ── Plans tab ──────────────────────────────────────────────────────────────
 const PLAN_LABELS = { free: 'Sin plan', solo: 'Solo', negocio: 'Negocio', agencia: 'Agencia' }
 const ALL_PLANS   = ['free', 'solo', 'negocio', 'agencia']
@@ -1284,6 +1517,7 @@ const TABS = [
   { key: 'planes',         path: 'planes',         label: 'Planes' },
   { key: 'paquetes',       path: 'paquetes',       label: 'Paquetes' },
   { key: 'codigos',        path: 'codigos',        label: 'Códigos promo' },
+  { key: 'campanias',      path: 'campanias',      label: 'Campañas' },
   { key: 'soporte',        path: 'soporte',        label: 'Soporte' },
 ]
 
@@ -1529,6 +1763,9 @@ export default function SuperAdminPage() {
 
           {/* ── PROMOS ── */}
           {tab === 'codigos' && <PromoCodesTab />}
+
+          {/* ── CAMPAÑAS ── */}
+          {tab === 'campanias' && <CampañasTab />}
 
           {/* ── SOPORTE ── */}
           {tab === 'soporte' && <SoporteTab />}

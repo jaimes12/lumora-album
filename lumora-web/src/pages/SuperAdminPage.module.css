@@ -1154,3 +1154,156 @@
 }
 .soporteReplyBtn:disabled { opacity: 0.4; cursor: not-allowed; }
 .soporteReplyBtn:not(:disabled):hover { opacity: 0.85; }
+
+/* ── Campañas ─────────────────────────────────────────────────────────────── */
+.campañasWrap {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 900px) { .campañasWrap { grid-template-columns: 1fr; } }
+
+.campañasCompose { display: flex; flex-direction: column; gap: 20px; }
+
+.campañasSection { display: flex; flex-direction: column; gap: 6px; }
+
+.campañasLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.campañasSelect,
+.campañasInput {
+  background: #12121e;
+  border: 1px solid #252535;
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 13px;
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+.campañasSelect:focus, .campañasInput:focus { border-color: #7c6af7; }
+
+.campañasRecCount {
+  font-size: 12px;
+  color: #7c6af7;
+  font-weight: 600;
+  min-height: 18px;
+}
+
+.campañasRecList { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.campañasRecPill {
+  background: #1e1e30;
+  border: 1px solid #252535;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+  color: #9ca3af;
+}
+.campañasMuted { font-size: 11px; color: #6b7280; align-self: center; }
+
+.campañasTemplates { display: flex; flex-wrap: wrap; gap: 8px; }
+.campañasTplBtn {
+  background: #12121e;
+  border: 1px solid #252535;
+  border-radius: 8px;
+  color: #9ca3af;
+  font-size: 12px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.campañasTplBtn:hover { border-color: #7c6af7; color: #c4b5fd; }
+.campañasTplActive { background: #1e1a3a !important; border-color: #7c6af7 !important; color: #c4b5fd !important; }
+
+.campañasHint { font-size: 11px; color: #6b7280; margin: 0; }
+.campañasHint code { background: #1e1e30; padding: 1px 5px; border-radius: 4px; font-size: 11px; color: #a78bfa; }
+
+.campañasBodyHeader { display: flex; align-items: center; justify-content: space-between; }
+.campañasPreviewBtn {
+  background: transparent;
+  border: 1px solid #252535;
+  border-radius: 6px;
+  color: #9ca3af;
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.campañasPreviewBtn:hover { border-color: #7c6af7; color: #c4b5fd; }
+
+.campañasTextarea {
+  background: #12121e;
+  border: 1px solid #252535;
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 12px;
+  font-family: 'Monaco', 'Menlo', monospace;
+  padding: 12px;
+  resize: vertical;
+  outline: none;
+  line-height: 1.5;
+  transition: border-color 0.15s;
+}
+.campañasTextarea:focus { border-color: #7c6af7; }
+
+.campañasPreview {
+  background: #fff;
+  border-radius: 8px;
+  min-height: 200px;
+  padding: 4px;
+  overflow: auto;
+}
+
+.campañasError { color: #f87171; font-size: 12px; margin: 0; }
+
+.campañasResult { display: flex; gap: 12px; align-items: center; }
+.campañasResultSent { color: #34d399; font-size: 13px; font-weight: 600; }
+.campañasResultFailed { color: #f87171; font-size: 13px; font-weight: 600; }
+
+.campañasSendBtn {
+  background: #7c6af7;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 13px 24px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  font-family: inherit;
+  align-self: flex-start;
+}
+.campañasSendBtn:hover:not(:disabled) { opacity: 0.88; }
+.campañasSendBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Right sidebar */
+.campañasSidebar {
+  background: #12121e;
+  border: 1px solid #252535;
+  border-radius: 12px;
+  padding: 16px;
+  max-height: 600px;
+  overflow-y: auto;
+  position: sticky;
+  top: 16px;
+}
+.campañasSidebarTitle { font-size: 13px; font-weight: 600; color: #e2e8f0; margin: 0 0 12px; }
+.campañasRecTable { display: flex; flex-direction: column; gap: 8px; }
+.campañasRecRow {
+  background: #1a1a2e;
+  border-radius: 8px;
+  padding: 8px 10px;
+  border: 1px solid #252535;
+}
+.campañasRecName { font-size: 12px; font-weight: 600; color: #e2e8f0; }
+.campañasRecEmail { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+.campañasRecOrg { font-size: 11px; color: #7c6af7; margin-top: 1px; }

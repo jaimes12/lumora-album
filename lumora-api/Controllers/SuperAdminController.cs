@@ -14,7 +14,7 @@ namespace lumora_api.Controllers;
 
 [ApiController]
 [Route("api/superadmin")]
-public class SuperAdminController(LumoraDbContext db, IConfiguration config, IWaServerService wa) : ControllerBase
+public partial class SuperAdminController(LumoraDbContext db, IConfiguration config, IWaServerService wa, IEmailService email) : ControllerBase
 {
     private bool IsSuperAdmin =>
         (User.FindFirst("role")?.Value ??
@@ -687,6 +687,7 @@ public class SuperAdminController(LumoraDbContext db, IConfiguration config, IWa
 }
 
 public record SuperAdminLoginRequest(string Email, string Password);
+public record CampaignRequest(string Segment, string Subject, string HtmlBody);
 public record UpdateSupportStatusRequest(string Status);
 public record AdminReplyRequest(string Message);
 public record ChangePlanRequest(string Plan);
@@ -706,3 +707,111 @@ public record PromoCodeRequest(
     int MaxUses,
     DateTime? ExpiresAt
 );
+
+// ── Campaigns ──────────────────────────────────────────────────────────────────
+// POST /api/superadmin/campaigns
+// Sends a custom email to a filtered set of org admin users via Resend.
+public partial class SuperAdminController
+{
+    [HttpPost("campaigns")]
+    [Authorize]
+    public async Task<IActionResult> SendCampaign([FromBody] CampaignRequest req)
+    {
+        if (!IsSuperAdmin) return Forbid();
+        if (string.IsNullOrWhiteSpace(req.Subject) || string.IsNullOrWhiteSpace(req.HtmlBody))
+            return BadRequest(new { message = "Se requiere asunto y cuerpo del email" });
+
+        // Build candidate org list
+        var query = db.Organizations.Where(o => !o.Disabled);
+
+        query = req.Segment switch
+        {
+            "trial_active"  => query.Where(o => o.Plan == "free" && o.TrialStartedAt.HasValue && o.TrialStartedAt.Value > DateTime.UtcNow.AddDays(-7)),
+            "trial_expired" => query.Where(o => o.Plan == "free" && o.TrialStartedAt.HasValue && o.TrialStartedAt.Value <= DateTime.UtcNow.AddDays(-3)),
+            "free"          => query.Where(o => o.Plan == "free"),
+            "paid"          => query.Where(o => o.Plan != "free"),
+            "solo"          => query.Where(o => o.Plan == "solo"),
+            "negocio"       => query.Where(o => o.Plan == "negocio"),
+            "agencia"       => query.Where(o => o.Plan == "agencia"),
+            _               => query, // "all"
+        };
+
+        var orgIds = await query.Select(o => o.Id).ToListAsync();
+
+        // Get one admin per org (the first admin user with an email)
+        var admins = await db.Users
+            .Where(u => orgIds.Contains(u.OrgId) && u.Role == "admin" && u.Email != null && u.Email != "")
+            .GroupBy(u => u.OrgId)
+            .Select(g => g.OrderBy(u => u.CreatedAt).First())
+            .Select(u => new { u.Id, u.Email, u.Name, u.OrgId })
+            .ToListAsync();
+
+        if (!admins.Any())
+            return Ok(new { sent = 0, failed = 0, total = 0, message = "Sin destinatarios para este segmento" });
+
+        int sent = 0, failed = 0;
+        foreach (var admin in admins)
+        {
+            // Replace variables in subject and body
+            var firstName = (admin.Name ?? "").Split(' ')[0];
+            if (string.IsNullOrEmpty(firstName)) firstName = "hola";
+
+            var orgName = await db.Organizations.Where(o => o.Id == admin.OrgId).Select(o => o.Name).FirstOrDefaultAsync() ?? "";
+
+            var subject = req.Subject
+                .Replace("{{nombre}}", firstName)
+                .Replace("{{org}}", orgName);
+
+            var html = req.HtmlBody
+                .Replace("{{nombre}}", firstName)
+                .Replace("{{org}}", orgName);
+
+            var ok = await email.SendAsync(admin.Email!, admin.Name ?? firstName, subject, html);
+            if (ok) sent++; else failed++;
+        }
+
+        return Ok(new { sent, failed, total = admins.Count });
+    }
+
+    // GET /api/superadmin/campaigns/preview-recipients?segment=trial_expired
+    [HttpGet("campaigns/preview-recipients")]
+    [Authorize]
+    public async Task<IActionResult> PreviewRecipients([FromQuery] string segment = "all")
+    {
+        if (!IsSuperAdmin) return Forbid();
+
+        var query = db.Organizations.Where(o => !o.Disabled);
+
+        query = segment switch
+        {
+            "trial_active"  => query.Where(o => o.Plan == "free" && o.TrialStartedAt.HasValue && o.TrialStartedAt.Value > DateTime.UtcNow.AddDays(-7)),
+            "trial_expired" => query.Where(o => o.Plan == "free" && o.TrialStartedAt.HasValue && o.TrialStartedAt.Value <= DateTime.UtcNow.AddDays(-3)),
+            "free"          => query.Where(o => o.Plan == "free"),
+            "paid"          => query.Where(o => o.Plan != "free"),
+            "solo"          => query.Where(o => o.Plan == "solo"),
+            "negocio"       => query.Where(o => o.Plan == "negocio"),
+            "agencia"       => query.Where(o => o.Plan == "agencia"),
+            _               => query,
+        };
+
+        var orgIds = await query.Select(o => o.Id).ToListAsync();
+
+        var admins = await db.Users
+            .Where(u => orgIds.Contains(u.OrgId) && u.Role == "admin" && u.Email != null && u.Email != "")
+            .GroupBy(u => u.OrgId)
+            .Select(g => g.OrderBy(u => u.CreatedAt).First())
+            .Select(u => new { u.Name, u.Email, u.OrgId })
+            .ToListAsync();
+
+        var orgNames = await db.Organizations
+            .Where(o => orgIds.Contains(o.Id))
+            .Select(o => new { o.Id, o.Name })
+            .ToDictionaryAsync(o => o.Id, o => o.Name);
+
+        return Ok(admins.Select(a => new {
+            name  = a.Name,
+            email = a.Email,
+            org   = orgNames.TryGetValue(a.OrgId, out var n) ? n : a.OrgId,
+        }));
+    }
+}
