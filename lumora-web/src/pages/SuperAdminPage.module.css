@@ -1307,3 +1307,24 @@
 .campañasRecName { font-size: 12px; font-weight: 600; color: #e2e8f0; }
 .campañasRecEmail { font-size: 11px; color: #9ca3af; margin-top: 2px; }
 .campañasRecOrg { font-size: 11px; color: #7c6af7; margin-top: 1px; }
+
+/* Campañas manual selection extras */
+.campañasSidebarHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.campañasSidebarTitle { font-size: 13px; font-weight: 600; color: #e2e8f0; margin: 0; }
+.campañasToggleAll {
+  background: transparent;
+  border: 1px solid #252535;
+  border-radius: 6px;
+  color: #9ca3af;
+  font-size: 10px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.campañasToggleAll:hover { border-color: #7c6af7; color: #c4b5fd; }
+
+.campañasRecRow { display: flex; align-items: flex-start; gap: 8px; }
+.campañasRecSelected { background: #1e1a3a !important; border-color: #7c6af7 !important; }
+.campañasCheckbox { margin-top: 3px; accent-color: #7c6af7; flex-shrink: 0; cursor: pointer; }
+.campañasRecInfo { flex: 1; min-width: 0; }

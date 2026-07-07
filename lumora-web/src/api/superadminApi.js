@@ -64,8 +64,8 @@ export const superadminApi = {
   deleteSupportTicket:    (id)         => saRequest(`/api/superadmin/support/${id}`, { method: 'DELETE' }),
 
   getCampaignRecipients: (segment) => saRequest(`/api/superadmin/campaigns/preview-recipients?segment=${encodeURIComponent(segment)}`),
-  sendCampaign: (segment, subject, htmlBody) => saRequest('/api/superadmin/campaigns', {
+  sendCampaign: (segment, subject, htmlBody, emails = null) => saRequest('/api/superadmin/campaigns', {
     method: 'POST',
-    body: JSON.stringify({ segment, subject, htmlBody }),
+    body: JSON.stringify({ segment, subject, htmlBody, emails }),
   }),
 }

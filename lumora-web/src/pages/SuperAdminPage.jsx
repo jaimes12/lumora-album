@@ -216,6 +216,7 @@ const SEGMENTS = [
   { value: 'solo',          label: 'Plan Solo' },
   { value: 'negocio',       label: 'Plan Negocio' },
   { value: 'agencia',       label: 'Plan Agencia' },
+  { value: 'manual',        label: 'Selección manual' },
 ]
 
 const EMAIL_TEMPLATES = [
@@ -276,28 +277,54 @@ const EMAIL_TEMPLATES = [
 ]
 
 function CampañasTab() {
-  const [segment,     setSegment]     = useState('trial_expired')
-  const [subject,     setSubject]     = useState('')
-  const [htmlBody,    setHtmlBody]    = useState('')
-  const [templateId,  setTemplateId]  = useState('blank')
-  const [recipients,  setRecipients]  = useState(null)
-  const [loadingRec,  setLoadingRec]  = useState(false)
-  const [sending,     setSending]     = useState(false)
-  const [result,      setResult]      = useState(null)
-  const [previewMode, setPreviewMode] = useState(false)
-  const [error,       setError]       = useState('')
+  const [segment,       setSegment]       = useState('trial_expired')
+  const [subject,       setSubject]       = useState('')
+  const [htmlBody,      setHtmlBody]      = useState('')
+  const [templateId,    setTemplateId]    = useState('blank')
+  const [allCandidates, setAllCandidates] = useState(null)   // all orgs (for manual mode)
+  const [loadingRec,    setLoadingRec]    = useState(false)
+  const [selectedEmails, setSelectedEmails] = useState(new Set()) // manual selection
+  const [sending,       setSending]       = useState(false)
+  const [result,        setResult]        = useState(null)
+  const [previewMode,   setPreviewMode]   = useState(false)
+  const [error,         setError]         = useState('')
 
-  const loadRecipients = async (seg) => {
+  const isManual = segment === 'manual'
+
+  // Load all candidates (manual mode always fetches 'all')
+  const loadCandidates = async (seg) => {
     setLoadingRec(true)
-    setRecipients(null)
+    setAllCandidates(null)
+    setSelectedEmails(new Set())
     try {
-      const data = await superadminApi.getCampaignRecipients(seg)
-      setRecipients(data)
-    } catch { setRecipients([]) }
+      const data = await superadminApi.getCampaignRecipients(seg === 'manual' ? 'all' : seg)
+      setAllCandidates(data)
+    } catch { setAllCandidates([]) }
     finally { setLoadingRec(false) }
   }
 
-  useEffect(() => { loadRecipients(segment) }, [segment])
+  useEffect(() => { loadCandidates(segment) }, [segment])
+
+  // Effective recipient list
+  const recipients = isManual
+    ? (allCandidates ?? []).filter(r => selectedEmails.has(r.email))
+    : (allCandidates ?? [])
+
+  const toggleEmail = (email) => {
+    setSelectedEmails(prev => {
+      const next = new Set(prev)
+      next.has(email) ? next.delete(email) : next.add(email)
+      return next
+    })
+  }
+
+  const toggleAll = () => {
+    if (selectedEmails.size === allCandidates?.length) {
+      setSelectedEmails(new Set())
+    } else {
+      setSelectedEmails(new Set(allCandidates?.map(r => r.email) ?? []))
+    }
+  }
 
   const applyTemplate = (id) => {
     const t = EMAIL_TEMPLATES.find(t => t.id === id)
@@ -310,12 +337,13 @@ function CampañasTab() {
 
   const handleSend = async () => {
     if (!subject.trim() || !htmlBody.trim()) { setError('Completa el asunto y el cuerpo del email.'); return }
-    if (!recipients?.length) { setError('No hay destinatarios para este segmento.'); return }
+    if (!recipients.length) { setError('No hay destinatarios seleccionados.'); return }
     setError('')
     setSending(true)
     setResult(null)
     try {
-      const r = await superadminApi.sendCampaign(segment, subject, htmlBody)
+      const emails = isManual ? Array.from(selectedEmails) : null
+      const r = await superadminApi.sendCampaign(segment, subject, htmlBody, emails)
       setResult(r)
     } catch (e) { setError(e.message || 'Error al enviar') }
     finally { setSending(false) }
@@ -324,6 +352,8 @@ function CampañasTab() {
   const previewHtml = htmlBody
     .replace(/\{\{nombre\}\}/g, 'Juan')
     .replace(/\{\{org\}\}/g, 'Mi Empresa Eventos')
+
+  const allSelected = isManual && allCandidates?.length > 0 && selectedEmails.size === allCandidates.length
 
   return (
     <div className={styles.campañasWrap}>
@@ -336,22 +366,16 @@ function CampañasTab() {
           </select>
           <div className={styles.campañasRecCount}>
             {loadingRec
-              ? 'Calculando destinatarios…'
-              : recipients === null
+              ? 'Cargando destinatarios…'
+              : allCandidates === null
                 ? ''
-                : recipients.length === 0
-                  ? 'Sin destinatarios para este segmento'
-                  : `${recipients.length} destinatario${recipients.length !== 1 ? 's' : ''}`
+                : isManual
+                  ? `${selectedEmails.size} de ${allCandidates.length} seleccionados`
+                  : allCandidates.length === 0
+                    ? 'Sin destinatarios para este segmento'
+                    : `${allCandidates.length} destinatario${allCandidates.length !== 1 ? 's' : ''}`
             }
           </div>
-          {recipients?.length > 0 && (
-            <div className={styles.campañasRecList}>
-              {recipients.slice(0, 5).map((r, i) => (
-                <span key={i} className={styles.campañasRecPill}>{r.name || r.email} · {r.org}</span>
-              ))}
-              {recipients.length > 5 && <span className={styles.campañasMuted}>+{recipients.length - 5} más</span>}
-            </div>
-          )}
         </div>
 
         <div className={styles.campañasSection}>
@@ -377,7 +401,7 @@ function CampañasTab() {
             onChange={e => setSubject(e.target.value)}
             placeholder="Ej: {{nombre}}, tu prueba de Elixe ha terminado"
           />
-          <p className={styles.campañasHint}>Variables disponibles: <code>{'{{nombre}}'}</code> · <code>{'{{org}}'}</code></p>
+          <p className={styles.campañasHint}>Variables: <code>{'{{nombre}}'}</code> · <code>{'{{org}}'}</code></p>
         </div>
 
         <div className={styles.campañasSection}>
@@ -400,7 +424,6 @@ function CampañasTab() {
         </div>
 
         {error && <p className={styles.campañasError}>{error}</p>}
-
         {result && (
           <div className={styles.campañasResult}>
             <span className={styles.campañasResultSent}>✓ {result.sent} enviados</span>
@@ -411,25 +434,50 @@ function CampañasTab() {
         <button
           className={styles.campañasSendBtn}
           onClick={handleSend}
-          disabled={sending || !recipients?.length}
+          disabled={sending || recipients.length === 0}
         >
-          {sending ? 'Enviando…' : `Enviar a ${recipients?.length ?? 0} destinatarios`}
+          {sending ? 'Enviando…' : `Enviar a ${recipients.length} destinatario${recipients.length !== 1 ? 's' : ''}`}
         </button>
       </div>
 
       {/* Right: recipient list */}
       <div className={styles.campañasSidebar}>
-        <h3 className={styles.campañasSidebarTitle}>Destinatarios</h3>
+        <div className={styles.campañasSidebarHeader}>
+          <h3 className={styles.campañasSidebarTitle}>
+            {isManual ? 'Seleccionar destinatarios' : 'Destinatarios'}
+          </h3>
+          {isManual && allCandidates?.length > 0 && (
+            <button className={styles.campañasToggleAll} onClick={toggleAll}>
+              {allSelected ? 'Deseleccionar todos' : 'Seleccionar todos'}
+            </button>
+          )}
+        </div>
         {loadingRec
           ? <p className={styles.campañasMuted}>Cargando…</p>
-          : !recipients?.length
+          : !allCandidates?.length
             ? <p className={styles.campañasMuted}>Sin destinatarios</p>
             : <div className={styles.campañasRecTable}>
-                {recipients.map((r, i) => (
-                  <div key={i} className={styles.campañasRecRow}>
-                    <div className={styles.campañasRecName}>{r.name || '—'}</div>
-                    <div className={styles.campañasRecEmail}>{r.email}</div>
-                    <div className={styles.campañasRecOrg}>{r.org}</div>
+                {allCandidates.map((r, i) => (
+                  <div
+                    key={i}
+                    className={`${styles.campañasRecRow} ${isManual && selectedEmails.has(r.email) ? styles.campañasRecSelected : ''}`}
+                    onClick={isManual ? () => toggleEmail(r.email) : undefined}
+                    style={isManual ? { cursor: 'pointer' } : undefined}
+                  >
+                    {isManual && (
+                      <input
+                        type="checkbox"
+                        className={styles.campañasCheckbox}
+                        checked={selectedEmails.has(r.email)}
+                        onChange={() => toggleEmail(r.email)}
+                        onClick={e => e.stopPropagation()}
+                      />
+                    )}
+                    <div className={styles.campañasRecInfo}>
+                      <div className={styles.campañasRecName}>{r.name || '—'}</div>
+                      <div className={styles.campañasRecEmail}>{r.email}</div>
+                      <div className={styles.campañasRecOrg}>{r.org}</div>
+                    </div>
                   </div>
                 ))}
               </div>
