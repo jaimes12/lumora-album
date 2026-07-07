@@ -177,6 +177,7 @@ function connectClient(name) {
         '--disable-extensions', '--disable-sync',
         '--disable-background-networking', '--disable-default-apps',
         '--mute-audio', '--no-default-browser-check',
+        '--disable-crash-reporter', '--disable-features=VizDisplayCompositor',
       ],
     },
   });
