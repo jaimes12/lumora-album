@@ -304,7 +304,20 @@ function connectClient(name) {
     postWebhook({ clientName: name, from: chatId, number: phoneDigits, pushname, body, timestamp: msg.timestamp, direction: 'outbound', ...media });
   });
 
-  waClient.initialize();
+  waClient.initialize().catch(err => {
+    log(name, `Initialize error: ${err?.message ?? err} — clearing session and retrying in 8s`);
+    if (!isActive()) return;
+    setTimeout(() => {
+      if (!isActive()) return;
+      const old = entry.client;
+      globalInstanceCounter++;
+      entry.instanceId = globalInstanceCounter;
+      clients.delete(name);
+      destroyInBackground(old);
+      deleteSession(name);
+      connectClient(name);
+    }, 8000);
+  });
   log(name, 'Initializing...');
 }
 

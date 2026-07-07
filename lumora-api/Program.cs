@@ -177,9 +177,13 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o =>
 
 var app = builder.Build();
 
-// Auto-migrate / ensure schema exists
-try
+// Run schema init in background AFTER the app starts listening so the healthcheck
+// can respond immediately (startup SQL takes 5-15s and was blocking port opening).
+app.Lifetime.ApplicationStarted.Register(() => _ = Task.Run(async () =>
 {
+    await Task.Delay(500); // brief pause to let the host fully settle
+    try
+    {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<LumoraDbContext>();
 
@@ -751,11 +755,12 @@ try
     }
     catch { }
 }
-catch (Exception ex)
-{
-    var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    logger.LogError(ex, "DB startup error — app will continue without schema init");
-}
+    catch (Exception ex)
+    {
+        var logger = app.Services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "DB startup error — app will continue without schema init");
+    }
+})); // end ApplicationStarted background task
 
 // CORS must be first — ensures Access-Control-Allow-Origin appears even on error responses
 app.UseCors();
