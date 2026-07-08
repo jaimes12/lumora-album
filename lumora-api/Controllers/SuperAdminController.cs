@@ -714,7 +714,7 @@ public partial class SuperAdminController
     private static IQueryable<lumora_api.Models.Organization> ApplySegment(
         IQueryable<lumora_api.Models.Organization> q, string segment) => segment switch
     {
-        "trial_active"  => q.Where(o => o.Plan == "free" && o.TrialStartedAt.HasValue && o.TrialStartedAt.Value > DateTime.UtcNow.AddDays(-7)),
+        "trial_active"  => q.Where(o => o.Plan == "free" && o.TrialStartedAt.HasValue && o.TrialStartedAt.Value > DateTime.UtcNow.AddDays(-3)),
         "trial_expired" => q.Where(o => o.Plan == "free" && o.TrialStartedAt.HasValue && o.TrialStartedAt.Value <= DateTime.UtcNow.AddDays(-3)),
         "free"          => q.Where(o => o.Plan == "free"),
         "paid"          => q.Where(o => o.Plan != "free"),

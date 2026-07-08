@@ -901,7 +901,7 @@ function PlansTab() {
                     <td>{(() => {
                       if (!row.trialStartedAt) return <span className={styles.muted} style={{ fontSize: 11 }}>Sin trial</span>
                       const started = new Date(row.trialStartedAt)
-                      const daysLeft = Math.max(0, 5 - Math.floor((Date.now() - started.getTime()) / 86_400_000))
+                      const daysLeft = Math.max(0, 3 - Math.floor((Date.now() - started.getTime()) / 86_400_000))
                       return daysLeft > 0
                         ? <span style={{ fontSize: 11, fontWeight: 700, color: '#34d399', background: 'rgba(52,211,153,0.12)', padding: '2px 8px', borderRadius: 4 }}>✓ {daysLeft}d restantes</span>
                         : <span style={{ fontSize: 11, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '2px 8px', borderRadius: 4 }}>Vencido</span>
@@ -924,7 +924,7 @@ function PlansTab() {
                     <td>{(() => {
                       if (!row.trialStartedAt) return <span className={styles.muted} style={{ fontSize: 11 }}>Sin trial</span>
                       const started = new Date(row.trialStartedAt)
-                      const daysLeft = Math.max(0, 5 - Math.floor((Date.now() - started.getTime()) / 86_400_000))
+                      const daysLeft = Math.max(0, 3 - Math.floor((Date.now() - started.getTime()) / 86_400_000))
                       return daysLeft > 0
                         ? <span style={{ fontSize: 11, fontWeight: 700, color: '#34d399', background: 'rgba(52,211,153,0.12)', padding: '2px 8px', borderRadius: 4 }}>✓ {daysLeft}d restantes</span>
                         : <span style={{ fontSize: 11, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '2px 8px', borderRadius: 4 }}>Vencido</span>
