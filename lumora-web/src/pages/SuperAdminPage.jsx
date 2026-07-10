@@ -344,6 +344,60 @@ const EMAIL_TEMPLATES = [
   </div>
   <p style="text-align:center;color:#9ca3af;font-size:12px;margin:12px 0 0">¿Tienes dudas? Contáctanos por Instagram o Facebook.</p>`),
   },
+  {
+    id: 'retarget_free',
+    label: 'Activa tu cuenta — retarget',
+    subject: '{{nombre}}, tu cuenta de Elixe está lista para despegar 🚀',
+    html: wrap(`
+  <h2 style="margin:0 0 8px;font-size:24px;color:#1a1a2e;font-weight:800">¡{{nombre}}, tu cuenta te está esperando!</h2>
+  <p style="margin:0 0 20px;color:#6b7280;font-size:14px">Cuenta gratuita de <strong>{{org}}</strong></p>
+  <p style="color:#4b5563;line-height:1.7;margin:0 0 24px">Vimos que ya tienes tu cuenta en Elixe, pero todavía hay funciones clave que pueden transformar cómo gestionas tu negocio de eventos. Solo necesitas 5 minutos para configurarlas.</p>
+
+  <div style="background:#f6f4ff;border-radius:14px;padding:24px;margin:0 0 8px;border-left:4px solid #7c6af7">
+    <p style="margin:0 0 16px;font-size:12px;font-weight:800;color:#7c6af7;text-transform:uppercase;letter-spacing:0.06em">Empieza por aquí 👇</p>
+
+    <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:18px">
+      <div style="min-width:36px;height:36px;background:#7c6af7;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💬</div>
+      <div>
+        <p style="margin:0 0 3px;font-size:14px;font-weight:700;color:#1a1a2e">Conecta tu WhatsApp</p>
+        <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.5">Atiende a tus clientes desde Elixe, crea un pipeline de ventas y da seguimiento a cada lead sin salir de la plataforma.</p>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:18px">
+      <div style="min-width:36px;height:36px;background:#5b4de0;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📅</div>
+      <div>
+        <p style="margin:0 0 3px;font-size:14px;font-weight:700;color:#1a1a2e">Agrega tu primer evento</p>
+        <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.5">Crea un evento, asigna clientes, proveedores y lleva el control de pagos y tareas en un solo lugar.</p>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:18px">
+      <div style="min-width:36px;height:36px;background:#a78bfa;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📄</div>
+      <div>
+        <p style="margin:0 0 3px;font-size:14px;font-weight:700;color:#1a1a2e">Envía una cotización</p>
+        <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.5">Genera cotizaciones profesionales en PDF en segundos y cierra más clientes con propuestas que impresionan.</p>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:flex-start;gap:14px">
+      <div style="min-width:36px;height:36px;background:#6d28d9;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💰</div>
+      <div>
+        <p style="margin:0 0 3px;font-size:14px;font-weight:700;color:#1a1a2e">Registra un ingreso o gasto</p>
+        <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.5">Ten tus finanzas siempre al día. Saldo, ingresos y gastos en tiempo real sin hojas de Excel.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#fff7ed;border-radius:10px;padding:14px 20px;margin:16px 0 28px;text-align:center">
+    <p style="margin:0;color:#92400e;font-size:13px">💡 Todo esto está disponible en tu cuenta gratuita de Elixe — <strong>sin costo adicional</strong></p>
+  </div>
+
+  <div style="text-align:center;margin:0 0 8px">
+    <a href="https://www.elixe.mx/app" style="display:inline-block;background:#7c6af7;color:#fff;padding:15px 36px;border-radius:11px;text-decoration:none;font-weight:800;font-size:16px">Ir a mi cuenta →</a>
+  </div>
+  <p style="text-align:center;color:#9ca3af;font-size:12px;margin:12px 0 0">¿Necesitas ayuda para empezar? Escríbenos por Instagram o Facebook.</p>`),
+  },
 ]
 
 function CampañasTab() {
