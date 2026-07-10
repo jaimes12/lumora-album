@@ -351,9 +351,10 @@ function CampañasTab() {
   const [subject,       setSubject]       = useState('')
   const [htmlBody,      setHtmlBody]      = useState('')
   const [templateId,    setTemplateId]    = useState('blank')
-  const [allCandidates, setAllCandidates] = useState(null)   // all orgs (for manual mode)
+  const [allCandidates, setAllCandidates] = useState(null)
+  const [emailHistory,  setEmailHistory]  = useState({})    // { email: [{subject, sentAt}] }
   const [loadingRec,    setLoadingRec]    = useState(false)
-  const [selectedEmails, setSelectedEmails] = useState(new Set()) // manual selection
+  const [selectedEmails, setSelectedEmails] = useState(new Set())
   const [sending,       setSending]       = useState(false)
   const [result,        setResult]        = useState(null)
   const [previewMode,   setPreviewMode]   = useState(false)
@@ -361,14 +362,17 @@ function CampañasTab() {
 
   const isManual = segment === 'manual'
 
-  // Load all candidates (manual mode always fetches 'all')
   const loadCandidates = async (seg) => {
     setLoadingRec(true)
     setAllCandidates(null)
     setSelectedEmails(new Set())
     try {
-      const data = await superadminApi.getCampaignRecipients(seg === 'manual' ? 'all' : seg)
+      const [data, history] = await Promise.all([
+        superadminApi.getCampaignRecipients(seg === 'manual' ? 'all' : seg),
+        superadminApi.getCampaignEmailHistory(),
+      ])
       setAllCandidates(data)
+      setEmailHistory(history ?? {})
     } catch { setAllCandidates([]) }
     finally { setLoadingRec(false) }
   }
@@ -570,6 +574,23 @@ function CampañasTab() {
                       <div className={styles.campañasRecName}>{r.name || '—'}</div>
                       <div className={styles.campañasRecEmail}>{r.email}</div>
                       <div className={styles.campañasRecOrg}>{r.org}</div>
+                      {emailHistory[r.email]?.length > 0 && (
+                        <div className={styles.campañasRecHistory}>
+                          {emailHistory[r.email].length === 1
+                            ? `📧 1 campaña enviada`
+                            : `📧 ${emailHistory[r.email].length} campañas enviadas`}
+                          <span className={styles.campañasRecHistoryList}>
+                            {emailHistory[r.email].slice(0, 3).map((h, hi) => (
+                              <span key={hi} className={styles.campañasRecHistoryItem} title={new Date(h.sentAt).toLocaleString('es-MX')}>
+                                {h.subject.length > 40 ? h.subject.slice(0, 40) + '…' : h.subject}
+                              </span>
+                            ))}
+                            {emailHistory[r.email].length > 3 && (
+                              <span className={styles.campañasRecHistoryMore}>+{emailHistory[r.email].length - 3} más</span>
+                            )}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -904,7 +925,7 @@ function PlansTab() {
                       const daysLeft = Math.max(0, 3 - Math.floor((Date.now() - started.getTime()) / 86_400_000))
                       return daysLeft > 0
                         ? <span style={{ fontSize: 11, fontWeight: 700, color: '#34d399', background: 'rgba(52,211,153,0.12)', padding: '2px 8px', borderRadius: 4 }}>✓ {daysLeft}d restantes</span>
-                        : <span style={{ fontSize: 11, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '2px 8px', borderRadius: 4 }}>Vencido</span>
+                        : (() => { const daysAgo = Math.floor((Date.now() - started.getTime()) / 86_400_000) - 3; return <span style={{ fontSize: 11, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '2px 8px', borderRadius: 4 }}>Vencido hace {daysAgo}d</span> })()
                     })()}</td>
                     <td>{row.waConnected
                       ? <span style={{ fontSize: 11, fontWeight: 700, color: '#25D366', background: 'rgba(37,211,102,0.12)', padding: '2px 8px', borderRadius: 4 }}>✓ Conectado</span>
@@ -927,7 +948,7 @@ function PlansTab() {
                       const daysLeft = Math.max(0, 3 - Math.floor((Date.now() - started.getTime()) / 86_400_000))
                       return daysLeft > 0
                         ? <span style={{ fontSize: 11, fontWeight: 700, color: '#34d399', background: 'rgba(52,211,153,0.12)', padding: '2px 8px', borderRadius: 4 }}>✓ {daysLeft}d restantes</span>
-                        : <span style={{ fontSize: 11, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '2px 8px', borderRadius: 4 }}>Vencido</span>
+                        : (() => { const daysAgo = Math.floor((Date.now() - started.getTime()) / 86_400_000) - 3; return <span style={{ fontSize: 11, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '2px 8px', borderRadius: 4 }}>Vencido hace {daysAgo}d</span> })()
                     })()}</td>
                     <td>{row.waConnected
                       ? <span style={{ fontSize: 11, fontWeight: 700, color: '#25D366', background: 'rgba(37,211,102,0.12)', padding: '2px 8px', borderRadius: 4 }}>✓ Conectado</span>

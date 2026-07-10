@@ -799,6 +799,9 @@ public partial class SuperAdminController
             .Select(o => new { o.Id, o.Name })
             .ToDictionaryAsync(o => o.Id, o => o.Name);
 
+        var conn2 = db.Database.GetDbConnection();
+        await conn2.OpenAsync();
+
         int sent = 0, failed = 0;
         foreach (var (targetEmail, name, orgId) in targets)
         {
@@ -810,9 +813,46 @@ public partial class SuperAdminController
             var html    = req.HtmlBody.Replace("{{nombre}}", firstName).Replace("{{org}}", orgName);
 
             var ok = await email.SendAsync(targetEmail, name, subject, html);
-            if (ok) sent++; else failed++;
+            if (ok)
+            {
+                sent++;
+                using var logCmd = conn2.CreateCommand();
+                logCmd.CommandText = "INSERT INTO campaign_email_log (id, email, subject, sent_at) VALUES (@id, @email, @subject, NOW())";
+                var p1 = logCmd.CreateParameter(); p1.ParameterName = "@id";      p1.Value = Guid.NewGuid().ToString(); logCmd.Parameters.Add(p1);
+                var p2 = logCmd.CreateParameter(); p2.ParameterName = "@email";   p2.Value = targetEmail; logCmd.Parameters.Add(p2);
+                var p3 = logCmd.CreateParameter(); p3.ParameterName = "@subject"; p3.Value = req.Subject; logCmd.Parameters.Add(p3);
+                await logCmd.ExecuteNonQueryAsync();
+            }
+            else failed++;
         }
 
         return Ok(new { sent, failed, total = targets.Count });
+    }
+
+    // GET /api/superadmin/campaigns/email-history
+    [HttpGet("campaigns/email-history")]
+    [Authorize]
+    public async Task<IActionResult> GetCampaignEmailHistory()
+    {
+        if (!IsSuperAdmin) return Forbid();
+
+        var conn = db.Database.GetDbConnection();
+        await conn.OpenAsync();
+
+        var result = new Dictionary<string, List<object>>();
+
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT email, subject, sent_at FROM campaign_email_log ORDER BY sent_at DESC";
+        using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            var em      = reader.GetString(0);
+            var subject = reader.GetString(1);
+            var sentAt  = reader.GetDateTime(2);
+            if (!result.ContainsKey(em)) result[em] = new List<object>();
+            result[em].Add(new { subject, sentAt });
+        }
+
+        return Ok(result);
     }
 }

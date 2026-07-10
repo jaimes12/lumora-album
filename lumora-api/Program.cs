@@ -700,6 +700,15 @@ app.Lifetime.ApplicationStarted.Register(() => _ = Task.Run(async () =>
           UNIQUE KEY `uq_trial_email` (`org_id`, `email_type`)
         ) CHARACTER SET utf8mb4",
 
+        @"CREATE TABLE IF NOT EXISTS `campaign_email_log` (
+          `id`       varchar(255) NOT NULL,
+          `email`    varchar(255) NOT NULL,
+          `subject`  varchar(500) NOT NULL,
+          `sent_at`  datetime(6)  NOT NULL,
+          PRIMARY KEY (`id`),
+          KEY `idx_cel_email` (`email`)
+        ) CHARACTER SET utf8mb4",
+
         @"CREATE TABLE IF NOT EXISTS `gastos` (
           `id`          varchar(255)  NOT NULL,
           `org_id`      varchar(255)  NOT NULL,
