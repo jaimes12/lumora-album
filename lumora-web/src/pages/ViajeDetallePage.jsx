@@ -378,10 +378,8 @@ function EditTripModal({ viaje, onClose, onSaved }) {
 
 // ── Marketplace section ─────────────────────────────────────────────────────
 function MarketplaceSection({ viaje, onUpdate }) {
-  const [descripcion, setDescripcion] = useState(viaje.descripcion ?? '')
+  const navigate = useNavigate()
   const [savingToggle, setSavingToggle] = useState(false)
-  const [savingDesc, setSavingDesc] = useState(false)
-  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
 
   const handleToggle = async () => {
@@ -396,56 +394,20 @@ function MarketplaceSection({ viaje, onUpdate }) {
     }
   }
 
-  const handleSaveDesc = async () => {
-    setSavingDesc(true); setError('')
-    try {
-      const updated = await viajesApi.update(viaje.id, { description: descripcion })
-      onUpdate({ descripcion: updated.descripcion ?? '' })
-    } catch (err) {
-      setError(err.message || 'No se pudo guardar la descripción')
-    } finally {
-      setSavingDesc(false)
-    }
-  }
-
-  const handleFile = async (e) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
-    setUploading(true); setError('')
-    try {
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(reader.result)
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-      })
-      const base64 = dataUrl.split(',')[1]
-      const photo = await viajesApi.addPhoto(viaje.id, { imageData: base64 })
-      onUpdate({ fotos: [...(viaje.fotos ?? []), { id: photo.id, url: photo.url, caption: photo.caption }] })
-    } catch (err) {
-      setError(err.message || 'No se pudo subir la foto')
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  const handleDeletePhoto = async (photoId) => {
-    try {
-      await viajesApi.deletePhoto(viaje.id, photoId)
-      onUpdate({ fotos: (viaje.fotos ?? []).filter(f => f.id !== photoId) })
-    } catch {}
-  }
-
   return (
     <div className={styles.section}>
       <div className={styles.sectionHead}>
         <h2 className={styles.sectionTitle}>Marketplace</h2>
-        {viaje.publico && (
-          <a href={`/viajes/market/${viaje.id}`} target="_blank" rel="noreferrer" className={styles.btnSecondary}>
-            Ver en el marketplace ↗
-          </a>
-        )}
+        <div style={{ display: 'flex', gap: 8 }}>
+          {viaje.publico && (
+            <a href={`/viajes/market/${viaje.id}`} target="_blank" rel="noreferrer" className={styles.btnSecondary}>
+              Ver publicación ↗
+            </a>
+          )}
+          <button type="button" className={styles.btnPrimary} onClick={() => navigate(`/app/viajes/${viaje.id}/marketplace`)}>
+            Editar publicación
+          </button>
+        </div>
       </div>
 
       <div className={styles.marketplaceToggleRow}>
@@ -456,41 +418,6 @@ function MarketplaceSection({ viaje, onUpdate }) {
         <div>
           <p className={styles.marketplaceToggleLabel}>Publicar en el marketplace</p>
           <p className={styles.marketplaceToggleSub}>Gratis con tu cuenta. Cualquiera podrá ver este viaje en /viajes/market y contactarte.</p>
-        </div>
-      </div>
-
-      <div className={styles.field} style={{ marginTop: 14 }}>
-        <label>Descripción para el marketplace</label>
-        <textarea
-          rows={4}
-          placeholder="Incluye qué incluye el viaje, itinerario, hospedaje, transporte…"
-          value={descripcion}
-          onChange={e => setDescripcion(e.target.value)}
-        />
-        <button
-          type="button"
-          className={styles.btnSecondary}
-          style={{ alignSelf: 'flex-start', marginTop: 6 }}
-          onClick={handleSaveDesc}
-          disabled={savingDesc || descripcion === (viaje.descripcion ?? '')}
-        >
-          {savingDesc ? 'Guardando…' : 'Guardar descripción'}
-        </button>
-      </div>
-
-      <div style={{ marginTop: 16 }}>
-        <p className={styles.marketplaceToggleLabel}>Fotos</p>
-        <div className={styles.photoGrid}>
-          {(viaje.fotos ?? []).map(f => (
-            <div key={f.id} className={styles.photoThumb}>
-              <img src={f.url} alt="" />
-              <button type="button" className={styles.photoDelete} onClick={() => handleDeletePhoto(f.id)}>×</button>
-            </div>
-          ))}
-          <label className={styles.photoAdd}>
-            {uploading ? '…' : '+'}
-            <input type="file" accept="image/*" onChange={handleFile} disabled={uploading} hidden />
-          </label>
         </div>
       </div>
 

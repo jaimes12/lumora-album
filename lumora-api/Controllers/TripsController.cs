@@ -53,7 +53,8 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
                 ps?.Count ?? 0, ps?.Seats ?? 0,
                 py?.Total ?? 0,
                 t.CreatedById is not null && creators.TryGetValue(t.CreatedById, out var cn) ? cn : null,
-                t.IsPublic, t.Description
+                t.IsPublic, t.Description, null,
+                t.PostTitle, t.Includes
             );
         }));
     }
@@ -105,8 +106,8 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
 
         var photos = await db.TripPhotos
             .Where(p => p.TripId == id && p.OrgId == OrgId)
-            .OrderBy(p => p.CreatedAt)
-            .Select(p => new TripPhotoInfo(p.Id, p.TripId, p.Url, p.Caption, p.CreatedAt))
+            .OrderBy(p => p.SortOrder).ThenBy(p => p.CreatedAt)
+            .Select(p => new TripPhotoInfo(p.Id, p.TripId, p.Url, p.Caption, p.CreatedAt, p.SortOrder))
             .ToListAsync();
 
         return Ok(new TripDetailResponse(
@@ -114,7 +115,8 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
             trip.DepartureDate, trip.ReturnDate,
             trip.PricePerPerson, trip.SeatsTotal,
             trip.Notes, trip.CreatedAt, passengerList, createdByName, expenses,
-            trip.IsPublic, trip.Description, photos
+            trip.IsPublic, trip.Description, photos,
+            trip.PostTitle, trip.Includes
         ));
     }
 
@@ -140,7 +142,8 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
             new TripResponse(trip.Id, trip.Name, trip.Destination, trip.Status,
                 trip.DepartureDate, trip.ReturnDate, trip.PricePerPerson, trip.SeatsTotal,
                 trip.Notes, trip.CreatedAt, 0, 0, 0, null,
-                trip.IsPublic, trip.Description));
+                trip.IsPublic, trip.Description, null,
+                trip.PostTitle, trip.Includes));
     }
 
     [HttpPatch("{id}")]
@@ -158,6 +161,8 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
         if (req.SeatsTotal.HasValue)          trip.SeatsTotal    = req.SeatsTotal.Value;
         if (req.IsPublic.HasValue)             trip.IsPublic      = req.IsPublic.Value;
         if (req.Description is not null)      trip.Description   = req.Description;
+        if (req.PostTitle is not null)        trip.PostTitle     = req.PostTitle;
+        if (req.Includes is not null)         trip.Includes      = req.Includes;
         await db.SaveChangesAsync();
         return Ok(await GetTripResponse(trip));
     }
@@ -328,7 +333,8 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
         return new TripResponse(trip.Id, trip.Name, trip.Destination, trip.Status,
             trip.DepartureDate, trip.ReturnDate, trip.PricePerPerson, trip.SeatsTotal,
             trip.Notes, trip.CreatedAt, ps.Count, ps.Sum(p => p.Seats), rev, null,
-            trip.IsPublic, trip.Description);
+            trip.IsPublic, trip.Description, null,
+            trip.PostTitle, trip.Includes);
     }
 
     // ── Photos ───────────────────────────────────────────────────────────────
@@ -343,17 +349,20 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
         var url   = await r2.UploadAsync(bytes, "image/jpeg");
         if (url is null) return BadRequest(new { error = "No se pudo subir la imagen" });
 
+        var maxOrder = await db.TripPhotos.Where(p => p.TripId == id).Select(p => (int?)p.SortOrder).MaxAsync() ?? -1;
+
         var photo = new TripPhoto {
             Id        = Guid.NewGuid().ToString(),
             TripId    = id,
             OrgId     = OrgId,
             Url       = url,
             Caption   = req.Caption,
+            SortOrder = maxOrder + 1,
             CreatedAt = DateTime.UtcNow,
         };
         await db.TripPhotos.AddAsync(photo);
         await db.SaveChangesAsync();
-        return Ok(new TripPhotoInfo(photo.Id, photo.TripId, photo.Url, photo.Caption, photo.CreatedAt));
+        return Ok(new TripPhotoInfo(photo.Id, photo.TripId, photo.Url, photo.Caption, photo.CreatedAt, photo.SortOrder));
     }
 
     [HttpDelete("{id}/photos/{photoId}")]
@@ -364,5 +373,18 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
         db.TripPhotos.Remove(photo);
         await db.SaveChangesAsync();
         return NoContent();
+    }
+
+    [HttpPut("{id}/photos/order")]
+    public async Task<IActionResult> ReorderPhotos(string id, [FromBody] ReorderPhotosRequest req)
+    {
+        var photos = await db.TripPhotos.Where(p => p.TripId == id && p.OrgId == OrgId).ToListAsync();
+        for (var i = 0; i < req.PhotoIds.Count; i++)
+        {
+            var photo = photos.FirstOrDefault(p => p.Id == req.PhotoIds[i]);
+            if (photo is not null) photo.SortOrder = i;
+        }
+        await db.SaveChangesAsync();
+        return Ok(photos.OrderBy(p => p.SortOrder).Select(p => new TripPhotoInfo(p.Id, p.TripId, p.Url, p.Caption, p.CreatedAt, p.SortOrder)));
     }
 }

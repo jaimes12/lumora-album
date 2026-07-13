@@ -16,7 +16,8 @@ public record MarketplaceTripDetail(
     string? Description,
     List<TripPhotoInfo> Photos,
     string AgencyName, string? AgencyCity,
-    string? AgencyPhone, string? AgencyEmail
+    string? AgencyPhone, string? AgencyEmail,
+    List<string> Includes
 );
 
 public record MarketplaceInquiryRequest(

@@ -17,6 +17,8 @@ public class Trip
     [Column("notes")] public string? Notes { get; set; }
     [Column("is_public")] public bool IsPublic { get; set; } = false;
     [Column("description")] public string? Description { get; set; }
+    [Column("post_title")] public string? PostTitle { get; set; }
+    [Column("includes")] public string? Includes { get; set; }
     [Column("created_at")] public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     [Column("created_by_id")] public string? CreatedById { get; set; }
     public Organization? Organization { get; set; }

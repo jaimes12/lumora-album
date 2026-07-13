@@ -37,6 +37,7 @@ import SuperAdminPage    from './pages/SuperAdminPage'
 import NotasPage         from './pages/NotasPage'
 import ViajesPage        from './pages/ViajesPage'
 import ViajeDetallePage  from './pages/ViajeDetallePage'
+import ViajeMarketplacePostPage from './pages/ViajeMarketplacePostPage'
 import ViajesLanding     from './pages/ViajesLanding'
 import MarketplacePage      from './pages/MarketplacePage'
 import MarketplaceTripPage  from './pages/MarketplaceTripPage'
@@ -125,6 +126,7 @@ export default function App() {
               <Route path="trabajadores"   element={<TrabajadoresPage />} />
               <Route path="viajes"         element={<ViajesPage />} />
               <Route path="viajes/:id"     element={<ViajeDetallePage />} />
+              <Route path="viajes/:id/marketplace" element={<ViajeMarketplacePostPage />} />
               <Route path="finanzas"       element={<FinanzasPage />} />
             </Route>
 

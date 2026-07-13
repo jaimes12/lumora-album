@@ -110,6 +110,18 @@
 .metaItem { display: flex; align-items: center; gap: 6px; }
 .descripcion { font-size: 14px; line-height: 1.7; color: var(--text); white-space: pre-line; margin-top: 8px; }
 
+.includes { margin-top: 8px; }
+.includesTitle { font-size: 15px; font-weight: 700; margin: 0 0 10px; }
+.includesList { display: flex; flex-direction: column; gap: 8px; list-style: none; padding: 0; margin: 0; }
+.includesItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+.includesItem svg { color: #16a34a; flex-shrink: 0; }
+
 .sidebar { display: flex; flex-direction: column; gap: 14px; }
 
 .priceCard {

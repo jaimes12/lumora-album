@@ -25,7 +25,9 @@ function toFrontend(t) {
     createdByName: t.createdByName ?? null,
     publico: t.isPublic ?? false,
     descripcion: t.description ?? '',
-    fotos: (t.photos ?? []).map(p => ({ id: p.id, url: p.url, caption: p.caption })),
+    tituloPost: t.postTitle ?? '',
+    incluye: t.includes ?? '',
+    fotos: (t.photos ?? []).map(p => ({ id: p.id, url: p.url, caption: p.caption, orden: p.sortOrder ?? 0 })),
     pasajerosList: (t.passengers ?? []).map(p => ({
       id: p.id,
       clienteId: p.clientId,
@@ -67,6 +69,7 @@ export const viajesApi = {
   delete: (id) => api.delete(`/api/trips/${id}`),
   addPhoto: (tripId, data) => api.post(`/api/trips/${tripId}/photos`, data),
   deletePhoto: (tripId, photoId) => api.delete(`/api/trips/${tripId}/photos/${photoId}`),
+  reorderPhotos: (tripId, photoIds) => api.put(`/api/trips/${tripId}/photos/order`, { photoIds }),
   addPassenger: (tripId, data) => api.post(`/api/trips/${tripId}/passengers`, data),
   updatePassenger: (tripId, passengerId, data) => api.patch(`/api/trips/${tripId}/passengers/${passengerId}`, data),
   removePassenger: (tripId, passengerId) => api.delete(`/api/trips/${tripId}/passengers/${passengerId}`),

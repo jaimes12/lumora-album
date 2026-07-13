@@ -33,6 +33,7 @@ function detailToFrontend(t) {
     asientosTotal: t.seatsTotal,
     asientosOcupados: t.seatsTaken ?? 0,
     descripcion: t.description ?? '',
+    incluye: t.includes ?? [],
     fotos: (t.photos ?? []).map(p => ({ id: p.id, url: p.url, caption: p.caption })),
     agenciaNombre: t.agencyName,
     agenciaCiudad: t.agencyCity,

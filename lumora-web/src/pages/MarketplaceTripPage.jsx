@@ -154,6 +154,20 @@ export default function MarketplaceTripPage() {
             {viaje.descripcion && (
               <p className={styles.descripcion}>{viaje.descripcion}</p>
             )}
+
+            {viaje.incluye.length > 0 && (
+              <div className={styles.includes}>
+                <h3 className={styles.includesTitle}>Qué incluye</h3>
+                <ul className={styles.includesList}>
+                  {viaje.incluye.map((item, i) => (
+                    <li key={i} className={styles.includesItem}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <aside className={styles.sidebar}>

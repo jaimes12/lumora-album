@@ -694,6 +694,8 @@ app.Lifetime.ApplicationStarted.Register(() => _ = Task.Run(async () =>
         // ── Marketplace de viajes ─────────────────────────────────────────────
         "ALTER TABLE trips ADD COLUMN is_public tinyint(1) NOT NULL DEFAULT 0",
         "ALTER TABLE trips ADD COLUMN description text NULL",
+        "ALTER TABLE trips ADD COLUMN post_title varchar(255) NULL",
+        "ALTER TABLE trips ADD COLUMN includes text NULL",
 
         @"CREATE TABLE IF NOT EXISTS `trip_photos` (
           `id`         varchar(255) NOT NULL,
@@ -701,10 +703,12 @@ app.Lifetime.ApplicationStarted.Register(() => _ = Task.Run(async () =>
           `org_id`     varchar(255) NOT NULL,
           `url`        varchar(500) NOT NULL,
           `caption`    varchar(500) NULL,
+          `sort_order` int          NOT NULL DEFAULT 0,
           `created_at` datetime(6)  NOT NULL,
           PRIMARY KEY (`id`),
           KEY `idx_trip_photos_trip` (`trip_id`)
         ) CHARACTER SET utf8mb4",
+        "ALTER TABLE trip_photos ADD COLUMN sort_order int NOT NULL DEFAULT 0",
 
         @"CREATE TABLE IF NOT EXISTS `trial_email_log` (
           `id`         varchar(255) NOT NULL,

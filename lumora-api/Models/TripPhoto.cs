@@ -22,6 +22,9 @@ public class TripPhoto
     [Column("caption")]
     public string? Caption { get; set; }
 
+    [Column("sort_order")]
+    public int SortOrder { get; set; } = 0;
+
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

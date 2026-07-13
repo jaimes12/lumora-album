@@ -33,7 +33,7 @@ public class MarketplaceController(LumoraDbContext db) : ControllerBase
         var tripIds = trips.Select(t => t.Id).ToList();
         var coverPhotos = await db.TripPhotos
             .Where(p => tripIds.Contains(p.TripId))
-            .OrderBy(p => p.CreatedAt)
+            .OrderBy(p => p.SortOrder).ThenBy(p => p.CreatedAt)
             .GroupBy(p => p.TripId)
             .Select(g => new { TripId = g.Key, Url = g.First().Url })
             .ToDictionaryAsync(x => x.TripId, x => x.Url);
@@ -49,7 +49,7 @@ public class MarketplaceController(LumoraDbContext db) : ControllerBase
             var cfg = settings.GetValueOrDefault(t.OrgId);
             var agencyName = !string.IsNullOrWhiteSpace(cfg?.CompanyName) ? cfg!.CompanyName : org.Name;
             return new MarketplaceTripSummary(
-                t.Id, t.Name, t.Destination, t.DepartureDate, t.ReturnDate,
+                t.Id, string.IsNullOrWhiteSpace(t.PostTitle) ? t.Name : t.PostTitle, t.Destination, t.DepartureDate, t.ReturnDate,
                 t.PricePerPerson, t.SeatsTotal, passengerStats.GetValueOrDefault(t.Id),
                 coverPhotos.GetValueOrDefault(t.Id),
                 agencyName, string.IsNullOrWhiteSpace(cfg?.City) ? null : cfg!.City
@@ -71,20 +71,25 @@ public class MarketplaceController(LumoraDbContext db) : ControllerBase
 
         var photos = await db.TripPhotos
             .Where(p => p.TripId == id)
-            .OrderBy(p => p.CreatedAt)
-            .Select(p => new TripPhotoInfo(p.Id, p.TripId, p.Url, p.Caption, p.CreatedAt))
+            .OrderBy(p => p.SortOrder).ThenBy(p => p.CreatedAt)
+            .Select(p => new TripPhotoInfo(p.Id, p.TripId, p.Url, p.Caption, p.CreatedAt, p.SortOrder))
             .ToListAsync();
 
         var seatsTaken = await db.TripPassengers.Where(p => p.TripId == id).SumAsync(p => (int?)p.Seats) ?? 0;
 
+        var includes = (trip.Includes ?? "")
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+
         return Ok(new MarketplaceTripDetail(
-            trip.Id, trip.Name, trip.Destination, trip.DepartureDate, trip.ReturnDate,
+            trip.Id, string.IsNullOrWhiteSpace(trip.PostTitle) ? trip.Name : trip.PostTitle, trip.Destination, trip.DepartureDate, trip.ReturnDate,
             trip.PricePerPerson, trip.SeatsTotal, seatsTaken,
             trip.Description, photos,
             agencyName,
             string.IsNullOrWhiteSpace(cfg?.City) ? null : cfg!.City,
             string.IsNullOrWhiteSpace(cfg?.Phone) ? null : cfg!.Phone,
-            string.IsNullOrWhiteSpace(cfg?.Email) ? null : cfg!.Email
+            string.IsNullOrWhiteSpace(cfg?.Email) ? null : cfg!.Email,
+            includes
         ));
     }
 
