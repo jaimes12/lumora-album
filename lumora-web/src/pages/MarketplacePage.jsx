@@ -83,6 +83,7 @@ export default function MarketplacePage() {
                   <div className={styles.cardCover} style={v.portada ? { backgroundImage: `url(${v.portada})` } : undefined}>
                     {!v.portada && <span className={styles.coverPlaceholder}>✈️</span>}
                     <span className={styles.coverDestino}>{v.destino}</span>
+                    {v.precioOferta != null && <span className={styles.coverOferta}>OFERTA</span>}
                   </div>
                   <div className={styles.cardBody}>
                     <h3 className={styles.cardNombre}>{v.nombre}</h3>
@@ -95,7 +96,14 @@ export default function MarketplacePage() {
                     </div>
                     <div className={styles.cardFooter}>
                       <div>
-                        <span className={styles.cardPrecio}>{fmtMoney(v.precioPorPersona)}</span>
+                        {v.precioOferta != null ? (
+                          <>
+                            <span className={styles.cardPrecioTachado}>{fmtMoney(v.precioPorPersona)}</span>
+                            <span className={styles.cardPrecioOferta}>{fmtMoney(v.precioOferta)}</span>
+                          </>
+                        ) : (
+                          <span className={styles.cardPrecio}>{fmtMoney(v.precioPorPersona)}</span>
+                        )}
                         <span className={styles.cardPrecioLabel}> / persona</span>
                       </div>
                       {v.asientosTotal > 0 && (

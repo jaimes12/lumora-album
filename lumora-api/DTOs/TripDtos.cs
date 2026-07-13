@@ -16,7 +16,8 @@ public record UpdateTripRequest(
     DateTime? DepartureDate, DateTime? ReturnDate,
     decimal? PricePerPerson, int? SeatsTotal, string? Notes,
     bool? IsPublic = null, string? Description = null,
-    string? PostTitle = null, string? Includes = null
+    string? PostTitle = null, string? Includes = null,
+    string? Location = null, decimal? OfferPrice = null, bool ClearOfferPrice = false
 );
 
 public record TripResponse(
@@ -28,7 +29,8 @@ public record TripResponse(
     decimal TotalRevenue, string? CreatedByName,
     bool IsPublic = false, string? Description = null,
     List<TripPhotoInfo>? Photos = null,
-    string? PostTitle = null, string? Includes = null
+    string? PostTitle = null, string? Includes = null,
+    string? Location = null, decimal? OfferPrice = null
 );
 
 public record TripPhotoInfo(
@@ -98,7 +100,8 @@ public record TripDetailResponse(
     List<TripExpenseInfo> Expenses,
     bool IsPublic = false, string? Description = null,
     List<TripPhotoInfo>? Photos = null,
-    string? PostTitle = null, string? Includes = null
+    string? PostTitle = null, string? Includes = null,
+    string? Location = null, decimal? OfferPrice = null
 );
 
 public record TripExpenseInfo(

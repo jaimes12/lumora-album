@@ -55,7 +55,8 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
                 py?.Total ?? 0,
                 t.CreatedById is not null && creators.TryGetValue(t.CreatedById, out var cn) ? cn : null,
                 t.IsPublic, t.Description, null,
-                t.PostTitle, t.Includes
+                t.PostTitle, t.Includes,
+                t.Location, t.OfferPrice
             );
         }));
     }
@@ -118,7 +119,8 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
             trip.PricePerPerson, trip.SeatsTotal,
             trip.Notes, trip.CreatedAt, passengerList, createdByName, expenses,
             trip.IsPublic, trip.Description, photos,
-            trip.PostTitle, trip.Includes
+            trip.PostTitle, trip.Includes,
+            trip.Location, trip.OfferPrice
         ));
     }
 
@@ -145,7 +147,8 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
                 trip.DepartureDate, trip.ReturnDate, trip.PricePerPerson, trip.SeatsTotal,
                 trip.Notes, trip.CreatedAt, 0, 0, 0, null,
                 trip.IsPublic, trip.Description, null,
-                trip.PostTitle, trip.Includes));
+                trip.PostTitle, trip.Includes,
+                trip.Location, trip.OfferPrice));
     }
 
     [HttpPatch("{id}")]
@@ -165,6 +168,9 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
         if (req.Description is not null)      trip.Description   = req.Description;
         if (req.PostTitle is not null)        trip.PostTitle     = req.PostTitle;
         if (req.Includes is not null)         trip.Includes      = req.Includes;
+        if (req.Location is not null)         trip.Location      = req.Location;
+        if (req.ClearOfferPrice)              trip.OfferPrice    = null;
+        else if (req.OfferPrice.HasValue)     trip.OfferPrice    = req.OfferPrice.Value;
         await db.SaveChangesAsync();
         return Ok(await GetTripResponse(trip));
     }
@@ -339,7 +345,8 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
             trip.DepartureDate, trip.ReturnDate, trip.PricePerPerson, trip.SeatsTotal,
             trip.Notes, trip.CreatedAt, ps.Count, ps.Sum(p => p.Seats), rev, null,
             trip.IsPublic, trip.Description, null,
-            trip.PostTitle, trip.Includes);
+            trip.PostTitle, trip.Includes,
+            trip.Location, trip.OfferPrice);
     }
 
     private static string? SerializeCompanions(List<PassengerCompanionInfo>? companions) =>

@@ -6,7 +6,8 @@ public record MarketplaceTripSummary(
     DateTime DepartureDate, DateTime ReturnDate,
     decimal PricePerPerson, int SeatsTotal, int SeatsTaken,
     string? CoverPhotoUrl,
-    string AgencyName, string? AgencyCity
+    string AgencyName, string? AgencyCity,
+    decimal? OfferPrice = null
 );
 
 public record MarketplaceTripDetail(
@@ -17,7 +18,8 @@ public record MarketplaceTripDetail(
     List<TripPhotoInfo> Photos,
     string AgencyName, string? AgencyCity,
     string? AgencyPhone, string? AgencyEmail,
-    List<string> Includes
+    List<string> Includes,
+    string? Location = null, decimal? OfferPrice = null
 );
 
 public record MarketplaceInquiryRequest(

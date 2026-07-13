@@ -17,6 +17,8 @@ export default function ViajeMarketplacePostPage() {
 
   const [titulo, setTitulo] = useState('')
   const [descripcion, setDescripcion] = useState('')
+  const [ubicacion, setUbicacion] = useState('')
+  const [precioOferta, setPrecioOferta] = useState('')
   const [incluye, setIncluye] = useState([])
   const [nuevoIncluye, setNuevoIncluye] = useState('')
   const [savingContent, setSavingContent] = useState(false)
@@ -33,6 +35,8 @@ export default function ViajeMarketplacePostPage() {
       setPublico(data.publico)
       setTitulo(data.tituloPost)
       setDescripcion(data.descripcion)
+      setUbicacion(data.ubicacion)
+      setPrecioOferta(data.precioOferta != null ? String(data.precioOferta) : '')
       setIncluye(data.incluye ? data.incluye.split('\n').filter(Boolean) : [])
       setFotos(data.fotos)
     } catch {
@@ -54,15 +58,24 @@ export default function ViajeMarketplacePostPage() {
   }
 
   const handleSaveContent = async () => {
+    const ofertaTrim = precioOferta.trim()
+    if (ofertaTrim && parseFloat(ofertaTrim) >= viaje.precioPorPersona) {
+      setError('El precio de oferta debe ser menor al precio por persona')
+      return
+    }
     setSavingContent(true); setError('')
     try {
       const updated = await viajesApi.update(id, {
         postTitle: titulo,
         description: descripcion,
         includes: incluye.join('\n'),
+        location: ubicacion,
+        ...(ofertaTrim ? { offerPrice: parseFloat(ofertaTrim) } : { clearOfferPrice: true }),
       })
       setTitulo(updated.tituloPost)
       setDescripcion(updated.descripcion)
+      setUbicacion(updated.ubicacion)
+      setPrecioOferta(updated.precioOferta != null ? String(updated.precioOferta) : '')
       setIncluye(updated.incluye ? updated.incluye.split('\n').filter(Boolean) : [])
       setSavedAt(Date.now())
     } catch (err) {
@@ -176,6 +189,25 @@ export default function ViajeMarketplacePostPage() {
           value={descripcion}
           onChange={e => setDescripcion(e.target.value)}
         />
+
+        <label className={styles.fieldLabel} style={{ marginTop: 18 }}>Ubicación</label>
+        <input
+          className={styles.input}
+          placeholder="Ej: Hotel RIU Palace, Puerto Vallarta, Jalisco"
+          value={ubicacion}
+          onChange={e => setUbicacion(e.target.value)}
+        />
+        <p className={styles.fieldHint}>Se muestra un mapa en la publicación con esta ubicación.</p>
+
+        <label className={styles.fieldLabel} style={{ marginTop: 18 }}>Precio de oferta (opcional)</label>
+        <input
+          className={styles.input}
+          type="number" min="0" step="0.01"
+          placeholder={`Menor a ${fmtMoney(viaje.precioPorPersona)}`}
+          value={precioOferta}
+          onChange={e => setPrecioOferta(e.target.value)}
+        />
+        <p className={styles.fieldHint}>Si lo defines, se mostrará el precio original tachado y este destacado como oferta.</p>
 
         <label className={styles.fieldLabel} style={{ marginTop: 18 }}>Qué incluye</label>
         <div className={styles.includeList}>

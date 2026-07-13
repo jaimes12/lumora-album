@@ -19,6 +19,7 @@ function summaryToFrontend(t) {
     portada: t.coverPhotoUrl,
     agenciaNombre: t.agencyName,
     agenciaCiudad: t.agencyCity,
+    precioOferta: t.offerPrice ?? null,
   }
 }
 
@@ -34,6 +35,8 @@ function detailToFrontend(t) {
     asientosOcupados: t.seatsTaken ?? 0,
     descripcion: t.description ?? '',
     incluye: t.includes ?? [],
+    ubicacion: t.location ?? '',
+    precioOferta: t.offerPrice ?? null,
     fotos: (t.photos ?? []).map(p => ({ id: p.id, url: p.url, caption: p.caption })),
     agenciaNombre: t.agencyName,
     agenciaCiudad: t.agencyCity,

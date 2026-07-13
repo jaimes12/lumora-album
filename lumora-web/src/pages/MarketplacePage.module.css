@@ -197,8 +197,23 @@
   border-top: 1px solid var(--border);
 }
 .cardPrecio { font-size: 16px; font-weight: 700; color: var(--text); }
+.cardPrecioTachado { font-size: 12px; color: var(--text-muted); text-decoration: line-through; margin-right: 6px; }
+.cardPrecioOferta { font-size: 16px; font-weight: 700; color: #dc2626; }
 .cardPrecioLabel { font-size: 11px; color: var(--text-muted); }
 .cardCupos { font-size: 11px; color: var(--text-muted); }
+
+.coverOferta {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #fff;
+  background: #dc2626;
+  padding: 4px 9px;
+  border-radius: 20px;
+}
 
 .empty { text-align: center; color: var(--text-muted); font-size: 14px; padding: 64px 0; }
 .emptyState {

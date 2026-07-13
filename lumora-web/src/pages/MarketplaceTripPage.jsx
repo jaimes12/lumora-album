@@ -81,7 +81,6 @@ export default function MarketplaceTripPage() {
   const [viaje, setViaje] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [activePhoto, setActivePhoto] = useState(0)
 
   useEffect(() => {
     marketplaceApi.getTrip(id)
@@ -101,7 +100,10 @@ export default function MarketplaceTripPage() {
   const disponibles = Math.max(viaje.asientosTotal - viaje.asientosOcupados, 0)
   const waMsg = `Hola, me interesa el viaje "${viaje.nombre}" (${viaje.destino}) que vi en Elixe.`
   const waUrl = whatsappUrl(viaje.agenciaTelefono, waMsg)
-  const fotos = viaje.fotos.length > 0 ? viaje.fotos : [null]
+  const portada = viaje.fotos[0] ?? null
+  const mapaUrl = viaje.ubicacion
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(viaje.ubicacion)}`
+    : null
 
   return (
     <div className={styles.page}>
@@ -116,25 +118,12 @@ export default function MarketplaceTripPage() {
       <main className={styles.main}>
         <div className={styles.gallery}>
           <div className={styles.galleryMain}>
-            {fotos[activePhoto] ? (
-              <img src={fotos[activePhoto].url} alt={viaje.nombre} />
+            {portada ? (
+              <img src={portada.url} alt={viaje.nombre} />
             ) : (
               <div className={styles.galleryPlaceholder}>✈️</div>
             )}
           </div>
-          {fotos.length > 1 && (
-            <div className={styles.galleryThumbs}>
-              {fotos.map((f, i) => f && (
-                <button
-                  key={f.id}
-                  className={`${styles.thumb} ${i === activePhoto ? styles.thumbActive : ''}`}
-                  onClick={() => setActivePhoto(i)}
-                >
-                  <img src={f.url} alt="" />
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
         <div className={styles.content}>
@@ -168,11 +157,32 @@ export default function MarketplaceTripPage() {
                 </ul>
               </div>
             )}
+
+            {mapaUrl && (
+              <div className={styles.locationBlock}>
+                <h3 className={styles.includesTitle}>Ubicación</h3>
+                <a href={mapaUrl} target="_blank" rel="noreferrer" className={styles.mapCard}>
+                  <span className={styles.mapPin}>📍</span>
+                  <span className={styles.mapCardText}>
+                    <span className={styles.locationText}>{viaje.ubicacion}</span>
+                    <span className={styles.mapCardLink}>Ver en Google Maps ↗</span>
+                  </span>
+                </a>
+              </div>
+            )}
           </div>
 
           <aside className={styles.sidebar}>
             <div className={styles.priceCard}>
-              <span className={styles.priceVal}>{fmtMoney(viaje.precioPorPersona)}</span>
+              {viaje.precioOferta != null ? (
+                <>
+                  <span className={styles.priceOfertaBadge}>OFERTA</span>
+                  <span className={styles.priceTachado}>{fmtMoney(viaje.precioPorPersona)}</span>
+                  <span className={`${styles.priceVal} ${styles.priceValOferta}`}>{fmtMoney(viaje.precioOferta)}</span>
+                </>
+              ) : (
+                <span className={styles.priceVal}>{fmtMoney(viaje.precioPorPersona)}</span>
+              )}
               <span className={styles.priceLabel}>por persona</span>
             </div>
 

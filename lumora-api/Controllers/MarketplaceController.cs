@@ -52,7 +52,8 @@ public class MarketplaceController(LumoraDbContext db) : ControllerBase
                 t.Id, string.IsNullOrWhiteSpace(t.PostTitle) ? t.Name : t.PostTitle, t.Destination, t.DepartureDate, t.ReturnDate,
                 t.PricePerPerson, t.SeatsTotal, passengerStats.GetValueOrDefault(t.Id),
                 coverPhotos.GetValueOrDefault(t.Id),
-                agencyName, string.IsNullOrWhiteSpace(cfg?.City) ? null : cfg!.City
+                agencyName, string.IsNullOrWhiteSpace(cfg?.City) ? null : cfg!.City,
+                t.OfferPrice
             );
         }));
     }
@@ -89,7 +90,8 @@ public class MarketplaceController(LumoraDbContext db) : ControllerBase
             string.IsNullOrWhiteSpace(cfg?.City) ? null : cfg!.City,
             string.IsNullOrWhiteSpace(cfg?.Phone) ? null : cfg!.Phone,
             string.IsNullOrWhiteSpace(cfg?.Email) ? null : cfg!.Email,
-            includes
+            includes,
+            trip.Location, trip.OfferPrice
         ));
     }
 

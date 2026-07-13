@@ -27,6 +27,8 @@ function toFrontend(t) {
     descripcion: t.description ?? '',
     tituloPost: t.postTitle ?? '',
     incluye: t.includes ?? '',
+    ubicacion: t.location ?? '',
+    precioOferta: t.offerPrice ?? null,
     fotos: (t.photos ?? []).map(p => ({ id: p.id, url: p.url, caption: p.caption, orden: p.sortOrder ?? 0 })),
     pasajerosList: (t.passengers ?? []).map(p => ({
       id: p.id,
