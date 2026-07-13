@@ -18,6 +18,49 @@ function whatsappUrl(phone, text) {
 
 const fmtMoney = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(n || 0)
 
+function Carousel({ fotos, alt }) {
+  const [active, setActive] = useState(0)
+
+  useEffect(() => {
+    if (fotos.length < 2) return
+    const timer = setInterval(() => {
+      setActive(prev => (prev + 1) % fotos.length)
+    }, 4000)
+    return () => clearInterval(timer)
+  }, [fotos.length])
+
+  if (fotos.length === 0) {
+    return <div className={styles.galleryPlaceholder}>✈️</div>
+  }
+
+  return (
+    <>
+      {fotos.map((f, i) => (
+        <img
+          key={f.id}
+          src={f.url}
+          alt={alt}
+          className={styles.carouselImg}
+          style={{ opacity: i === active ? 1 : 0 }}
+        />
+      ))}
+      {fotos.length > 1 && (
+        <div className={styles.carouselDots}>
+          {fotos.map((f, i) => (
+            <button
+              key={f.id}
+              type="button"
+              className={`${styles.carouselDot} ${i === active ? styles.carouselDotActive : ''}`}
+              onClick={() => setActive(i)}
+              aria-label={`Foto ${i + 1}`}
+            />
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
 function InquiryForm({ tripId }) {
   const [form, setForm] = useState({ name: '', phone: '', message: '' })
   const [sending, setSending] = useState(false)
@@ -100,7 +143,6 @@ export default function MarketplaceTripPage() {
   const disponibles = Math.max(viaje.asientosTotal - viaje.asientosOcupados, 0)
   const waMsg = `Hola, me interesa el viaje "${viaje.nombre}" (${viaje.destino}) que vi en Elixe.`
   const waUrl = whatsappUrl(viaje.agenciaTelefono, waMsg)
-  const portada = viaje.fotos[0] ?? null
   const mapaUrl = viaje.ubicacion
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(viaje.ubicacion)}`
     : null
@@ -118,11 +160,7 @@ export default function MarketplaceTripPage() {
       <main className={styles.main}>
         <div className={styles.gallery}>
           <div className={styles.galleryMain}>
-            {portada ? (
-              <img src={portada.url} alt={viaje.nombre} />
-            ) : (
-              <div className={styles.galleryPlaceholder}>✈️</div>
-            )}
+            <Carousel fotos={viaje.fotos} alt={viaje.nombre} />
           </div>
         </div>
 

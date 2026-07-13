@@ -56,13 +56,13 @@
 
 .gallery { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
 .galleryMain {
+  position: relative;
   height: 360px;
   border-radius: 18px;
   overflow: hidden;
   background: var(--bg-2);
   border: 1px solid var(--border);
 }
-.galleryMain img { width: 100%; height: 100%; object-fit: cover; }
 .galleryPlaceholder {
   width: 100%;
   height: 100%;
@@ -72,6 +72,37 @@
   font-size: 56px;
   opacity: 0.3;
 }
+
+.carouselImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.carouselDots {
+  position: absolute;
+  bottom: 14px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+}
+.carouselDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.5);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s, transform 0.2s;
+}
+.carouselDot:hover { background: rgba(255,255,255,0.8); }
+.carouselDotActive { background: #fff; transform: scale(1.25); }
 
 .content {
   display: grid;
