@@ -24,6 +24,31 @@
   margin: 0 auto 28px;
 }
 
+.industryBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(43,111,212,0.1);
+  border: 1px solid rgba(43,111,212,0.22);
+  color: var(--accent);
+  padding: 7px 16px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  width: fit-content;
+  margin: -14px auto 22px;
+  letter-spacing: 0.01em;
+}
+
+.industryDot {
+  width: 6px;
+  height: 6px;
+  background: #22c55e;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .tabs {
   display: flex;
   gap: 4px;

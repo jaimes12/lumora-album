@@ -11,8 +11,10 @@ export default function LoginPage() {
   const location = useLocation()
   const { login, register } = useAuth()
   const { theme } = useSettings()
-  const industryParam = new URLSearchParams(location.search).get('industry') ?? 'events'
-  const [mode, setMode]     = useState('login') // 'login' | 'register'
+  const searchParams = new URLSearchParams(location.search)
+  const industryParam = searchParams.get('industry') ?? 'events'
+  const isTravel = industryParam === 'travel'
+  const [mode, setMode]     = useState(searchParams.has('industry') ? 'register' : 'login') // 'login' | 'register'
   const [loading, setLoading] = useState(false)
   const [error, setError]   = useState('')
   const [form, setForm]     = useState({ orgName: '', name: '', email: '', password: '' })
@@ -43,6 +45,13 @@ export default function LoginPage() {
       <div className={styles.card}>
         <img src={theme === 'dark' ? logoWhite : logoFull} alt="Elixe" className={styles.logo} />
 
+        {isTravel && (
+          <div className={styles.industryBadge}>
+            <span className={styles.industryDot} />
+            ✈️ Agencia de viajes / Tour operador
+          </div>
+        )}
+
         <div className={styles.tabs}>
           <button className={`${styles.tab} ${mode === 'login' ? styles.tabActive : ''}`} onClick={() => { setMode('login'); setError('') }}>
             Iniciar sesión
@@ -56,8 +65,8 @@ export default function LoginPage() {
           {mode === 'register' && (
             <>
               <div className={styles.field}>
-                <label>Nombre de la empresa</label>
-                <input placeholder="Ej: Elixe Events" value={form.orgName} onChange={set('orgName')} required />
+                <label>{isTravel ? 'Nombre de la agencia' : 'Nombre de la empresa'}</label>
+                <input placeholder={isTravel ? 'Ej: Viajes García' : 'Ej: Elixe Events'} value={form.orgName} onChange={set('orgName')} required />
               </div>
               <div className={styles.field}>
                 <label>Tu nombre</label>
@@ -86,7 +95,7 @@ export default function LoginPage() {
           {error && <p className={styles.error}>{error}</p>}
 
           <button className={styles.btnSubmit} type="submit" disabled={loading}>
-            {loading ? 'Cargando...' : mode === 'login' ? 'Entrar →' : 'Crear cuenta →'}
+            {loading ? 'Cargando...' : mode === 'login' ? 'Entrar →' : isTravel ? 'Crear cuenta de agencia →' : 'Crear cuenta →'}
           </button>
         </form>
       </div>
