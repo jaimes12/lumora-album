@@ -665,6 +665,7 @@ app.Lifetime.ApplicationStarted.Register(() => _ = Task.Run(async () =>
           `created_at` datetime(6)   NOT NULL,
           PRIMARY KEY (`id`)
         ) CHARACTER SET utf8mb4",
+        "ALTER TABLE trip_passengers ADD COLUMN companions text NULL",
 
         @"CREATE TABLE IF NOT EXISTS `trip_payments` (
           `id`           varchar(255)  NOT NULL,

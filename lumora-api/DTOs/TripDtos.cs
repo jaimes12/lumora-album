@@ -44,23 +44,32 @@ public record ReorderPhotosRequest(
     [Required] List<string> PhotoIds
 );
 
+public record PassengerCompanionInfo(
+    [Required] string Name,
+    bool IsMinor = false,
+    int? Age = null
+);
+
 public record AddPassengerRequest(
     [Required] string ClientId,
     int Seats = 1,
     decimal? TotalCost = null,
-    string? Notes = null
+    string? Notes = null,
+    List<PassengerCompanionInfo>? Companions = null
 );
 
 public record UpdatePassengerRequest(
     string? Status = null, string? Notes = null,
-    decimal? TotalCost = null, int? Seats = null
+    decimal? TotalCost = null, int? Seats = null,
+    List<PassengerCompanionInfo>? Companions = null
 );
 
 public record PassengerInfo(
     string Id, string ClientId, string? ClientName, string? ClientPhone,
     int Seats, decimal TotalCost, decimal Paid, decimal Pending,
     string Status, string? Notes, DateTime CreatedAt,
-    List<TripPaymentInfo> Payments
+    List<TripPaymentInfo> Payments,
+    List<PassengerCompanionInfo>? Companions = null
 );
 
 public record AddTripPaymentRequest(

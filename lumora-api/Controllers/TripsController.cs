@@ -1,3 +1,4 @@
+using System.Text.Json;
 using lumora_api.Data;
 using lumora_api.DTOs;
 using lumora_api.Models;
@@ -94,7 +95,8 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
                 p.Id, p.ClientId, cl?.Name, cl?.Phone,
                 p.Seats, p.TotalCost, paid, p.TotalCost - paid,
                 p.Status, p.Notes, p.CreatedAt,
-                pPays.Select(x => new TripPaymentInfo(x.Id, x.PassengerId, x.Concept, x.Amount, x.Method, x.PaidAt)).ToList()
+                pPays.Select(x => new TripPaymentInfo(x.Id, x.PassengerId, x.Concept, x.Amount, x.Method, x.PaidAt)).ToList(),
+                DeserializeCompanions(p.Companions)
             );
         }).ToList();
 
@@ -192,6 +194,7 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
             Seats = req.Seats,
             TotalCost = req.TotalCost ?? trip.PricePerPerson * req.Seats,
             Notes = req.Notes,
+            Companions = SerializeCompanions(req.Companions),
             CreatedAt = DateTime.UtcNow,
         };
         await db.TripPassengers.AddAsync(passenger);
@@ -199,7 +202,8 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
         var cl = await db.Clients.Where(c => c.Id == req.ClientId).Select(c => new { c.Name, c.Phone }).FirstOrDefaultAsync();
         return Ok(new PassengerInfo(passenger.Id, passenger.ClientId, cl?.Name, cl?.Phone,
             passenger.Seats, passenger.TotalCost, 0, passenger.TotalCost,
-            passenger.Status, passenger.Notes, passenger.CreatedAt, []));
+            passenger.Status, passenger.Notes, passenger.CreatedAt, [],
+            DeserializeCompanions(passenger.Companions)));
     }
 
     [HttpPatch("{tripId}/passengers/{passengerId}")]
@@ -211,6 +215,7 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
         if (req.Notes  is not null)      p.Notes     = req.Notes;
         if (req.TotalCost.HasValue)      p.TotalCost = req.TotalCost.Value;
         if (req.Seats.HasValue)          p.Seats     = req.Seats.Value;
+        if (req.Companions is not null)  p.Companions = SerializeCompanions(req.Companions);
         await db.SaveChangesAsync();
         return Ok(new { p.Id, p.Status, p.TotalCost, p.Seats });
     }
@@ -335,6 +340,16 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
             trip.Notes, trip.CreatedAt, ps.Count, ps.Sum(p => p.Seats), rev, null,
             trip.IsPublic, trip.Description, null,
             trip.PostTitle, trip.Includes);
+    }
+
+    private static string? SerializeCompanions(List<PassengerCompanionInfo>? companions) =>
+        companions is null ? null : JsonSerializer.Serialize(companions);
+
+    private static List<PassengerCompanionInfo> DeserializeCompanions(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return [];
+        try { return JsonSerializer.Deserialize<List<PassengerCompanionInfo>>(json) ?? []; }
+        catch { return []; }
     }
 
     // ── Photos ───────────────────────────────────────────────────────────────

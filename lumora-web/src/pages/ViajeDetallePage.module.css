@@ -545,6 +545,54 @@
 
 .paxNotas { font-size: 12px; color: var(--text-muted); margin: 0; }
 
+.paxCompanions { display: flex; flex-wrap: wrap; gap: 6px; }
+.paxCompanionChip {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+
+.acompanantesList { display: flex; flex-direction: column; gap: 8px; }
+.acompananteRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.acompananteNombre {
+  flex: 1;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+}
+.acompananteNombre:focus { border-color: var(--accent); }
+.acompananteMenorLabel {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.acompananteEdad {
+  width: 64px;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+}
+.acompananteEdad:focus { border-color: var(--accent); }
+
 /* Expenses Section */
 .gastosSummary {
   display: flex;

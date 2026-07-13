@@ -39,6 +39,7 @@ function toFrontend(t) {
       pendiente: p.pending,
       estado: p.status,
       notas: p.notes ?? '',
+      companions: (p.companions ?? []).map(c => ({ nombre: c.name, esMenor: c.isMinor, edad: c.age })),
       pagos: (p.payments ?? []).map(x => ({
         id: x.id,
         pasajeroId: x.passengerId,

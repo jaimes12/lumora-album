@@ -32,8 +32,10 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
   const [clientes, setClientes] = useState([])
   const [busqueda, setBusqueda] = useState('')
   const [clienteSel, setClienteSel] = useState(null)
+  const [telefono, setTelefono] = useState('')
   const [asientos, setAsientos] = useState(1)
   const [costoCustom, setCostoCustom] = useState('')
+  const [acompanantes, setAcompanantes] = useState([{ nombre: '', esMenor: false, edad: '' }])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [creandoCliente, setCreandoCliente] = useState(false)
@@ -46,12 +48,27 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
     clientesApi.getAll().then(setClientes).catch(() => {})
   }, [])
 
+  // Mantiene la lista de acompañantes del mismo tamaño que los asientos
+  useEffect(() => {
+    setAcompanantes(prev => {
+      if (asientos === prev.length) return prev
+      if (asientos > prev.length) {
+        return [...prev, ...Array.from({ length: asientos - prev.length }, () => ({ nombre: '', esMenor: false, edad: '' }))]
+      }
+      return prev.slice(0, asientos)
+    })
+  }, [asientos])
+
   const clientesFiltrados = clientes.filter(c =>
     c.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
     (c.telefono || '').includes(busqueda)
   )
 
   const costoTotal = costoCustom !== '' ? parseFloat(costoCustom) : (viaje.precioPorPersona * asientos)
+
+  const setAcompanante = (idx, patch) => {
+    setAcompanantes(prev => prev.map((a, i) => i === idx ? { ...a, ...patch } : a))
+  }
 
   const handleCrearCliente = async (e) => {
     e.preventDefault()
@@ -66,6 +83,7 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
       })
       setClientes(prev => [...prev, nuevo])
       setClienteSel(nuevo)
+      setTelefono(nuevo.telefono || '')
       setBusqueda(nuevo.nombre)
       setCreandoCliente(false)
     } catch (err) {
@@ -80,12 +98,19 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
     if (!clienteSel) { setError('Selecciona un pasajero'); return }
     setSaving(true); setError('')
     try {
+      if (telefono.trim() && telefono.trim() !== (clienteSel.telefono || '')) {
+        await clientesApi.update(clienteSel.id, { phone: telefono.trim() })
+      }
+      const companions = acompanantes
+        .filter(a => a.nombre.trim())
+        .map(a => ({ name: a.nombre.trim(), isMinor: a.esMenor, age: a.esMenor && a.edad ? parseInt(a.edad) : null }))
       const nuevo = await viajesApi.addPassenger(viaje.id, {
         clientId: clienteSel.id,
         seats: asientos,
         totalCost: costoTotal,
+        companions,
       })
-      onAdded(nuevo)
+      onAdded({ ...nuevo, clientPhone: telefono.trim() || nuevo.clientPhone })
       onClose()
     } catch (err) {
       setError(err.message || 'Error al agregar pasajero')
@@ -126,7 +151,7 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
                     <button
                       key={c.id} type="button"
                       className={`${styles.clienteRow} ${clienteSel?.id === c.id ? styles.clienteRowSel : ''}`}
-                      onClick={() => { setClienteSel(c); setBusqueda(c.nombre) }}
+                      onClick={() => { setClienteSel(c); setBusqueda(c.nombre); setTelefono(c.telefono || '') }}
                     >
                       <span className={styles.clienteNombre}>{c.nombre}</span>
                       {c.telefono && <span className={styles.clienteTel}>{c.telefono}</span>}
@@ -178,6 +203,13 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
             </div>
           )}
 
+          {!creandoCliente && clienteSel && (
+            <div className={styles.field}>
+              <label>Teléfono de contacto</label>
+              <input type="tel" placeholder="55 1234 5678" value={telefono} onChange={e => setTelefono(e.target.value)} />
+            </div>
+          )}
+
           {!creandoCliente && (
             <>
               <div className={styles.row2}>
@@ -198,6 +230,42 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
               <p className={styles.costoHint}>
                 Precio por defecto: {fmtMoney(viaje.precioPorPersona)} x {asientos} = {fmtMoney(viaje.precioPorPersona * asientos)}
               </p>
+
+              {asientos > 1 && (
+                <div className={styles.field}>
+                  <label>Acompañantes ({asientos})</label>
+                  <div className={styles.acompanantesList}>
+                    {acompanantes.map((a, i) => (
+                      <div key={i} className={styles.acompananteRow}>
+                        <input
+                          className={styles.acompananteNombre}
+                          placeholder={`Nombre de la persona ${i + 1}`}
+                          value={a.nombre}
+                          onChange={e => setAcompanante(i, { nombre: e.target.value })}
+                        />
+                        <label className={styles.acompananteMenorLabel}>
+                          <input
+                            type="checkbox"
+                            checked={a.esMenor}
+                            onChange={e => setAcompanante(i, { esMenor: e.target.checked, edad: e.target.checked ? a.edad : '' })}
+                          />
+                          Menor de edad
+                        </label>
+                        {a.esMenor && (
+                          <input
+                            type="number" min="0" max="17"
+                            className={styles.acompananteEdad}
+                            placeholder="Edad"
+                            value={a.edad}
+                            onChange={e => setAcompanante(i, { edad: e.target.value })}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {error && <p className={styles.error}>{error}</p>}
               <div className={styles.modalActions}>
                 <button type="button" className={styles.btnSecondary} onClick={onClose}>Cancelar</button>
@@ -854,6 +922,16 @@ export default function ViajeDetallePage() {
                     </div>
                   )}
 
+                  {pax.companions?.length > 0 && (
+                    <div className={styles.paxCompanions}>
+                      {pax.companions.map((c, i) => (
+                        <span key={i} className={styles.paxCompanionChip}>
+                          {c.nombre}{c.esMenor ? ` · menor${c.edad ? ` (${c.edad})` : ''}` : ''}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
                   {pax.notas && <p className={styles.paxNotas}>{pax.notas}</p>}
                 </div>
               )
@@ -976,6 +1054,7 @@ export default function ViajeDetallePage() {
               pendiente: nuevo.totalCost,
               estado: nuevo.status,
               notas: nuevo.notes ?? '',
+              companions: (nuevo.companions ?? []).map(c => ({ nombre: c.name, esMenor: c.isMinor, edad: c.age })),
               pagos: [],
             }
             setViaje(prev => ({ ...prev, pasajerosList: [...(prev.pasajerosList ?? []), p] }))
