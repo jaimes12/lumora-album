@@ -46,6 +46,7 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
     public DbSet<TripPassenger> TripPassengers => Set<TripPassenger>();
     public DbSet<TripPayment> TripPayments => Set<TripPayment>();
     public DbSet<TripExpense> TripExpenses => Set<TripExpense>();
+    public DbSet<TripPhoto> TripPhotos => Set<TripPhoto>();
     public DbSet<Gasto> Gastos => Set<Gasto>();
 
     protected override void OnModelCreating(ModelBuilder mb)

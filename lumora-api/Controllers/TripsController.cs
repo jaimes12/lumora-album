@@ -1,6 +1,7 @@
 using lumora_api.Data;
 using lumora_api.DTOs;
 using lumora_api.Models;
+using lumora_api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,7 @@ namespace lumora_api.Controllers;
 [ApiController]
 [Route("api/trips")]
 [Authorize]
-public class TripsController(LumoraDbContext db) : ControllerBase
+public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
 {
     private string OrgId   => User.FindFirst("org_id")?.Value   ?? string.Empty;
     private string? UserId => User.FindFirst("user_id")?.Value;
@@ -51,7 +52,8 @@ public class TripsController(LumoraDbContext db) : ControllerBase
                 t.Notes, t.CreatedAt,
                 ps?.Count ?? 0, ps?.Seats ?? 0,
                 py?.Total ?? 0,
-                t.CreatedById is not null && creators.TryGetValue(t.CreatedById, out var cn) ? cn : null
+                t.CreatedById is not null && creators.TryGetValue(t.CreatedById, out var cn) ? cn : null,
+                t.IsPublic, t.Description
             );
         }));
     }
@@ -101,11 +103,18 @@ public class TripsController(LumoraDbContext db) : ControllerBase
             .Select(e => new TripExpenseInfo(e.Id, e.Concept, e.Amount, e.Paid, e.Notes, e.CreatedAt))
             .ToListAsync();
 
+        var photos = await db.TripPhotos
+            .Where(p => p.TripId == id && p.OrgId == OrgId)
+            .OrderBy(p => p.CreatedAt)
+            .Select(p => new TripPhotoInfo(p.Id, p.TripId, p.Url, p.Caption, p.CreatedAt))
+            .ToListAsync();
+
         return Ok(new TripDetailResponse(
             trip.Id, trip.Name, trip.Destination, trip.Status,
             trip.DepartureDate, trip.ReturnDate,
             trip.PricePerPerson, trip.SeatsTotal,
-            trip.Notes, trip.CreatedAt, passengerList, createdByName, expenses
+            trip.Notes, trip.CreatedAt, passengerList, createdByName, expenses,
+            trip.IsPublic, trip.Description, photos
         ));
     }
 
@@ -130,7 +139,8 @@ public class TripsController(LumoraDbContext db) : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = trip.Id },
             new TripResponse(trip.Id, trip.Name, trip.Destination, trip.Status,
                 trip.DepartureDate, trip.ReturnDate, trip.PricePerPerson, trip.SeatsTotal,
-                trip.Notes, trip.CreatedAt, 0, 0, 0, null));
+                trip.Notes, trip.CreatedAt, 0, 0, 0, null,
+                trip.IsPublic, trip.Description));
     }
 
     [HttpPatch("{id}")]
@@ -146,6 +156,8 @@ public class TripsController(LumoraDbContext db) : ControllerBase
         if (req.ReturnDate.HasValue)          trip.ReturnDate    = req.ReturnDate.Value.ToUniversalTime();
         if (req.PricePerPerson.HasValue)      trip.PricePerPerson = req.PricePerPerson.Value;
         if (req.SeatsTotal.HasValue)          trip.SeatsTotal    = req.SeatsTotal.Value;
+        if (req.IsPublic.HasValue)             trip.IsPublic      = req.IsPublic.Value;
+        if (req.Description is not null)      trip.Description   = req.Description;
         await db.SaveChangesAsync();
         return Ok(await GetTripResponse(trip));
     }
@@ -315,6 +327,42 @@ public class TripsController(LumoraDbContext db) : ControllerBase
         var rev = await db.TripPayments.Where(p => p.TripId == trip.Id).SumAsync(p => (decimal?)p.Amount) ?? 0;
         return new TripResponse(trip.Id, trip.Name, trip.Destination, trip.Status,
             trip.DepartureDate, trip.ReturnDate, trip.PricePerPerson, trip.SeatsTotal,
-            trip.Notes, trip.CreatedAt, ps.Count, ps.Sum(p => p.Seats), rev, null);
+            trip.Notes, trip.CreatedAt, ps.Count, ps.Sum(p => p.Seats), rev, null,
+            trip.IsPublic, trip.Description);
+    }
+
+    // ── Photos ───────────────────────────────────────────────────────────────
+
+    [HttpPost("{id}/photos")]
+    public async Task<IActionResult> AddPhoto(string id, [FromBody] AddTripPhotoRequest req)
+    {
+        var trip = await db.Trips.FirstOrDefaultAsync(t => t.Id == id && t.OrgId == OrgId);
+        if (trip is null) return NotFound();
+
+        var bytes = Convert.FromBase64String(req.ImageData);
+        var url   = await r2.UploadAsync(bytes, "image/jpeg");
+        if (url is null) return BadRequest(new { error = "No se pudo subir la imagen" });
+
+        var photo = new TripPhoto {
+            Id        = Guid.NewGuid().ToString(),
+            TripId    = id,
+            OrgId     = OrgId,
+            Url       = url,
+            Caption   = req.Caption,
+            CreatedAt = DateTime.UtcNow,
+        };
+        await db.TripPhotos.AddAsync(photo);
+        await db.SaveChangesAsync();
+        return Ok(new TripPhotoInfo(photo.Id, photo.TripId, photo.Url, photo.Caption, photo.CreatedAt));
+    }
+
+    [HttpDelete("{id}/photos/{photoId}")]
+    public async Task<IActionResult> DeletePhoto(string id, string photoId)
+    {
+        var photo = await db.TripPhotos.FirstOrDefaultAsync(p => p.Id == photoId && p.TripId == id && p.OrgId == OrgId);
+        if (photo is null) return NotFound();
+        db.TripPhotos.Remove(photo);
+        await db.SaveChangesAsync();
+        return NoContent();
     }
 }

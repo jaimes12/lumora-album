@@ -302,6 +302,7 @@ export default function ViajesLanding() {
           <a href="#features">Características</a>
           <a href="#how">Cómo funciona</a>
           <a href="#pricing">Precios</a>
+          <a onClick={() => navigate('/viajes/market')} style={{ cursor: 'pointer' }}>Marketplace</a>
         </div>
         <div className={styles.navActions}>
           <button className={styles.navLogin} onClick={() => navigate('/login')}>Acceder</button>

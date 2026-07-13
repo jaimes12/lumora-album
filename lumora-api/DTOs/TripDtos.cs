@@ -14,7 +14,8 @@ public record CreateTripRequest(
 public record UpdateTripRequest(
     string? Name, string? Destination, string? Status,
     DateTime? DepartureDate, DateTime? ReturnDate,
-    decimal? PricePerPerson, int? SeatsTotal, string? Notes
+    decimal? PricePerPerson, int? SeatsTotal, string? Notes,
+    bool? IsPublic = null, string? Description = null
 );
 
 public record TripResponse(
@@ -23,7 +24,18 @@ public record TripResponse(
     decimal PricePerPerson, int SeatsTotal,
     string? Notes, DateTime CreatedAt,
     int PassengerCount, int SeatsTaken,
-    decimal TotalRevenue, string? CreatedByName
+    decimal TotalRevenue, string? CreatedByName,
+    bool IsPublic = false, string? Description = null,
+    List<TripPhotoInfo>? Photos = null
+);
+
+public record TripPhotoInfo(
+    string Id, string TripId, string Url, string? Caption, DateTime CreatedAt
+);
+
+public record AddTripPhotoRequest(
+    [Required] string ImageData,   // base64
+    string? Caption
 );
 
 public record AddPassengerRequest(
@@ -68,7 +80,9 @@ public record TripDetailResponse(
     string? Notes, DateTime CreatedAt,
     List<PassengerInfo> Passengers,
     string? CreatedByName,
-    List<TripExpenseInfo> Expenses
+    List<TripExpenseInfo> Expenses,
+    bool IsPublic = false, string? Description = null,
+    List<TripPhotoInfo>? Photos = null
 );
 
 public record TripExpenseInfo(

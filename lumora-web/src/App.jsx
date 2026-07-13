@@ -38,6 +38,8 @@ import NotasPage         from './pages/NotasPage'
 import ViajesPage        from './pages/ViajesPage'
 import ViajeDetallePage  from './pages/ViajeDetallePage'
 import ViajesLanding     from './pages/ViajesLanding'
+import MarketplacePage      from './pages/MarketplacePage'
+import MarketplaceTripPage  from './pages/MarketplaceTripPage'
 import FinanzasPage      from './pages/FinanzasPage'
 
 function LandingPage() {
@@ -93,6 +95,8 @@ export default function App() {
             {/* Landing */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/viajes" element={<ViajesLanding />} />
+            <Route path="/viajes/market" element={<MarketplacePage />} />
+            <Route path="/viajes/market/:id" element={<MarketplaceTripPage />} />
 
             {/* Auth */}
             <Route path="/login" element={<LoginPage />} />

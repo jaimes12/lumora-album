@@ -691,6 +691,21 @@ app.Lifetime.ApplicationStarted.Register(() => _ = Task.Run(async () =>
           PRIMARY KEY (`id`)
         ) CHARACTER SET utf8mb4",
 
+        // ── Marketplace de viajes ─────────────────────────────────────────────
+        "ALTER TABLE trips ADD COLUMN is_public tinyint(1) NOT NULL DEFAULT 0",
+        "ALTER TABLE trips ADD COLUMN description text NULL",
+
+        @"CREATE TABLE IF NOT EXISTS `trip_photos` (
+          `id`         varchar(255) NOT NULL,
+          `trip_id`    varchar(255) NOT NULL,
+          `org_id`     varchar(255) NOT NULL,
+          `url`        varchar(500) NOT NULL,
+          `caption`    varchar(500) NULL,
+          `created_at` datetime(6)  NOT NULL,
+          PRIMARY KEY (`id`),
+          KEY `idx_trip_photos_trip` (`trip_id`)
+        ) CHARACTER SET utf8mb4",
+
         @"CREATE TABLE IF NOT EXISTS `trial_email_log` (
           `id`         varchar(255) NOT NULL,
           `org_id`     varchar(255) NOT NULL,

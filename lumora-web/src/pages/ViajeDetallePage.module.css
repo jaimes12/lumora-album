@@ -720,7 +720,7 @@
 
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field label { font-size: 13px; font-weight: 600; color: var(--text); }
-.field input, .field select {
+.field input, .field select, .field textarea {
   background: var(--bg-1);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -730,8 +730,9 @@
   outline: none;
   transition: border-color 0.15s;
   font-family: inherit;
+  resize: vertical;
 }
-.field input:focus, .field select:focus { border-color: var(--accent); }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
 
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
@@ -835,6 +836,68 @@
 .modalActions { display: flex; gap: 8px; justify-content: flex-end; }
 
 .error { font-size: 13px; color: #ef4444; margin: 0; }
+
+/* Marketplace section */
+.marketplaceToggleRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.marketplaceToggleLabel { font-size: 14px; font-weight: 600; color: var(--text); margin: 0; }
+.marketplaceToggleSub { font-size: 12px; color: var(--text-muted); margin: 2px 0 0; }
+
+.switch { position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switchSlider {
+  position: absolute; cursor: pointer; inset: 0;
+  background: var(--border); border-radius: 999px;
+  transition: background 0.2s;
+}
+.switchSlider::before {
+  content: ""; position: absolute; width: 18px; height: 18px;
+  left: 3px; bottom: 3px; background: #fff; border-radius: 50%;
+  transition: transform 0.2s;
+}
+.switch input:checked + .switchSlider { background: var(--accent); }
+.switch input:checked + .switchSlider::before { transform: translateX(18px); }
+.switch input:disabled + .switchSlider { opacity: 0.6; cursor: not-allowed; }
+
+.photoGrid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.photoThumb {
+  position: relative;
+  width: 88px; height: 88px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.photoThumb img { width: 100%; height: 100%; object-fit: cover; }
+.photoDelete {
+  position: absolute; top: 3px; right: 3px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.photoAdd {
+  width: 88px; height: 88px;
+  border-radius: 10px;
+  border: 1px dashed var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.photoAdd:hover { border-color: var(--accent); color: var(--accent); }
 
 /* Responsive */
 @media (max-width: 640px) {

@@ -23,6 +23,9 @@ function toFrontend(t) {
     ingresos: t.totalRevenue ?? 0,
     notas: t.notes ?? '',
     createdByName: t.createdByName ?? null,
+    publico: t.isPublic ?? false,
+    descripcion: t.description ?? '',
+    fotos: (t.photos ?? []).map(p => ({ id: p.id, url: p.url, caption: p.caption })),
     pasajerosList: (t.passengers ?? []).map(p => ({
       id: p.id,
       clienteId: p.clientId,
@@ -62,6 +65,8 @@ export const viajesApi = {
   create: (data) => api.post('/api/trips', data).then(toFrontend),
   update: (id, data) => api.patch(`/api/trips/${id}`, data).then(toFrontend),
   delete: (id) => api.delete(`/api/trips/${id}`),
+  addPhoto: (tripId, data) => api.post(`/api/trips/${tripId}/photos`, data),
+  deletePhoto: (tripId, photoId) => api.delete(`/api/trips/${tripId}/photos/${photoId}`),
   addPassenger: (tripId, data) => api.post(`/api/trips/${tripId}/passengers`, data),
   updatePassenger: (tripId, passengerId, data) => api.patch(`/api/trips/${tripId}/passengers/${passengerId}`, data),
   removePassenger: (tripId, passengerId) => api.delete(`/api/trips/${tripId}/passengers/${passengerId}`),
