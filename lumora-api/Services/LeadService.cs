@@ -54,7 +54,8 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer, IR2Servi
             Budget = req.Budget,
             Stage = "nuevo",
             UnreadCount = 0,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            Source = "app",
         };
         await db.Leads.AddAsync(lead);
         await db.SaveChangesAsync();
@@ -77,7 +78,7 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer, IR2Servi
             lead.Id, lead.ClientId, lead.Name, lead.Phone, lead.EventType, lead.EventDate,
             lead.Budget, lead.Stage, lead.LastMessage, lead.UnreadCount,
             lead.CreatedAt, lead.LastMessageAt,
-            msgs.Select(ToMessageResponse).ToList());
+            msgs.Select(ToMessageResponse).ToList(), lead.Source);
     }
 
     public async Task<IEnumerable<LeadResponse>> GetByOrgAsync(string orgId, string? stage = null)
@@ -89,7 +90,7 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer, IR2Servi
         return list.Select(l => new LeadResponse(
             l.Id, l.ClientId, l.Name, l.Phone, l.EventType, l.EventDate,
             l.Budget, l.Stage, l.LastMessage, l.UnreadCount,
-            l.CreatedAt, l.LastMessageAt, []));
+            l.CreatedAt, l.LastMessageAt, [], l.Source));
     }
 
     public async Task<LeadMessagesPage> GetMessagesPageAsync(string orgId, string leadId, int skip, int take)
@@ -292,7 +293,8 @@ public class LeadService(LumoraDbContext db, IWaServerService waServer, IR2Servi
     private static LeadResponse ToResponse(Lead l) => new(
         l.Id, l.ClientId, l.Name, l.Phone, l.EventType, l.EventDate, l.Budget,
         l.Stage, l.LastMessage, l.UnreadCount, l.CreatedAt, l.LastMessageAt,
-        l.Messages.OrderBy(m => m.SentAt).Select(ToMessageResponse).ToList()
+        l.Messages.OrderBy(m => m.SentAt).Select(ToMessageResponse).ToList(),
+        l.Source
     );
 
     private static LeadMessageResponse ToMessageResponse(LeadMessage m) => new(

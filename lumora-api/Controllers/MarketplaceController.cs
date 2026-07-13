@@ -114,6 +114,7 @@ public class MarketplaceController(LumoraDbContext db) : ControllerBase
             Stage         = "nuevo",
             CreatedAt     = DateTime.UtcNow,
             LastMessageAt = DateTime.UtcNow,
+            Source        = "marketplace",
         };
         await db.Leads.AddAsync(lead);
         await db.SaveChangesAsync();

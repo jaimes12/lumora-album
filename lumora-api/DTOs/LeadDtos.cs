@@ -52,5 +52,6 @@ public record LeadResponse(
     int UnreadCount,
     DateTime CreatedAt,
     DateTime? LastMessageAt,
-    List<LeadMessageResponse> Messages
+    List<LeadMessageResponse> Messages,
+    string Source = "whatsapp"
 );

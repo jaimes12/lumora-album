@@ -18,6 +18,7 @@ function toFrontend(l) {
     budgetRaw:    l.budget ?? null,
     presupuesto:  l.budget ? '$' + Number(l.budget).toLocaleString('es-MX') : '$0',
     ultimoMsg: l.lastMessage ?? '',
+    fuente: l.source ?? 'whatsapp',
     hora: l.lastMessageAt ? new Date(l.lastMessageAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '',
     noLeidos: l.unreadCount,
     mensajes: (l.messages ?? []).map(m => ({

@@ -34,6 +34,9 @@ public class Lead
     [Column("stage")]
     public string Stage { get; set; } = "nuevo"; // nuevo|contactado|cotizacion|negociando|confirmado
 
+    [Column("source")]
+    public string Source { get; set; } = "whatsapp"; // whatsapp|app|marketplace
+
     [Column("last_message")]
     public string? LastMessage { get; set; }
 

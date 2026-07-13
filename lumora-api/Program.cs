@@ -343,6 +343,7 @@ app.Lifetime.ApplicationStarted.Register(() => _ = Task.Run(async () =>
             `last_message_at` datetime(6)    NULL,
             PRIMARY KEY (`id`)
         ) CHARACTER SET utf8mb4",
+        "ALTER TABLE leads ADD COLUMN source varchar(50) NOT NULL DEFAULT 'whatsapp'",
 
         @"CREATE TABLE IF NOT EXISTS `lead_messages` (
             `id`         varchar(255) NOT NULL,
