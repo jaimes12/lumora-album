@@ -237,12 +237,16 @@ function PieChart({ data = [] }) {
 
 function VentasStats({ stats, loading }) {
   const f = v => '$' + Number(v ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  const isTravel = stats?.industry === 'travel'
+  const unit = isTravel ? 'reservas' : 'eventos'
   const cards = [
-    { label: 'Ventas de Hoy',          value: f(stats?.todaySales),    sub: 'eventos de hoy',        color: '#7c6af7' },
-    { label: 'Total Ventas (Eventos)',  value: f(stats?.totalSales),    sub: `${stats?.totalEvents ?? 0} eventos`, color: '#c9a227' },
-    { label: 'Total Pagos Recibidos',   value: f(stats?.totalPayments), sub: 'pagos registrados',      color: '#34d399' },
-    { label: 'Promedio Diario',         value: f(stats?.dailyAverage),  sub: 'Últimos 30 días',        color: '#38bdf8' },
-    { label: 'Eventos Totales',         value: String(stats?.totalEvents ?? 0), sub: 'en el período',  color: '#a78bfa' },
+    { label: 'Ventas de Hoy',                             value: f(stats?.todaySales),    sub: `${unit} de hoy`,             color: '#7c6af7' },
+    { label: isTravel ? 'Total Ventas (Reservas)' : 'Total Ventas (Eventos)',
+                                                            value: f(stats?.totalSales),    sub: `${stats?.totalEvents ?? 0} ${unit}`, color: '#c9a227' },
+    { label: 'Total Pagos Recibidos',                      value: f(stats?.totalPayments), sub: 'pagos registrados',          color: '#34d399' },
+    { label: 'Promedio Diario',                            value: f(stats?.dailyAverage),  sub: 'Últimos 30 días',            color: '#38bdf8' },
+    { label: isTravel ? 'Reservas Totales' : 'Eventos Totales',
+                                                            value: String(stats?.totalEvents ?? 0), sub: 'en el período',      color: '#a78bfa' },
   ]
 
   return (
@@ -263,10 +267,10 @@ function VentasStats({ stats, loading }) {
         <div className={styles.chartCard}>
           <div className={styles.chartCardHeader}>
             <span className={styles.chartCardTitle}>Ventas por Mes</span>
-            <span className={styles.chartCardSub}>Presupuesto de eventos (MXN)</span>
+            <span className={styles.chartCardSub}>{isTravel ? 'Valor de reservas (MXN)' : 'Presupuesto de eventos (MXN)'}</span>
           </div>
           {loading ? <div className={styles.chartSkeleton} /> : (
-            <BarChart data={stats?.byMonth ?? []} color="#c9a227" emptyText="Sin eventos en los últimos 12 meses" />
+            <BarChart data={stats?.byMonth ?? []} color="#c9a227" emptyText={`Sin ${unit} en los últimos 12 meses`} />
           )}
         </div>
 
@@ -653,7 +657,9 @@ export default function VentasPage() {
         <div>
           <h1 className={styles.title}>Ventas</h1>
           <p className={styles.sub}>
-            {tab === 'estadisticas' ? 'Análisis de ingresos por eventos' : 'Cotizaciones y facturación'}
+            {tab === 'estadisticas'
+              ? (stats?.industry === 'travel' ? 'Análisis de ingresos por reservas de viaje' : 'Análisis de ingresos por eventos')
+              : 'Cotizaciones y facturación'}
           </p>
         </div>
         <div className={styles.headerActions}>
