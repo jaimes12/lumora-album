@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { viajesApi } from '../api/viajesApi'
 import { clientesApi } from '../api/clientesApi'
 import styles from './ViajesPage.module.css'
@@ -119,11 +119,19 @@ function NuevoViajeModal({ onClose, onCreated }) {
 
 export default function ViajesPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [viajes, setViajes] = useState([])
   const [loading, setLoading] = useState(true)
   const [filtro, setFiltro] = useState(null)
   const [busqueda, setBusqueda] = useState('')
   const [showModal, setShowModal] = useState(false)
+
+  useEffect(() => {
+    if (location.state?.autoOpenNewTrip) {
+      setShowModal(true)
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [location.state]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const load = async () => {
     setLoading(true)

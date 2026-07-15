@@ -27,7 +27,7 @@ export function AuthProvider({ children }) {
         if (res?.plan !== undefined) {
           setUser(prev => {
             if (!prev) return prev
-            const next = { ...prev, plan: res.plan ?? 'free', role: res.role ?? prev.role ?? 'admin', trialStartedAt: res.trialStartedAt ?? prev.trialStartedAt ?? null, industry: res.industry ?? prev.industry ?? 'events' }
+            const next = { ...prev, plan: res.plan ?? 'free', role: res.role ?? prev.role ?? 'admin', trialStartedAt: res.trialStartedAt ?? prev.trialStartedAt ?? null, industry: res.industry ?? prev.industry ?? 'events', onboardingCompleted: res.onboardingCompleted ?? prev.onboardingCompleted ?? true }
             localStorage.setItem('elixe_user', JSON.stringify(next))
             return next
           })
@@ -45,7 +45,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   const saveUser = (res) => {
-    const u = { userId: res.userId, orgId: res.orgId, name: res.name, email: res.email, plan: res.plan ?? 'free', role: res.role ?? 'admin', trialStartedAt: res.trialStartedAt ?? null, industry: res.industry ?? 'events' }
+    const u = { userId: res.userId, orgId: res.orgId, name: res.name, email: res.email, plan: res.plan ?? 'free', role: res.role ?? 'admin', trialStartedAt: res.trialStartedAt ?? null, industry: res.industry ?? 'events', onboardingCompleted: res.onboardingCompleted ?? true }
     localStorage.setItem('elixe_token', res.token)
     localStorage.setItem('elixe_user', JSON.stringify(u))
     setUser(u)
@@ -113,6 +113,16 @@ export function AuthProvider({ children }) {
     return res.trialStartedAt
   }
 
+  const completeOnboarding = async () => {
+    setUser(prev => {
+      if (!prev) return prev
+      const next = { ...prev, onboardingCompleted: true }
+      localStorage.setItem('elixe_user', JSON.stringify(next))
+      return next
+    })
+    try { await api.post('/api/auth/complete-onboarding', {}) } catch {}
+  }
+
   const logout = () => {
     localStorage.removeItem('elixe_token')
     localStorage.removeItem('elixe_user')
@@ -120,7 +130,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, updatePlan, updateProfile, updateEmail, updatePassword, updatePhoto, startTrial, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, updatePlan, updateProfile, updateEmail, updatePassword, updatePhoto, startTrial, completeOnboarding, logout }}>
       {children}
     </AuthContext.Provider>
   )

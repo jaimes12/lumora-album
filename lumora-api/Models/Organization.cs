@@ -37,6 +37,9 @@ public class Organization
     [Column("wa_connected")]
     public bool WaConnected { get; set; } = false;
 
+    [Column("onboarding_completed")]
+    public bool OnboardingCompleted { get; set; } = false;
+
     public ICollection<Client> Clients { get; set; } = [];
     public ICollection<Event> Events { get; set; } = [];
 }

@@ -22,6 +22,7 @@ public interface IAuthService
     Task UpdatePasswordAsync(string userId, UpdatePasswordRequest req);
     Task<string> UpdatePhotoAsync(string userId, string photoBase64, IR2Service r2);
     Task<DateTime> StartTrialAsync(string orgId);
+    Task CompleteOnboardingAsync(string orgId);
 }
 
 public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r2) : IAuthService
@@ -71,7 +72,8 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
             "free",
             user.Role,
             org.TrialStartedAt,
-            org.Industry
+            org.Industry,
+            org.OnboardingCompleted
         );
     }
 
@@ -96,7 +98,8 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
             user.Organization?.Plan ?? "free",
             user.Role,
             user.Organization?.TrialStartedAt,
-            user.Organization?.Industry ?? "events"
+            user.Organization?.Industry ?? "events",
+            user.Organization?.OnboardingCompleted ?? true
         );
     }
 
@@ -113,7 +116,7 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
     {
         var user = await db.Users.Include(u => u.Organization).FirstOrDefaultAsync(u => u.Id == userId)
             ?? throw new InvalidOperationException("Usuario no encontrado");
-        return new UserProfileResponse(user.Id, user.Name, user.Email, user.ProfilePhoto, user.Organization?.Plan ?? "free", user.Role, user.Organization?.TrialStartedAt, user.Organization?.Industry ?? "events");
+        return new UserProfileResponse(user.Id, user.Name, user.Email, user.ProfilePhoto, user.Organization?.Plan ?? "free", user.Role, user.Organization?.TrialStartedAt, user.Organization?.Industry ?? "events", user.Organization?.OnboardingCompleted ?? true);
     }
 
     public async Task UpdateProfileAsync(string userId, UpdateProfileRequest req)
@@ -164,6 +167,14 @@ public class AuthService(LumoraDbContext db, IConfiguration config, IR2Service r
         org.TrialStartedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
         return org.TrialStartedAt.Value;
+    }
+
+    public async Task CompleteOnboardingAsync(string orgId)
+    {
+        var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == orgId);
+        if (org is null || org.OnboardingCompleted) return;
+        org.OnboardingCompleted = true;
+        await db.SaveChangesAsync();
     }
 
     private static string HashPassword(string password)

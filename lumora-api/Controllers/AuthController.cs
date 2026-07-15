@@ -128,6 +128,16 @@ public class AuthController(IAuthService auth, IR2Service r2) : ControllerBase
         catch (Exception ex) { return StatusCode(500, new { message = ex.Message }); }
     }
 
+    [HttpPost("complete-onboarding")]
+    [Authorize]
+    public async Task<IActionResult> CompleteOnboarding()
+    {
+        var orgId = User.FindFirst("org_id")?.Value;
+        if (string.IsNullOrEmpty(orgId)) return Unauthorized();
+        await auth.CompleteOnboardingAsync(orgId);
+        return Ok(new { ok = true });
+    }
+
     [HttpPatch("photo")]
     [Authorize]
     public async Task<IActionResult> UpdatePhoto([FromBody] UpdatePhotoRequest req)

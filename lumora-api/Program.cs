@@ -703,6 +703,12 @@ app.Lifetime.ApplicationStarted.Register(() => _ = Task.Run(async () =>
         "ALTER TABLE trips ADD COLUMN views int NOT NULL DEFAULT 0",
         "ALTER TABLE trip_passengers ADD COLUMN seat_number varchar(100) NULL",
 
+        // ── Tour de bienvenida ─────────────────────────────────────────────────
+        "ALTER TABLE organizations ADD COLUMN onboarding_completed tinyint(1) NOT NULL DEFAULT 0",
+        // Backfill: orgs created before this feature shipped never need to see the tour.
+        // Cutoff is fixed so future signups (after this deploy) keep onboarding_completed = 0.
+        "UPDATE organizations SET onboarding_completed = 1 WHERE created_at < '2026-07-15 21:10:00'",
+
         @"CREATE TABLE IF NOT EXISTS `trip_photos` (
           `id`         varchar(255) NOT NULL,
           `trip_id`    varchar(255) NOT NULL,
