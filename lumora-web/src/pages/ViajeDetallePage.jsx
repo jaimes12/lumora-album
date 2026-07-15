@@ -84,6 +84,7 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
   const [clienteSel, setClienteSel] = useState(null)
   const [telefono, setTelefono] = useState('')
   const [asientos, setAsientos] = useState(1)
+  const [asiento, setAsiento] = useState('')
   const [costoCustom, setCostoCustom] = useState('')
   const [acompanantes, setAcompanantes] = useState([{ nombre: '', esMenor: false, edad: '' }])
   const [saving, setSaving] = useState(false)
@@ -159,8 +160,9 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
         seats: asientos,
         totalCost: costoTotal,
         companions,
+        seatNumber: asiento.trim() || null,
       })
-      onAdded({ ...nuevo, clientPhone: telefono.trim() || nuevo.clientPhone })
+      onAdded({ ...nuevo, clienteTelefono: telefono.trim() || nuevo.clienteTelefono })
       onClose()
     } catch (err) {
       setError(err.message || 'Error al agregar pasajero')
@@ -281,6 +283,11 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
                 Precio por defecto: {fmtMoney(viaje.precioPorPersona)} x {asientos} = {fmtMoney(viaje.precioPorPersona * asientos)}
               </p>
 
+              <div className={styles.field}>
+                <label>Número de asiento (opcional)</label>
+                <input placeholder="Ej: 12, 13 o A1-A3" value={asiento} onChange={e => setAsiento(e.target.value)} />
+              </div>
+
               {asientos > 1 && (
                 <div className={styles.field}>
                   <label>Acompañantes ({asientos})</label>
@@ -325,6 +332,152 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
               </div>
             </>
           )}
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// ── Editar Pasajero Modal ──────────────────────────────────────────────────────
+function EditarPasajeroModal({ viaje, pasajero, onClose, onSaved }) {
+  const [asientos, setAsientos] = useState(pasajero.asientos)
+  const [asiento, setAsiento] = useState(pasajero.asiento || '')
+  const [costo, setCosto] = useState(String(pasajero.costoTotal))
+  const [estado, setEstado] = useState(pasajero.estado)
+  const [notas, setNotas] = useState(pasajero.notas || '')
+  const [acompanantes, setAcompanantes] = useState(() => {
+    const base = (pasajero.companions ?? []).map(c => ({ nombre: c.nombre, esMenor: c.esMenor, edad: c.edad != null ? String(c.edad) : '' }))
+    if (base.length === pasajero.asientos) return base
+    if (base.length < pasajero.asientos) {
+      return [...base, ...Array.from({ length: pasajero.asientos - base.length }, () => ({ nombre: '', esMenor: false, edad: '' }))]
+    }
+    return base.slice(0, pasajero.asientos)
+  })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    setAcompanantes(prev => {
+      if (asientos === prev.length) return prev
+      if (asientos > prev.length) {
+        return [...prev, ...Array.from({ length: asientos - prev.length }, () => ({ nombre: '', esMenor: false, edad: '' }))]
+      }
+      return prev.slice(0, asientos)
+    })
+  }, [asientos])
+
+  const setAcompanante = (idx, patch) => {
+    setAcompanantes(prev => prev.map((a, i) => i === idx ? { ...a, ...patch } : a))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setSaving(true); setError('')
+    try {
+      const companions = acompanantes
+        .filter(a => a.nombre.trim())
+        .map(a => ({ name: a.nombre.trim(), isMinor: a.esMenor, age: a.esMenor && a.edad ? parseInt(a.edad) : null }))
+      const actualizado = await viajesApi.updatePassenger(viaje.id, pasajero.id, {
+        seats: asientos,
+        totalCost: parseFloat(costo) || 0,
+        status: estado,
+        notes: notas,
+        companions,
+        seatNumber: asiento.trim() || null,
+        clearSeatNumber: !asiento.trim(),
+      })
+      onSaved(actualizado)
+      onClose()
+    } catch (err) {
+      setError(err.message || 'Error al guardar')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className={styles.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className={styles.modal}>
+        <div className={styles.modalHead}>
+          <h3>Editar pasajero — {pasajero.clienteNombre}</h3>
+          <button className={styles.modalClose} onClick={onClose}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className={styles.modalBody}>
+          <div className={styles.row2}>
+            <div className={styles.field}>
+              <label>Asientos</label>
+              <input type="number" min="1" value={asientos} onChange={e => setAsientos(parseInt(e.target.value) || 1)} />
+            </div>
+            <div className={styles.field}>
+              <label>Costo total ($)</label>
+              <input type="number" min="0" step="0.01" value={costo} onChange={e => setCosto(e.target.value)} />
+            </div>
+          </div>
+
+          <div className={styles.row2}>
+            <div className={styles.field}>
+              <label>Número de asiento</label>
+              <input placeholder="Ej: 12, 13 o A1-A3" value={asiento} onChange={e => setAsiento(e.target.value)} />
+            </div>
+            <div className={styles.field}>
+              <label>Estado</label>
+              <select value={estado} onChange={e => setEstado(e.target.value)}>
+                <option value="pendiente">Pendiente</option>
+                <option value="confirmado">Confirmado</option>
+                <option value="cancelado">Cancelado</option>
+              </select>
+            </div>
+          </div>
+
+          <div className={styles.field}>
+            <label>Notas</label>
+            <textarea rows={2} value={notas} onChange={e => setNotas(e.target.value)} />
+          </div>
+
+          {asientos > 1 && (
+            <div className={styles.field}>
+              <label>Acompañantes ({asientos})</label>
+              <div className={styles.acompanantesList}>
+                {acompanantes.map((a, i) => (
+                  <div key={i} className={styles.acompananteRow}>
+                    <input
+                      className={styles.acompananteNombre}
+                      placeholder={`Nombre de la persona ${i + 1}`}
+                      value={a.nombre}
+                      onChange={e => setAcompanante(i, { nombre: e.target.value })}
+                    />
+                    <label className={styles.acompananteMenorLabel}>
+                      <input
+                        type="checkbox"
+                        checked={a.esMenor}
+                        onChange={e => setAcompanante(i, { esMenor: e.target.checked, edad: e.target.checked ? a.edad : '' })}
+                      />
+                      Menor de edad
+                    </label>
+                    {a.esMenor && (
+                      <input
+                        type="number" min="0" max="17"
+                        className={styles.acompananteEdad}
+                        placeholder="Edad"
+                        value={a.edad}
+                        onChange={e => setAcompanante(i, { edad: e.target.value })}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {error && <p className={styles.error}>{error}</p>}
+          <div className={styles.modalActions}>
+            <button type="button" className={styles.btnSecondary} onClick={onClose}>Cancelar</button>
+            <button type="submit" className={styles.btnPrimary} disabled={saving}>
+              {saving ? 'Guardando…' : 'Guardar cambios'}
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -562,6 +715,7 @@ export default function ViajeDetallePage() {
   const [activeTab, setActiveTab] = useState('resumen')
   const [editingStatus, setEditingStatus] = useState(false)
   const [showAddPax, setShowAddPax] = useState(false)
+  const [editPaxModal, setEditPaxModal] = useState(null)
   const [pagoModal, setPagoModal] = useState(null)
   const [showEditTrip, setShowEditTrip] = useState(false)
   const [showAddGasto, setShowAddGasto] = useState(false)
@@ -937,9 +1091,18 @@ export default function ViajeDetallePage() {
                       <div className={styles.paxMetaRow}>
                         {pax.clienteTelefono && <span className={styles.paxTel}>{pax.clienteTelefono}</span>}
                         <span className={styles.paxAsientos}>{pax.asientos} asiento{pax.asientos !== 1 ? 's' : ''}</span>
+                        {pax.asiento && <span className={styles.paxAsientos}>Asiento {pax.asiento}</span>}
                       </div>
                     </div>
                     <div className={styles.paxActions}>
+                      <button
+                        className={styles.editBtn}
+                        onClick={() => setEditPaxModal(pax)}
+                        title="Editar pasajero"
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        Editar
+                      </button>
                       {pax.clienteTelefono && (
                         <button
                           type="button"
@@ -1182,21 +1345,20 @@ export default function ViajeDetallePage() {
           viaje={viaje}
           onClose={() => setShowAddPax(false)}
           onAdded={(nuevo) => {
-            const p = {
-              id: nuevo.id,
-              clienteId: nuevo.clientId,
-              clienteNombre: nuevo.clientName ?? '',
-              clienteTelefono: nuevo.clientPhone ?? '',
-              asientos: nuevo.seats,
-              costoTotal: nuevo.totalCost,
-              pagado: 0,
-              pendiente: nuevo.totalCost,
-              estado: nuevo.status,
-              notas: nuevo.notes ?? '',
-              companions: (nuevo.companions ?? []).map(c => ({ nombre: c.name, esMenor: c.isMinor, edad: c.age })),
-              pagos: [],
-            }
-            setViaje(prev => ({ ...prev, pasajerosList: [...(prev.pasajerosList ?? []), p] }))
+            setViaje(prev => ({ ...prev, pasajerosList: [...(prev.pasajerosList ?? []), nuevo] }))
+          }}
+        />
+      )}
+      {editPaxModal && (
+        <EditarPasajeroModal
+          viaje={viaje}
+          pasajero={editPaxModal}
+          onClose={() => setEditPaxModal(null)}
+          onSaved={(actualizado) => {
+            setViaje(prev => ({
+              ...prev,
+              pasajerosList: prev.pasajerosList.map(p => p.id === actualizado.id ? actualizado : p),
+            }))
           }}
         />
       )}

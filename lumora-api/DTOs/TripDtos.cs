@@ -58,13 +58,15 @@ public record AddPassengerRequest(
     int Seats = 1,
     decimal? TotalCost = null,
     string? Notes = null,
-    List<PassengerCompanionInfo>? Companions = null
+    List<PassengerCompanionInfo>? Companions = null,
+    string? SeatNumber = null
 );
 
 public record UpdatePassengerRequest(
     string? Status = null, string? Notes = null,
     decimal? TotalCost = null, int? Seats = null,
-    List<PassengerCompanionInfo>? Companions = null
+    List<PassengerCompanionInfo>? Companions = null,
+    string? SeatNumber = null, bool ClearSeatNumber = false
 );
 
 public record PassengerInfo(
@@ -72,7 +74,8 @@ public record PassengerInfo(
     int Seats, decimal TotalCost, decimal Paid, decimal Pending,
     string Status, string? Notes, DateTime CreatedAt,
     List<TripPaymentInfo> Payments,
-    List<PassengerCompanionInfo>? Companions = null
+    List<PassengerCompanionInfo>? Companions = null,
+    string? SeatNumber = null
 );
 
 public record AddTripPaymentRequest(

@@ -106,7 +106,7 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
                 p.Seats, p.TotalCost, paid, p.TotalCost - paid,
                 p.Status, p.Notes, p.CreatedAt,
                 pPays.Select(x => new TripPaymentInfo(x.Id, x.PassengerId, x.Concept, x.Amount, x.Method, x.PaidAt)).ToList(),
-                DeserializeCompanions(p.Companions)
+                DeserializeCompanions(p.Companions), p.SeatNumber
             );
         }).ToList();
 
@@ -210,6 +210,7 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
             TotalCost = req.TotalCost ?? trip.PricePerPerson * req.Seats,
             Notes = req.Notes,
             Companions = SerializeCompanions(req.Companions),
+            SeatNumber = req.SeatNumber,
             CreatedAt = DateTime.UtcNow,
         };
         await db.TripPassengers.AddAsync(passenger);
@@ -218,7 +219,7 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
         return Ok(new PassengerInfo(passenger.Id, passenger.ClientId, cl?.Name, cl?.Phone,
             passenger.Seats, passenger.TotalCost, 0, passenger.TotalCost,
             passenger.Status, passenger.Notes, passenger.CreatedAt, [],
-            DeserializeCompanions(passenger.Companions)));
+            DeserializeCompanions(passenger.Companions), passenger.SeatNumber));
     }
 
     [HttpPatch("{tripId}/passengers/{passengerId}")]
@@ -231,8 +232,19 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
         if (req.TotalCost.HasValue)      p.TotalCost = req.TotalCost.Value;
         if (req.Seats.HasValue)          p.Seats     = req.Seats.Value;
         if (req.Companions is not null)  p.Companions = SerializeCompanions(req.Companions);
+        if (req.ClearSeatNumber)         p.SeatNumber = null;
+        else if (req.SeatNumber is not null) p.SeatNumber = req.SeatNumber;
         await db.SaveChangesAsync();
-        return Ok(new { p.Id, p.Status, p.TotalCost, p.Seats });
+
+        var cl = await db.Clients.Where(c => c.Id == p.ClientId).Select(c => new { c.Name, c.Phone }).FirstOrDefaultAsync();
+        var pays = await db.TripPayments.Where(x => x.PassengerId == p.Id).OrderBy(x => x.PaidAt)
+            .Select(x => new TripPaymentInfo(x.Id, x.PassengerId, x.Concept, x.Amount, x.Method, x.PaidAt))
+            .ToListAsync();
+        var paid = pays.Sum(x => x.Amount);
+        return Ok(new PassengerInfo(p.Id, p.ClientId, cl?.Name, cl?.Phone,
+            p.Seats, p.TotalCost, paid, p.TotalCost - paid,
+            p.Status, p.Notes, p.CreatedAt, pays,
+            DeserializeCompanions(p.Companions), p.SeatNumber));
     }
 
     [HttpDelete("{tripId}/passengers/{passengerId}")]

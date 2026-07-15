@@ -6,6 +6,31 @@ function fmtDate(iso) {
   return `${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()}`
 }
 
+export function toFrontendPassenger(p) {
+  return {
+    id: p.id,
+    clienteId: p.clientId,
+    clienteNombre: p.clientName ?? '',
+    clienteTelefono: p.clientPhone ?? '',
+    asientos: p.seats,
+    asiento: p.seatNumber ?? '',
+    costoTotal: p.totalCost,
+    pagado: p.paid,
+    pendiente: p.pending,
+    estado: p.status,
+    notas: p.notes ?? '',
+    companions: (p.companions ?? []).map(c => ({ nombre: c.name, esMenor: c.isMinor, edad: c.age })),
+    pagos: (p.payments ?? []).map(x => ({
+      id: x.id,
+      pasajeroId: x.passengerId,
+      concepto: x.concept,
+      monto: x.amount,
+      metodo: x.method,
+      fecha: fmtDate(x.paidAt),
+    })),
+  }
+}
+
 function toFrontend(t) {
   return {
     id: t.id,
@@ -31,27 +56,7 @@ function toFrontend(t) {
     precioOferta: t.offerPrice ?? null,
     vistas: t.views ?? 0,
     fotos: (t.photos ?? []).map(p => ({ id: p.id, url: p.url, caption: p.caption, orden: p.sortOrder ?? 0 })),
-    pasajerosList: (t.passengers ?? []).map(p => ({
-      id: p.id,
-      clienteId: p.clientId,
-      clienteNombre: p.clientName ?? '',
-      clienteTelefono: p.clientPhone ?? '',
-      asientos: p.seats,
-      costoTotal: p.totalCost,
-      pagado: p.paid,
-      pendiente: p.pending,
-      estado: p.status,
-      notas: p.notes ?? '',
-      companions: (p.companions ?? []).map(c => ({ nombre: c.name, esMenor: c.isMinor, edad: c.age })),
-      pagos: (p.payments ?? []).map(x => ({
-        id: x.id,
-        pasajeroId: x.passengerId,
-        concepto: x.concept,
-        monto: x.amount,
-        metodo: x.method,
-        fecha: fmtDate(x.paidAt),
-      })),
-    })),
+    pasajerosList: (t.passengers ?? []).map(toFrontendPassenger),
     gastos: (t.expenses ?? []).map(e => ({
       id: e.id,
       concepto: e.concept,
@@ -74,8 +79,8 @@ export const viajesApi = {
   addPhoto: (tripId, data) => api.post(`/api/trips/${tripId}/photos`, data),
   deletePhoto: (tripId, photoId) => api.delete(`/api/trips/${tripId}/photos/${photoId}`),
   reorderPhotos: (tripId, photoIds) => api.put(`/api/trips/${tripId}/photos/order`, { photoIds }),
-  addPassenger: (tripId, data) => api.post(`/api/trips/${tripId}/passengers`, data),
-  updatePassenger: (tripId, passengerId, data) => api.patch(`/api/trips/${tripId}/passengers/${passengerId}`, data),
+  addPassenger: (tripId, data) => api.post(`/api/trips/${tripId}/passengers`, data).then(toFrontendPassenger),
+  updatePassenger: (tripId, passengerId, data) => api.patch(`/api/trips/${tripId}/passengers/${passengerId}`, data).then(toFrontendPassenger),
   removePassenger: (tripId, passengerId) => api.delete(`/api/trips/${tripId}/passengers/${passengerId}`),
   addPayment: (tripId, passengerId, data) => api.post(`/api/trips/${tripId}/passengers/${passengerId}/payments`, data),
   updatePayment: (tripId, passengerId, paymentId, data) => api.patch(`/api/trips/${tripId}/passengers/${passengerId}/payments/${paymentId}`, data),

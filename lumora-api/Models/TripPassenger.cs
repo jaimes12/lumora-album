@@ -14,6 +14,7 @@ public class TripPassenger
     [Column("status")] public string Status { get; set; } = "pendiente";
     [Column("notes")] public string? Notes { get; set; }
     [Column("companions")] public string? Companions { get; set; } // JSON array of PassengerCompanionInfo
+    [Column("seat_number")] public string? SeatNumber { get; set; }
     [Column("created_at")] public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public Trip? Trip { get; set; }
     public ICollection<TripPayment> Payments { get; set; } = [];

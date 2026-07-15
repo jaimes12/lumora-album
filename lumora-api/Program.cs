@@ -701,6 +701,7 @@ app.Lifetime.ApplicationStarted.Register(() => _ = Task.Run(async () =>
         "ALTER TABLE trips ADD COLUMN location varchar(500) NULL",
         "ALTER TABLE trips ADD COLUMN offer_price decimal(18,2) NULL",
         "ALTER TABLE trips ADD COLUMN views int NOT NULL DEFAULT 0",
+        "ALTER TABLE trip_passengers ADD COLUMN seat_number varchar(100) NULL",
 
         @"CREATE TABLE IF NOT EXISTS `trip_photos` (
           `id`         varchar(255) NOT NULL,
