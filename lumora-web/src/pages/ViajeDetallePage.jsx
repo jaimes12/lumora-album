@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { viajesApi } from '../api/viajesApi'
 import { clientesApi } from '../api/clientesApi'
+import { findOrCreateLeadByPhone } from '../api/leadsApi'
+import { whatsappApi } from '../api/whatsappApi'
+import { ChatModal, DEFAULT_STAGES } from './ChatPage'
+import { WhatsAppModal } from '../layouts/AppLayout'
 import styles from './ViajeDetallePage.module.css'
 
 const ESTADOS_VIAJE = ['borrador', 'confirmado', 'completado', 'cancelado']
@@ -18,14 +22,6 @@ const ESTADO_PAX_COLOR = {
 }
 
 const fmtMoney = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(n || 0)
-
-function whatsappUrl(phone) {
-  if (!phone) return null
-  const digits = phone.replace(/\D/g, '')
-  if (!digits) return null
-  const full = digits.length === 10 ? `52${digits}` : digits
-  return `https://wa.me/${full}`
-}
 
 // ── Agregar Pasajero Modal ─────────────────────────────────────────────────────
 function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
@@ -520,6 +516,42 @@ export default function ViajeDetallePage() {
   const [gastoError, setGastoError] = useState('')
   const [expandedPax, setExpandedPax] = useState({})
   const [editandoPago, setEditandoPago] = useState(null) // { pasajeroId, pagoId, concepto, monto, metodo }
+  const [chatLead, setChatLead] = useState(null)
+  const [openingChatId, setOpeningChatId] = useState(null)
+  const [showWaConnect, setShowWaConnect] = useState(false)
+  const [pendingWaPax, setPendingWaPax] = useState(null)
+
+  const handleWhatsappClick = async (pax) => {
+    if (!pax.clienteTelefono) { alert('Este pasajero no tiene teléfono registrado'); return }
+    setOpeningChatId(pax.id)
+    try {
+      const status = await whatsappApi.getStatus()
+      if (!status.connected) {
+        setPendingWaPax(pax)
+        setShowWaConnect(true)
+        return
+      }
+      const lead = await findOrCreateLeadByPhone(pax.clienteTelefono, pax.clienteNombre)
+      setChatLead(lead)
+    } catch {
+      alert('No se pudo abrir el chat')
+    } finally {
+      setOpeningChatId(null)
+    }
+  }
+
+  const handleWaConnected = async () => {
+    setShowWaConnect(false)
+    if (pendingWaPax) {
+      try {
+        const lead = await findOrCreateLeadByPhone(pendingWaPax.clienteTelefono, pendingWaPax.clienteNombre)
+        setChatLead(lead)
+      } catch {
+        alert('No se pudo abrir el chat')
+      }
+      setPendingWaPax(null)
+    }
+  }
 
   const load = async () => {
     try {
@@ -821,7 +853,6 @@ export default function ViajeDetallePage() {
             {pasajerosList.map(pax => {
               const pctPagado = pax.costoTotal > 0 ? Math.round((pax.pagado / pax.costoTotal) * 100) : 0
               const paxEc = ESTADO_PAX_COLOR[pax.estado] ?? ESTADO_PAX_COLOR.pendiente
-              const waUrl = whatsappUrl(pax.clienteTelefono)
               const isExpanded = expandedPax[pax.id] ?? false
 
               return (
@@ -844,25 +875,25 @@ export default function ViajeDetallePage() {
                       </div>
                     </div>
                     <div className={styles.paxActions}>
-                      {waUrl && (
-                        <a
-                          href={waUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                      {pax.clienteTelefono && (
+                        <button
+                          type="button"
+                          onClick={() => handleWhatsappClick(pax)}
+                          disabled={openingChatId === pax.id}
                           className={styles.waBtn}
                           title="Enviar WhatsApp"
                         >
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
-                          WhatsApp
-                        </a>
+                          {openingChatId === pax.id ? 'Abriendo…' : 'WhatsApp'}
+                        </button>
                       )}
                       <button
                         className={styles.pagoBtn}
                         onClick={() => setPagoModal(pax)}
-                        title="Registrar pago"
+                        title="Ver pagos"
                       >
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                        Pago
+                        Ver pagos
                       </button>
                       <button className={styles.removeBtn} onClick={() => handleRemovePax(pax.id)} title="Eliminar pasajero">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
@@ -960,7 +991,7 @@ export default function ViajeDetallePage() {
                     <div className={styles.paxCompanions}>
                       {pax.companions.map((c, i) => (
                         <span key={i} className={styles.paxCompanionChip}>
-                          {c.nombre}{c.esMenor ? ` · menor${c.edad ? ` (${c.edad})` : ''}` : ''}
+                          {c.nombre} · {c.esMenor ? `menor${c.edad ? ` (${c.edad})` : ''}` : 'mayor de edad'}
                         </span>
                       ))}
                     </div>
@@ -1074,6 +1105,13 @@ export default function ViajeDetallePage() {
       )}
 
       {/* Modals */}
+      {chatLead && <ChatModal lead={chatLead} stages={DEFAULT_STAGES} onClose={() => setChatLead(null)} />}
+      {showWaConnect && (
+        <WhatsAppModal
+          onClose={() => { setShowWaConnect(false); setPendingWaPax(null) }}
+          onConnect={handleWaConnected}
+        />
+      )}
       {showAddPax && (
         <AgregarPasajeroModal
           viaje={viaje}

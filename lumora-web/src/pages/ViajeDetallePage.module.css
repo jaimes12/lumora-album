@@ -421,6 +421,7 @@
   transition: opacity 0.15s;
 }
 .waBtn:hover { opacity: 0.8; }
+.waBtn:disabled { opacity: 0.6; cursor: default; }
 
 .pagoBtn {
   display: flex;

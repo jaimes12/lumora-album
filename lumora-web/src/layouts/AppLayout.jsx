@@ -110,7 +110,7 @@ const WhatsAppIcon = () => (
 )
 
 /* ── WhatsApp Connect Modal ── */
-function WhatsAppModal({ onClose, onConnect }) {
+export function WhatsAppModal({ onClose, onConnect }) {
   const [waState, setWaState] = useState('loading')
   const [qrCode,  setQrCode]  = useState(null)
   const pollRef = useRef(null)
