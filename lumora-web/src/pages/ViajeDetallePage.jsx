@@ -509,6 +509,7 @@ export default function ViajeDetallePage() {
   const [viaje, setViaje] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [activeTab, setActiveTab] = useState('resumen')
   const [editingStatus, setEditingStatus] = useState(false)
   const [showAddPax, setShowAddPax] = useState(false)
   const [pagoModal, setPagoModal] = useState(null)
@@ -713,7 +714,27 @@ export default function ViajeDetallePage() {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className={styles.tabBar}>
+        <button className={`${styles.tabBtn} ${activeTab === 'resumen' ? styles.tabBtnActive : ''}`} onClick={() => setActiveTab('resumen')}>
+          Resumen
+        </button>
+        <button className={`${styles.tabBtn} ${activeTab === 'pasajeros' ? styles.tabBtnActive : ''}`} onClick={() => setActiveTab('pasajeros')}>
+          Pasajeros
+          {pasajerosList.length > 0 && <span className={styles.tabCount}>{pasajerosList.length}</span>}
+        </button>
+        <button className={`${styles.tabBtn} ${activeTab === 'gastos' ? styles.tabBtnActive : ''}`} onClick={() => setActiveTab('gastos')}>
+          Gastos
+          {gastosList.length > 0 && <span className={styles.tabCount}>{gastosList.length}</span>}
+        </button>
+        <button className={`${styles.tabBtn} ${activeTab === 'marketplace' ? styles.tabBtnActive : ''}`} onClick={() => setActiveTab('marketplace')}>
+          Marketplace
+          {viaje.publico && <span className={styles.tabDot} />}
+        </button>
+      </div>
+
       {/* Financial Summary Card */}
+      {activeTab === 'resumen' && (
       <div className={styles.summaryCard}>
         <div className={styles.summaryStats}>
           <div className={styles.summaryStat}>
@@ -770,14 +791,17 @@ export default function ViajeDetallePage() {
           </div>
         )}
       </div>
+      )}
 
-      <MarketplaceSection
-        viaje={viaje}
-        onUpdate={(patch) => setViaje(prev => ({ ...prev, ...patch }))}
-      />
+      {activeTab === 'marketplace' && (
+        <MarketplaceSection
+          viaje={viaje}
+          onUpdate={(patch) => setViaje(prev => ({ ...prev, ...patch }))}
+        />
+      )}
 
-      <div className={styles.twoColGrid}>
       {/* Passengers Section */}
+      {activeTab === 'pasajeros' && (
       <div className={styles.section}>
         <div className={styles.sectionHead}>
           <h2 className={styles.sectionTitle}>Pasajeros</h2>
@@ -949,8 +973,10 @@ export default function ViajeDetallePage() {
           </div>
         )}
       </div>
+      )}
 
       {/* Expenses Section */}
+      {activeTab === 'gastos' && (
       <div className={styles.section}>
         <div className={styles.sectionHead}>
           <h2 className={styles.sectionTitle}>Gastos del viaje</h2>
@@ -1045,7 +1071,7 @@ export default function ViajeDetallePage() {
           </div>
         )}
       </div>
-      </div>{/* end twoColGrid */}
+      )}
 
       {/* Modals */}
       {showAddPax && (
