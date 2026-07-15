@@ -38,6 +38,7 @@ import NotasPage         from './pages/NotasPage'
 import ViajesPage        from './pages/ViajesPage'
 import ViajeDetallePage  from './pages/ViajeDetallePage'
 import ViajeMarketplacePostPage from './pages/ViajeMarketplacePostPage'
+import MisPublicacionesPage from './pages/MisPublicacionesPage'
 import ViajesLanding     from './pages/ViajesLanding'
 import MarketplacePage      from './pages/MarketplacePage'
 import MarketplaceTripPage  from './pages/MarketplaceTripPage'
@@ -127,6 +128,7 @@ export default function App() {
               <Route path="viajes"         element={<ViajesPage />} />
               <Route path="viajes/:id"     element={<ViajeDetallePage />} />
               <Route path="viajes/:id/marketplace" element={<ViajeMarketplacePostPage />} />
+              <Route path="market"         element={<MisPublicacionesPage />} />
               <Route path="finanzas"       element={<FinanzasPage />} />
             </Route>
 

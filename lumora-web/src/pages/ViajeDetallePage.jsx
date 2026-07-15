@@ -806,8 +806,10 @@ export default function ViajeDetallePage() {
                           {pax.estado}
                         </span>
                       </div>
-                      {pax.clienteTelefono && <span className={styles.paxTel}>{pax.clienteTelefono}</span>}
-                      <span className={styles.paxAsientos}>{pax.asientos} asiento{pax.asientos !== 1 ? 's' : ''}</span>
+                      <div className={styles.paxMetaRow}>
+                        {pax.clienteTelefono && <span className={styles.paxTel}>{pax.clienteTelefono}</span>}
+                        <span className={styles.paxAsientos}>{pax.asientos} asiento{pax.asientos !== 1 ? 's' : ''}</span>
+                      </div>
                     </div>
                     <div className={styles.paxActions}>
                       {waUrl && (
