@@ -5,7 +5,15 @@ namespace lumora_api.Services;
 
 public class WaAutoReconnectService(IServiceScopeFactory scopeFactory, ILogger<WaAutoReconnectService> log) : IHostedService
 {
-    public async Task StartAsync(CancellationToken ct)
+    public Task StartAsync(CancellationToken ct)
+    {
+        // Fire-and-forget: never block host startup (and the deploy healthcheck) on the
+        // WA bridge being reachable — a crashed/slow lumora-wa must not take down the API.
+        _ = Task.Run(() => RunAsync(ct), ct);
+        return Task.CompletedTask;
+    }
+
+    private async Task RunAsync(CancellationToken ct)
     {
         // Short delay to let the rest of the app finish startup
         await Task.Delay(TimeSpan.FromSeconds(5), ct);
