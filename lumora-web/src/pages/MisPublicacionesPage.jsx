@@ -55,6 +55,11 @@ export default function MisPublicacionesPage() {
                     {v.salida} → {v.regreso}
                   </div>
 
+                  <div className={styles.cardViews}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    {v.vistas} vista{v.vistas !== 1 ? 's' : ''}
+                  </div>
+
                   <div className={styles.cardFooter}>
                     <div>
                       {v.precioOferta != null ? (

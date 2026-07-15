@@ -465,7 +465,15 @@ function MarketplaceSection({ viaje, onUpdate }) {
   return (
     <div className={styles.section}>
       <div className={styles.sectionHead}>
-        <h2 className={styles.sectionTitle}>Marketplace</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <h2 className={styles.sectionTitle}>Marketplace</h2>
+          {viaje.publico && (
+            <span className={styles.marketplaceViews}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              {viaje.vistas ?? 0} vista{(viaje.vistas ?? 0) !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {viaje.publico && (
             <a href={`/viajes/market/${viaje.id}`} target="_blank" rel="noreferrer" className={styles.btnSecondary}>

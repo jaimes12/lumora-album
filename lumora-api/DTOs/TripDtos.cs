@@ -30,7 +30,8 @@ public record TripResponse(
     bool IsPublic = false, string? Description = null,
     List<TripPhotoInfo>? Photos = null,
     string? PostTitle = null, string? Includes = null,
-    string? Location = null, decimal? OfferPrice = null
+    string? Location = null, decimal? OfferPrice = null,
+    int Views = 0
 );
 
 public record TripPhotoInfo(
@@ -101,7 +102,8 @@ public record TripDetailResponse(
     bool IsPublic = false, string? Description = null,
     List<TripPhotoInfo>? Photos = null,
     string? PostTitle = null, string? Includes = null,
-    string? Location = null, decimal? OfferPrice = null
+    string? Location = null, decimal? OfferPrice = null,
+    int Views = 0
 );
 
 public record TripExpenseInfo(

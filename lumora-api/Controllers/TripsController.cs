@@ -65,7 +65,7 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
                 t.IsPublic, t.Description,
                 cover is null ? [] : [new TripPhotoInfo(cover.Id, cover.TripId, cover.Url, cover.Caption, cover.CreatedAt, cover.SortOrder)],
                 t.PostTitle, t.Includes,
-                t.Location, t.OfferPrice
+                t.Location, t.OfferPrice, t.Views
             );
         }));
     }
@@ -129,7 +129,7 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
             trip.Notes, trip.CreatedAt, passengerList, createdByName, expenses,
             trip.IsPublic, trip.Description, photos,
             trip.PostTitle, trip.Includes,
-            trip.Location, trip.OfferPrice
+            trip.Location, trip.OfferPrice, trip.Views
         ));
     }
 
@@ -157,7 +157,7 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
                 trip.Notes, trip.CreatedAt, 0, 0, 0, null,
                 trip.IsPublic, trip.Description, null,
                 trip.PostTitle, trip.Includes,
-                trip.Location, trip.OfferPrice));
+                trip.Location, trip.OfferPrice, trip.Views));
     }
 
     [HttpPatch("{id}")]
@@ -355,7 +355,7 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
             trip.Notes, trip.CreatedAt, ps.Count, ps.Sum(p => p.Seats), rev, null,
             trip.IsPublic, trip.Description, null,
             trip.PostTitle, trip.Includes,
-            trip.Location, trip.OfferPrice);
+            trip.Location, trip.OfferPrice, trip.Views);
     }
 
     private static string? SerializeCompanions(List<PassengerCompanionInfo>? companions) =>

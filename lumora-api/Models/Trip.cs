@@ -21,6 +21,7 @@ public class Trip
     [Column("includes")] public string? Includes { get; set; }
     [Column("location")] public string? Location { get; set; }
     [Column("offer_price")] public decimal? OfferPrice { get; set; }
+    [Column("views")] public int Views { get; set; } = 0;
     [Column("created_at")] public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     [Column("created_by_id")] public string? CreatedById { get; set; }
     public Organization? Organization { get; set; }

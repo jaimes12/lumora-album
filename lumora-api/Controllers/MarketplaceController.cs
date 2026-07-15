@@ -67,6 +67,9 @@ public class MarketplaceController(LumoraDbContext db) : ControllerBase
         var org = await db.Organizations.FirstOrDefaultAsync(o => o.Id == trip.OrgId && o.Industry == "travel" && !o.Disabled);
         if (org is null) return NotFound();
 
+        trip.Views++;
+        await db.SaveChangesAsync();
+
         var cfg = await db.OrgSettings.FirstOrDefaultAsync(s => s.OrgId == trip.OrgId);
         var agencyName = !string.IsNullOrWhiteSpace(cfg?.CompanyName) ? cfg!.CompanyName : org.Name;
 
