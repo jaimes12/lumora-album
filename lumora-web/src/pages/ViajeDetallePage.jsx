@@ -16,12 +16,66 @@ const ESTADO_COLOR = {
   cancelado:  { bg: '#fee2e2', color: '#dc2626', border: '#fca5a5' },
 }
 const ESTADO_PAX_COLOR = {
-  pendiente:  { bg: '#fef9c3', color: '#854d0e', border: '#fef08a' },
+  pendiente:  { bg: '#e0e7ff', color: '#4338ca', border: '#c7d2fe' },
   confirmado: { bg: '#dcfce7', color: '#16a34a', border: '#86efac' },
   cancelado:  { bg: '#fee2e2', color: '#dc2626', border: '#fca5a5' },
 }
 
 const fmtMoney = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(n || 0)
+
+const initials = (name) => (name || '').trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?'
+
+// ── Composición de viajeros (donut) ─────────────────────────────────────────
+function TravelersDonut({ adultos, menores }) {
+  const total = adultos + menores
+  if (total === 0) return <div className={styles.chartEmpty}>Agrega pasajeros para ver la composición del grupo.</div>
+
+  const data = [
+    { key: 'adultos', label: 'Adultos', count: adultos, color: '#2563eb' },
+    { key: 'menores', label: 'Menores de edad', count: menores, color: '#7c3aed' },
+  ].filter(d => d.count > 0)
+
+  let cumDeg = -90
+  const slices = data.map(d => {
+    const pct = d.count / total
+    const start = cumDeg
+    cumDeg += pct * 360
+    return { ...d, start, end: cumDeg }
+  })
+
+  const arc = (start, end, r = 70, ri = 44) => {
+    const cx = 100, cy = 100
+    if (end - start >= 359.9) {
+      return `M${cx},${cy - r} A${r},${r},0,1,1,${cx - 0.01},${cy - r} Z M${cx},${cy - ri} A${ri},${ri},0,1,0,${cx - 0.01},${cy - ri} Z`
+    }
+    const sR = start * Math.PI / 180, eR = end * Math.PI / 180
+    const x1 = cx + r * Math.cos(sR), y1 = cy + r * Math.sin(sR)
+    const x2 = cx + r * Math.cos(eR), y2 = cy + r * Math.sin(eR)
+    const ix1 = cx + ri * Math.cos(sR), iy1 = cy + ri * Math.sin(sR)
+    const ix2 = cx + ri * Math.cos(eR), iy2 = cy + ri * Math.sin(eR)
+    const lg = end - start > 180 ? 1 : 0
+    return `M${ix1},${iy1} L${x1},${y1} A${r},${r},0,${lg},1,${x2},${y2} L${ix2},${iy2} A${ri},${ri},0,${lg},0,${ix1},${iy1} Z`
+  }
+
+  return (
+    <div className={styles.donutWrap}>
+      <svg viewBox="0 0 200 200" className={styles.donutSvg}>
+        {slices.map(s => <path key={s.key} d={arc(s.start, s.end)} fill={s.color} />)}
+        <text x="100" y="95" textAnchor="middle" className={styles.donutCenter}>{total}</text>
+        <text x="100" y="112" textAnchor="middle" className={styles.donutCenterSub}>viajeros</text>
+      </svg>
+      <div className={styles.donutLegend}>
+        {data.map(d => (
+          <div key={d.key} className={styles.legendItem}>
+            <div className={styles.legendDot} style={{ background: d.color }} />
+            <span className={styles.legendLabel}>{d.label}</span>
+            <span className={styles.legendCount}>{d.count}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 // ── Agregar Pasajero Modal ─────────────────────────────────────────────────────
 function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
@@ -690,6 +744,8 @@ export default function ViajeDetallePage() {
   const utilidad         = totalCobrado - totalGastos
   const pctCobrado       = totalEsperado > 0 ? Math.round((totalCobrado / totalEsperado) * 100) : 0
   const pctOcupacion     = viaje.asientosTotal > 0 ? Math.round((asientosOcupados / viaje.asientosTotal) * 100) : 0
+  const totalMenores     = pasajerosList.reduce((s, p) => s + (p.companions?.filter(c => c.esMenor).length ?? 0), 0)
+  const totalAdultos     = Math.max(asientosOcupados - totalMenores, 0)
 
   return (
     <div className={styles.page}>
@@ -767,6 +823,7 @@ export default function ViajeDetallePage() {
 
       {/* Financial Summary Card */}
       {activeTab === 'resumen' && (
+      <>
       <div className={styles.summaryCard}>
         <div className={styles.summaryStats}>
           <div className={styles.summaryStat}>
@@ -791,7 +848,7 @@ export default function ViajeDetallePage() {
             <span className={styles.summaryLbl}>Cobrado</span>
           </div>
           <div className={styles.summaryStat}>
-            <span className={styles.summaryNum} style={{ color: totalPendiente > 0 ? '#ea580c' : '#16a34a' }}>{fmtMoney(totalPendiente)}</span>
+            <span className={styles.summaryNum} style={{ color: totalPendiente > 0 ? '#4338ca' : '#16a34a' }}>{fmtMoney(totalPendiente)}</span>
             <span className={styles.summaryLbl}>Pendiente</span>
           </div>
           <div className={styles.summaryStat}>
@@ -818,11 +875,17 @@ export default function ViajeDetallePage() {
             </div>
             <div className={styles.summaryProgressLabels}>
               <span style={{ color: '#16a34a' }}>Cobrado {pctCobrado}%</span>
-              <span style={{ color: '#ea580c' }}>Pendiente {100 - pctCobrado}%</span>
+              <span style={{ color: '#4338ca' }}>Pendiente {100 - pctCobrado}%</span>
             </div>
           </div>
         )}
       </div>
+
+      <div className={styles.demographicsCard}>
+        <h3 className={styles.demographicsTitle}>Composición de viajeros</h3>
+        <TravelersDonut adultos={totalAdultos} menores={totalMenores} />
+      </div>
+      </>
       )}
 
       {activeTab === 'marketplace' && (
@@ -859,13 +922,15 @@ export default function ViajeDetallePage() {
                 <div key={pax.id} className={styles.paxCard}>
                   {/* Header row */}
                   <div className={styles.paxHeader}>
+                    <div className={styles.paxAvatar}>{initials(pax.clienteNombre)}</div>
                     <div className={styles.paxInfo}>
                       <div className={styles.paxNameRow}>
                         <span className={styles.paxNombre}>{pax.clienteNombre || 'Sin nombre'}</span>
                         <span
                           className={styles.paxEstadoBadge}
-                          style={{ background: paxEc.bg, color: paxEc.color, border: `1px solid ${paxEc.border}` }}
+                          style={{ background: paxEc.bg, color: paxEc.color }}
                         >
+                          <span className={styles.paxEstadoDot} style={{ background: paxEc.color }} />
                           {pax.estado}
                         </span>
                       </div>
@@ -915,7 +980,7 @@ export default function ViajeDetallePage() {
                     </div>
                     <div className={styles.paxProgressAmounts}>
                       <span style={{ color: '#16a34a' }}>Pagado {fmtMoney(pax.pagado)}</span>
-                      <span style={{ color: '#ea580c' }}>Pendiente {fmtMoney(pax.pendiente)}</span>
+                      <span style={{ color: '#4338ca' }}>Pendiente {fmtMoney(pax.pendiente)}</span>
                       <span style={{ color: 'var(--text-muted)' }}>Total {fmtMoney(pax.costoTotal)}</span>
                     </div>
                   </div>
@@ -990,7 +1055,7 @@ export default function ViajeDetallePage() {
                   {pax.companions?.length > 0 && (
                     <div className={styles.paxCompanions}>
                       {pax.companions.map((c, i) => (
-                        <span key={i} className={styles.paxCompanionChip}>
+                        <span key={i} className={`${styles.paxCompanionChip} ${c.esMenor ? styles.paxCompanionChipMinor : ''}`}>
                           {c.nombre} · {c.esMenor ? `menor${c.edad ? ` (${c.edad})` : ''}` : 'mayor de edad'}
                         </span>
                       ))}
@@ -1023,7 +1088,7 @@ export default function ViajeDetallePage() {
             <span className={styles.gastosSummaryDot}>&#183;</span>
             <span style={{ color: '#16a34a' }}>Pagados: <strong>{fmtMoney(gastosPagados)}</strong></span>
             <span className={styles.gastosSummaryDot}>&#183;</span>
-            <span style={{ color: '#ea580c' }}>Por pagar: <strong>{fmtMoney(gastosPorPagar)}</strong></span>
+            <span style={{ color: '#4338ca' }}>Por pagar: <strong>{fmtMoney(gastosPorPagar)}</strong></span>
           </div>
         )}
 

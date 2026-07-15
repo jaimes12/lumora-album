@@ -89,11 +89,12 @@ const EVENTOS_NAV_ITEM = {
 }
 
 function getNavItems(industry) {
-  const items = NAV_KEYS_BASE.map(item => {
+  let items = NAV_KEYS_BASE.map(item => {
     if (item === null) return industry === 'travel' ? VIAJES_NAV_ITEM : EVENTOS_NAV_ITEM
     return item
   })
   if (industry === 'travel') {
+    items = items.filter(i => i.key !== 'productos')
     const idx = items.findIndex(i => i.key === 'viajes')
     items.splice(idx + 1, 0, MARKET_NAV_ITEM)
   }
@@ -113,9 +114,12 @@ const WhatsAppIcon = () => (
 export function WhatsAppModal({ onClose, onConnect }) {
   const [waState, setWaState] = useState('loading')
   const [qrCode,  setQrCode]  = useState(null)
+  const [slow,    setSlow]    = useState(false)
   const pollRef = useRef(null)
+  const slowRef = useRef(null)
 
   const stopPolling = () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null } }
+  const stopSlowTimer = () => { if (slowRef.current) { clearTimeout(slowRef.current); slowRef.current = null } }
 
   const poll = async () => {
     try {
@@ -124,6 +128,7 @@ export function WhatsAppModal({ onClose, onConnect }) {
       setQrCode(status.qrCode ?? null)
       if (status.connected) {
         stopPolling()
+        stopSlowTimer()
         onConnect()
       }
     } catch {
@@ -131,12 +136,21 @@ export function WhatsAppModal({ onClose, onConnect }) {
     }
   }
 
-  useEffect(() => {
+  const startConnecting = () => {
+    setSlow(false)
+    stopSlowTimer()
     whatsappApi.connect().catch(() => {})
     poll()
+    slowRef.current = setTimeout(() => setSlow(true), 25000)
+  }
+
+  useEffect(() => {
+    startConnecting()
     pollRef.current = setInterval(poll, 2500)
-    return stopPolling
+    return () => { stopPolling(); stopSlowTimer() }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleRetry = () => { startConnecting() }
 
   const stateLabel = {
     loading:      'Iniciando conexión…',
@@ -180,8 +194,14 @@ export function WhatsAppModal({ onClose, onConnect }) {
             <div className={styles.waQrWrap}>
               <div className={styles.waSpinner} />
               <p className={styles.waScanning}>{stateLabel}</p>
-              {(waState === 'loading' || waState === 'disconnected') && (
+              {(waState === 'loading' || waState === 'disconnected') && !slow && (
                 <p className={styles.waHint}>El QR aparecerá en unos segundos.<br/>Puede tardar hasta 30s la primera vez.</p>
+              )}
+              {slow && waState !== 'qr' && (
+                <>
+                  <p className={styles.waHint}>Esto está tardando más de lo normal.<br/>Puedes intentar de nuevo.</p>
+                  <button type="button" className={styles.waBtn} onClick={handleRetry}>Reintentar</button>
+                </>
               )}
             </div>
           )}
