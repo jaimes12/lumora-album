@@ -43,9 +43,17 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
             .Select(u => new { u.Id, u.Name })
             .ToDictionaryAsync(u => u.Id, u => u.Name);
 
+        var coverPhotos = await db.TripPhotos
+            .Where(p => tripIds.Contains(p.TripId))
+            .OrderBy(p => p.SortOrder).ThenBy(p => p.CreatedAt)
+            .GroupBy(p => p.TripId)
+            .Select(g => g.First())
+            .ToDictionaryAsync(p => p.TripId);
+
         return Ok(trips.Select(t => {
             var ps = passengerStats.GetValueOrDefault(t.Id);
             var py = paymentStats.GetValueOrDefault(t.Id);
+            var cover = coverPhotos.GetValueOrDefault(t.Id);
             return new TripResponse(
                 t.Id, t.Name, t.Destination, t.Status,
                 t.DepartureDate, t.ReturnDate,
@@ -54,7 +62,8 @@ public class TripsController(LumoraDbContext db, IR2Service r2) : ControllerBase
                 ps?.Count ?? 0, ps?.Seats ?? 0,
                 py?.Total ?? 0,
                 t.CreatedById is not null && creators.TryGetValue(t.CreatedById, out var cn) ? cn : null,
-                t.IsPublic, t.Description, null,
+                t.IsPublic, t.Description,
+                cover is null ? [] : [new TripPhotoInfo(cover.Id, cover.TripId, cover.Url, cover.Caption, cover.CreatedAt, cover.SortOrder)],
                 t.PostTitle, t.Includes,
                 t.Location, t.OfferPrice
             );
