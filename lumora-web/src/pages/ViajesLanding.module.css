@@ -73,6 +73,95 @@
 }
 .navCta:hover { background: #3b7fe8; transform: translateY(-1px); }
 
+/* ── Dos caminos: agencia o viajero ─────────────────────────────────────── */
+.pathsSection {
+  padding: 140px 24px 40px;
+  background: linear-gradient(180deg, rgba(43,111,212,0.05), transparent);
+}
+
+.pathsInner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.pathCard {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 32px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.22s cubic-bezier(0.23,1,0.32,1), border-color 0.22s, box-shadow 0.22s;
+  position: relative;
+  overflow: hidden;
+}
+.pathCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 85% -10%, color-mix(in srgb, var(--path) 18%, transparent), transparent 60%);
+  pointer-events: none;
+}
+.pathCard:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--path) 45%, var(--border));
+  box-shadow: 0 20px 50px color-mix(in srgb, var(--path) 18%, transparent);
+}
+
+.pathIcon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--path) 14%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  margin-bottom: 6px;
+}
+
+.pathTag {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--path);
+}
+
+.pathTitle {
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin: 2px 0 0;
+}
+
+.pathDesc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+}
+
+.pathCta {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--path);
+}
+
+@media (max-width: 760px) {
+  .pathsInner { grid-template-columns: 1fr; }
+  .pathsSection { padding-top: 120px; }
+}
+
 /* ── Hero ────────────────────────────────────────────────────────────────── */
 .hero {
   min-height: 100vh;
@@ -84,7 +173,7 @@
     "bot    mockup";
   column-gap: 80px;
   row-gap: 28px;
-  padding: 150px 72px 100px;
+  padding: 64px 72px 100px;
   max-width: 1400px;
   margin: 0 auto;
   position: relative;

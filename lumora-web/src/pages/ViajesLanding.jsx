@@ -310,6 +310,33 @@ export default function ViajesLanding() {
         </div>
       </nav>
 
+      {/* ── Dos caminos: agencia o viajero ── */}
+      <section className={styles.pathsSection}>
+        <div className={styles.pathsInner}>
+          <button type="button" className={styles.pathCard} style={{ '--path': '#2B6FD4' }} onClick={goRegister}>
+            <div className={styles.pathIcon}>🏢</div>
+            <span className={styles.pathTag}>Para agencias</span>
+            <h3 className={styles.pathTitle}>Publica y gestiona tus viajes gratis</h3>
+            <p className={styles.pathDesc}>
+              Sube tus viajes grupales al marketplace, controla pasajeros y pagos,
+              y consigue clientes nuevos sin costo extra.
+            </p>
+            <span className={styles.pathCta}>Comenzar gratis →</span>
+          </button>
+
+          <button type="button" className={styles.pathCard} style={{ '--path': '#ea580c' }} onClick={() => navigate('/viajes/market')}>
+            <div className={styles.pathIcon}>🧳</div>
+            <span className={styles.pathTag}>Para viajeros</span>
+            <h3 className={styles.pathTitle}>Encuentra tu próximo viaje grupal</h3>
+            <p className={styles.pathDesc}>
+              Explora destinos, fechas y precios publicados por agencias.
+              Contacta directo por WhatsApp o mensaje, sin intermediarios.
+            </p>
+            <span className={styles.pathCta}>Ver viajes disponibles →</span>
+          </button>
+        </div>
+      </section>
+
       {/* ── Hero ── */}
       <section className={styles.hero}>
         <div className={styles.gridBg} />
