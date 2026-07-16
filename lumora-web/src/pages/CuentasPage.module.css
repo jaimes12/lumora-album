@@ -1,0 +1,325 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.header { display: flex; align-items: flex-start; justify-content: space-between; }
+.title { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; }
+.sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+
+.forbidden {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 80px 24px;
+  text-align: center;
+  color: var(--text-muted);
+}
+.forbiddenIcon { font-size: 36px; }
+.forbidden h2 { color: var(--text); font-size: 18px; margin: 0; }
+
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+/* ── Sidebar de cuentas ── */
+.sidebar {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebarHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.addAccountBtn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.addAccountBtn:hover { background: var(--accent-2); }
+
+.newAccountForm { display: flex; flex-direction: column; gap: 8px; }
+.newAccountForm input {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--text);
+}
+.newAccountActions { display: flex; gap: 6px; justify-content: flex-end; }
+.newAccountActions button {
+  font-size: 12px;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.newAccountActions button:first-child { background: var(--bg-1); color: var(--text-muted); }
+.newAccountActions button:last-child { background: var(--accent); color: #fff; }
+.newAccountActions button:disabled { opacity: 0.5; cursor: default; }
+
+.emptyHint { font-size: 12.5px; color: var(--text-muted); padding: 8px 4px; }
+
+.accountList { display: flex; flex-direction: column; gap: 4px; }
+
+.accountItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+.accountItem:hover { background: var(--bg-1); }
+.accountItemActive { background: var(--accent-dim, rgba(43,111,212,0.1)); }
+
+.accountBtn {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  background: none;
+  border: none;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+}
+.accountName { font-size: 13.5px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+.accountBalance { font-size: 12px; font-weight: 600; }
+
+.renameInput {
+  flex: 1;
+  background: var(--bg-1);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 7px 9px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.accountItemActions { display: flex; gap: 2px; padding-right: 6px; opacity: 0; transition: opacity 0.15s; }
+.accountItem:hover .accountItemActions { opacity: 1; }
+.iconBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.iconBtn:hover { background: var(--bg-2); color: var(--text); }
+
+/* ── Hoja ── */
+.sheet {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 64px 24px;
+  color: var(--text-muted);
+  text-align: center;
+}
+.emptyIcon { font-size: 36px; }
+
+.summaryRow { display: flex; gap: 28px; flex-wrap: wrap; }
+.summaryStat { display: flex; flex-direction: column; gap: 2px; }
+.summaryLbl { font-size: 11.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.summaryVal { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+
+.filtersRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.filterField { display: flex; flex-direction: column; gap: 4px; }
+.filterField label { font-size: 11px; color: var(--text-muted); }
+.filterField input, .filterField select {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 9px;
+  font-size: 12.5px;
+  color: var(--text);
+}
+.clearFiltersBtn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 7px 4px;
+}
+.addRowBtn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.addRowBtn:hover { background: var(--accent-2); }
+.addRowBtn:disabled { opacity: 0.6; cursor: default; }
+
+/* ── Tabla estilo Excel ── */
+.tableWrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+.table thead th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: var(--bg-1);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.row td {
+  border-bottom: 1px solid var(--border);
+  padding: 2px;
+}
+.row:last-child td { border-bottom: none; }
+.row:hover { background: var(--bg-1); }
+
+.colDate    { min-width: 130px; }
+.colConcept { min-width: 180px; }
+.colCategory{ min-width: 130px; }
+.colType    { min-width: 110px; }
+.colTrip    { min-width: 150px; }
+.colAmount  { min-width: 120px; }
+.colNotes   { min-width: 160px; }
+.colActions { width: 36px; }
+
+.cellInput, .cellSelect {
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--text);
+  font-family: inherit;
+}
+.cellInput:hover, .cellSelect:hover { border-color: var(--border); }
+.cellInput:focus, .cellSelect:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--bg-1);
+}
+.cellAmount { font-variant-numeric: tabular-nums; font-weight: 600; }
+.cellSelect { cursor: pointer; }
+.typeIngreso { color: #16a34a; font-weight: 600; }
+.typeGasto   { color: #dc2626; font-weight: 600; }
+
+.emptyCell { text-align: center; padding: 32px; color: var(--text-muted); font-size: 13px; }
+
+.deleteRowBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.row:hover .deleteRowBtn { opacity: 1; }
+.deleteRowBtn:hover { background: #fee2e2; color: #dc2626; }
+
+/* ── Modal confirmación ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+.confirmModal {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 360px;
+  width: 100%;
+}
+.confirmModal h3 { font-size: 16px; margin: 0 0 8px; color: var(--text); }
+.confirmModal p { font-size: 13px; color: var(--text-muted); margin: 0 0 20px; }
+.confirmActions { display: flex; gap: 8px; justify-content: flex-end; }
+.confirmActions button {
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--bg-2);
+  color: var(--text);
+}
+.dangerBtn { background: #dc2626 !important; color: #fff !important; }

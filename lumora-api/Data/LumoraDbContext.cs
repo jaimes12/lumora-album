@@ -48,6 +48,8 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
     public DbSet<TripExpense> TripExpenses => Set<TripExpense>();
     public DbSet<TripPhoto> TripPhotos => Set<TripPhoto>();
     public DbSet<Gasto> Gastos => Set<Gasto>();
+    public DbSet<Account> Accounts => Set<Account>();
+    public DbSet<AccountEntry> AccountEntries => Set<AccountEntry>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -181,6 +183,13 @@ public class LumoraDbContext(DbContextOptions<LumoraDbContext> options) : DbCont
             .HasForeignKey(g => g.EventId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // AccountEntry -> Account
+        mb.Entity<AccountEntry>()
+            .HasOne(e => e.Account)
+            .WithMany(a => a.Entries)
+            .HasForeignKey(e => e.AccountId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // ── Pomelo 8.x GUID fix ──────────────────────────────────────────────
         // HasConversion<string>() on a string property is a no-op in EF Core (identity

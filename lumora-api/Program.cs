@@ -753,6 +753,34 @@ app.Lifetime.ApplicationStarted.Register(() => _ = Task.Run(async () =>
           PRIMARY KEY (`id`),
           KEY `idx_gastos_org` (`org_id`)
         ) CHARACTER SET utf8mb4",
+
+        // ── Cuentas (admin-only ledger) ──────────────────────────────────────────
+        @"CREATE TABLE IF NOT EXISTS `accounts` (
+          `id`            varchar(255) NOT NULL,
+          `org_id`        varchar(255) NOT NULL,
+          `name`          varchar(255) NOT NULL,
+          `created_at`    datetime(6)  NOT NULL,
+          `created_by_id` varchar(255) NULL,
+          PRIMARY KEY (`id`),
+          KEY `idx_accounts_org` (`org_id`)
+        ) CHARACTER SET utf8mb4",
+
+        @"CREATE TABLE IF NOT EXISTS `account_entries` (
+          `id`          varchar(255)  NOT NULL,
+          `account_id`  varchar(255)  NOT NULL,
+          `org_id`      varchar(255)  NOT NULL,
+          `entry_date`  datetime(6)   NOT NULL,
+          `concept`     varchar(500)  NOT NULL,
+          `category`    varchar(100)  NULL,
+          `type`        varchar(20)   NOT NULL DEFAULT 'gasto',
+          `amount`      decimal(18,2) NOT NULL DEFAULT 0,
+          `trip_id`     varchar(255)  NULL,
+          `notes`       varchar(1000) NULL,
+          `created_at`  datetime(6)   NOT NULL,
+          PRIMARY KEY (`id`),
+          KEY `idx_account_entries_account` (`account_id`),
+          KEY `idx_account_entries_org` (`org_id`)
+        ) CHARACTER SET utf8mb4",
     };
 
     try

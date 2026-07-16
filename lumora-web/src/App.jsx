@@ -43,6 +43,7 @@ import ViajesLanding     from './pages/ViajesLanding'
 import MarketplacePage      from './pages/MarketplacePage'
 import MarketplaceTripPage  from './pages/MarketplaceTripPage'
 import FinanzasPage      from './pages/FinanzasPage'
+import CuentasPage       from './pages/CuentasPage'
 
 function LandingPage() {
   return (
@@ -130,6 +131,7 @@ export default function App() {
               <Route path="viajes/:id/marketplace" element={<ViajeMarketplacePostPage />} />
               <Route path="market"         element={<MisPublicacionesPage />} />
               <Route path="finanzas"       element={<FinanzasPage />} />
+              <Route path="cuentas"        element={<CuentasPage />} />
             </Route>
 
             {/* Super admin — own auth, independent of app session */}
