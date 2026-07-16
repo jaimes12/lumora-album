@@ -187,6 +187,38 @@ function CalMock() {
   )
 }
 
+function MarketplaceMock() {
+  const posts = [
+    { emoji: '🏖️', title: 'Cancún Todo Incluido', dest: 'Cancún, MX', price: '$8,500', views: 128 },
+    { emoji: '🌵', title: 'Aventura en Los Cabos', dest: 'Los Cabos, MX', price: '$6,200', views: 74 },
+    { emoji: '🏛️', title: 'Ruta Colonial Cuba', dest: 'La Habana, Cuba', price: '$11,900', views: 52 },
+  ]
+  return (
+    <div className={styles.tripListMock}>
+      <div className={styles.mockHead}>
+        <span className={styles.mockTitle}>Marketplace público</span>
+        <span className={styles.mockBadge}>3 publicados</span>
+      </div>
+      {posts.map((p, i) => (
+        <div key={i} className={styles.marketMockRow}>
+          <div className={styles.marketThumb}>{p.emoji}</div>
+          <div className={styles.tripMockInfo}>
+            <span className={styles.tripMockDest}>{p.title}</span>
+            <span className={styles.tripMockFecha}>{p.dest}</span>
+          </div>
+          <div className={styles.tripMockRight}>
+            <span className={styles.tripMockPax} style={{ color: '#16a34a' }}>{p.price}</span>
+            <span className={styles.marketMockViews}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              {p.views}
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function FinancialMock() {
   return (
     <div className={styles.financialMock}>
@@ -277,13 +309,22 @@ const FEATURES = [
     Mock: FinancialMock,
     reverse: false,
   },
+  {
+    label: 'Marketplace público',
+    title: 'Publica tus viajes gratis y consigue clientes nuevos.',
+    desc: 'Sube tu viaje al marketplace de Elixe en segundos: destino, fotos, precio y cupos. Cualquier persona puede verlo y escribirte, sin costo extra.',
+    bullets: ['Publicar es 100% gratis con tu cuenta', 'Contacto directo por WhatsApp o mensaje', 'Contador de vistas por publicación'],
+    color: '#2563eb',
+    Mock: MarketplaceMock,
+    reverse: true,
+  },
 ]
 
 const STEPS = [
   { num: '01', icon: '🚀', title: 'Crea tu cuenta gratis', desc: 'Registro en menos de 2 minutos. Sin tarjeta. Selecciona "Agencia de viajes" y configura tu empresa.' },
-  { num: '02', icon: '✈️', title: 'Crea tu primer viaje', desc: 'Agrega destino, fechas, precio por persona y cupos disponibles. Listo para recibir pasajeros.' },
+  { num: '02', icon: '✈️', title: 'Crea tu primer viaje', desc: 'Agrega destino, fechas, precio por persona y cupos disponibles, y publícalo gratis en el marketplace para que lo vea más gente.' },
   { num: '03', icon: '👥', title: 'Agrega pasajeros', desc: 'Busca o crea clientes como pasajeros. Registra sus abonos y lleva su estado de pago individual.' },
-  { num: '04', icon: '💰', title: 'Cobra y crece', desc: 'Controla gastos del viaje, calcula tu utilidad y usa WhatsApp para atraer más viajeros.' },
+  { num: '04', icon: '💰', title: 'Cobra y crece', desc: 'Controla gastos del viaje, calcula tu utilidad y atiende por WhatsApp a quienes te escriban desde tu publicación.' },
 ]
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -375,8 +416,8 @@ export default function ViajesLanding() {
             <strong>Grupos escolares</strong> y <strong>Viajes religiosos</strong>.
           </p>
           <p className={styles.heroSub}>
-            Controla pasajeros, abonos, gastos y reservaciones desde un solo lugar.
-            Deja los grupos de WhatsApp y el Excel atrás.
+            Controla pasajeros, abonos, gastos y reservaciones desde un solo lugar,
+            y publica tus viajes gratis en nuestro marketplace público para conseguir clientes nuevos.
           </p>
         </div>
 
@@ -443,7 +484,7 @@ export default function ViajesLanding() {
           </h2>
           <p className={styles.sectionSub}>
             Sin hojas de cálculo, sin grupos de WhatsApp caóticos, sin clientes perdidos.
-            Todo centralizado en Elixe Viajes.
+            Todo centralizado en Elixe Viajes, incluyendo un marketplace público para publicar tus viajes gratis.
           </p>
         </div>
 
@@ -526,7 +567,8 @@ export default function ViajesLanding() {
             Tu agencia de viajes merece<br />una herramienta pro.
           </h2>
           <p className={styles.ctaSub}>
-            Crea tu cuenta sin costo. Elige el plan que mejor se adapte y cancela cuando quieras.
+            Crea tu cuenta sin costo, publica tus viajes en el marketplace y consigue clientes nuevos.
+            Elige el plan que mejor se adapte y cancela cuando quieras.
           </p>
           <div className={styles.heroBtns}>
             <button className={styles.btnPrimary} onClick={goRegister}>Crear cuenta gratis</button>
