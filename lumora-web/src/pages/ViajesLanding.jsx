@@ -314,6 +314,8 @@ export default function ViajesLanding() {
       <section className={styles.pathsSection}>
         <div className={styles.pathsInner}>
           <button type="button" className={styles.pathCard} style={{ '--path': '#2B6FD4' }} onClick={goRegister}>
+            <div className={styles.pathBeachBg} />
+            <div className={styles.pathScrim} />
             <div className={styles.pathIcon}>🏢</div>
             <span className={styles.pathTag}>Para agencias</span>
             <h3 className={styles.pathTitle}>Publica y gestiona tus viajes gratis</h3>
@@ -325,6 +327,8 @@ export default function ViajesLanding() {
           </button>
 
           <button type="button" className={styles.pathCard} style={{ '--path': '#ea580c' }} onClick={() => navigate('/viajes/market')}>
+            <div className={styles.pathBeachBg} />
+            <div className={styles.pathScrim} />
             <div className={styles.pathIcon}>🧳</div>
             <span className={styles.pathTag}>Para viajeros</span>
             <h3 className={styles.pathTitle}>Encuentra tu próximo viaje grupal</h3>

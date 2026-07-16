@@ -103,17 +103,37 @@
   position: relative;
   overflow: hidden;
 }
-.pathCard::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 85% -10%, color-mix(in srgb, var(--path) 18%, transparent), transparent 60%);
-  pointer-events: none;
-}
 .pathCard:hover {
   transform: translateY(-4px);
   border-color: color-mix(in srgb, var(--path) 45%, var(--border));
   box-shadow: 0 20px 50px color-mix(in srgb, var(--path) 18%, transparent);
+}
+
+/* Blurred "beach" backdrop — CSS gradient (sky/ocean/sand), no external image */
+.pathBeachBg {
+  position: absolute;
+  inset: -30px;
+  background:
+    radial-gradient(circle at 78% 12%, rgba(255,226,140,0.9) 0%, transparent 30%),
+    linear-gradient(180deg, #bfe6f5 0%, #8fdce0 32%, #35b6c4 52%, #f4e2b8 76%, #eccd93 100%);
+  filter: blur(30px);
+  opacity: 0.72;
+  transform: scale(1.1);
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.22s;
+}
+[data-theme="dark"] .pathBeachBg { opacity: 0.34; }
+.pathCard:hover .pathBeachBg { opacity: 0.88; }
+[data-theme="dark"] .pathCard:hover .pathBeachBg { opacity: 0.46; }
+
+.pathScrim {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-1);
+  opacity: 0.6;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .pathIcon {
@@ -126,6 +146,8 @@
   justify-content: center;
   font-size: 26px;
   margin-bottom: 6px;
+  position: relative;
+  z-index: 2;
 }
 
 .pathTag {
@@ -134,6 +156,8 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--path);
+  position: relative;
+  z-index: 2;
 }
 
 .pathTitle {
@@ -142,6 +166,8 @@
   letter-spacing: -0.02em;
   color: var(--text);
   margin: 2px 0 0;
+  position: relative;
+  z-index: 2;
 }
 
 .pathDesc {
@@ -149,12 +175,16 @@
   line-height: 1.6;
   color: var(--text-muted);
   margin: 0 0 8px;
+  position: relative;
+  z-index: 2;
 }
 
 .pathCta {
   font-size: 14.5px;
   font-weight: 700;
   color: var(--path);
+  position: relative;
+  z-index: 2;
 }
 
 @media (max-width: 760px) {
