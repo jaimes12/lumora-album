@@ -8,6 +8,7 @@ import logoFull  from '../assets/logo_elixe.jpeg'
 import logoWhite from '../assets/logo_white_elixe.jpeg'
 import oficinaImg from '../assets/oficina.png'
 import playaImg   from '../assets/playa.png'
+import viajeVideo from '../assets/landing_video_viaje.mp4'
 
 // ── Floating travel icons ────────────────────────────────────────────────────
 const BG_ICONS = [
@@ -318,7 +319,9 @@ export default function ViajesLanding() {
           <button type="button" className={styles.pathCard} style={{ '--path': '#2B6FD4' }} onClick={goRegister}>
             <div className={styles.pathBeachBg} style={{ backgroundImage: `url(${oficinaImg})` }} />
             <div className={styles.pathScrim} />
-            <div className={styles.pathIcon}>🏢</div>
+            <div className={styles.pathIcon}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 22V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v18"/><path d="M2 22h20"/><path d="M9 22v-4h6v4"/><line x1="9" y1="7" x2="9" y2="7.01"/><line x1="15" y1="7" x2="15" y2="7.01"/><line x1="9" y1="11" x2="9" y2="11.01"/><line x1="15" y1="11" x2="15" y2="11.01"/><line x1="9" y1="15" x2="9" y2="15.01"/><line x1="15" y1="15" x2="15" y2="15.01"/></svg>
+            </div>
             <span className={styles.pathTag}>Para agencias</span>
             <h3 className={styles.pathTitle}>Publica y gestiona tus viajes gratis</h3>
             <p className={styles.pathDesc}>
@@ -331,7 +334,9 @@ export default function ViajesLanding() {
           <button type="button" className={styles.pathCard} style={{ '--path': '#ea580c' }} onClick={() => navigate('/viajes/market')}>
             <div className={styles.pathBeachBg} style={{ backgroundImage: `url(${playaImg})` }} />
             <div className={styles.pathScrim} />
-            <div className={styles.pathIcon}>🧳</div>
+            <div className={styles.pathIcon}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="3" y1="13" x2="21" y2="13"/></svg>
+            </div>
             <span className={styles.pathTag}>Para viajeros</span>
             <h3 className={styles.pathTitle}>Encuentra tu próximo viaje grupal</h3>
             <p className={styles.pathDesc}>
@@ -417,14 +422,14 @@ export default function ViajesLanding() {
             </div>
           ))}
           <div className={styles.device}>
-            <div className={styles.deviceBar}>
-              <div className={styles.dots}><span /><span /><span /></div>
-              <span className={styles.deviceTitle}>elixe.mx/app/viajes</span>
-              <div className={styles.devicePill}>En vivo</div>
-            </div>
-            <div className={styles.deviceContent}>
-              <TripListMock />
-            </div>
+            <video
+              className={styles.heroVideo}
+              src={viajeVideo}
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
           </div>
         </div>
       </section>
