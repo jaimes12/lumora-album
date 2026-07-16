@@ -113,25 +113,24 @@
 .pathBeachBg {
   position: absolute;
   inset: -30px;
-  background:
-    radial-gradient(circle at 78% 12%, rgba(255,226,140,0.9) 0%, transparent 30%),
-    linear-gradient(180deg, #bfe6f5 0%, #8fdce0 32%, #35b6c4 52%, #f4e2b8 76%, #eccd93 100%);
-  filter: blur(30px);
-  opacity: 0.72;
+  background-size: cover;
+  background-position: center;
+  filter: blur(14px);
+  opacity: 0.8;
   transform: scale(1.1);
   z-index: 0;
   pointer-events: none;
-  transition: opacity 0.22s;
+  transition: opacity 0.22s, filter 0.22s;
 }
-[data-theme="dark"] .pathBeachBg { opacity: 0.34; }
-.pathCard:hover .pathBeachBg { opacity: 0.88; }
-[data-theme="dark"] .pathCard:hover .pathBeachBg { opacity: 0.46; }
+[data-theme="dark"] .pathBeachBg { opacity: 0.5; }
+.pathCard:hover .pathBeachBg { opacity: 0.95; filter: blur(9px); }
+[data-theme="dark"] .pathCard:hover .pathBeachBg { opacity: 0.62; }
 
 .pathScrim {
   position: absolute;
   inset: 0;
   background: var(--bg-1);
-  opacity: 0.6;
+  opacity: 0.5;
   z-index: 1;
   pointer-events: none;
 }

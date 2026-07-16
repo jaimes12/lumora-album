@@ -6,6 +6,8 @@ import Footer from '../components/Footer'
 import styles from './ViajesLanding.module.css'
 import logoFull  from '../assets/logo_elixe.jpeg'
 import logoWhite from '../assets/logo_white_elixe.jpeg'
+import oficinaImg from '../assets/oficina.png'
+import playaImg   from '../assets/playa.png'
 
 // ── Floating travel icons ────────────────────────────────────────────────────
 const BG_ICONS = [
@@ -314,7 +316,7 @@ export default function ViajesLanding() {
       <section className={styles.pathsSection}>
         <div className={styles.pathsInner}>
           <button type="button" className={styles.pathCard} style={{ '--path': '#2B6FD4' }} onClick={goRegister}>
-            <div className={styles.pathBeachBg} />
+            <div className={styles.pathBeachBg} style={{ backgroundImage: `url(${oficinaImg})` }} />
             <div className={styles.pathScrim} />
             <div className={styles.pathIcon}>🏢</div>
             <span className={styles.pathTag}>Para agencias</span>
@@ -327,7 +329,7 @@ export default function ViajesLanding() {
           </button>
 
           <button type="button" className={styles.pathCard} style={{ '--path': '#ea580c' }} onClick={() => navigate('/viajes/market')}>
-            <div className={styles.pathBeachBg} />
+            <div className={styles.pathBeachBg} style={{ backgroundImage: `url(${playaImg})` }} />
             <div className={styles.pathScrim} />
             <div className={styles.pathIcon}>🧳</div>
             <span className={styles.pathTag}>Para viajeros</span>
