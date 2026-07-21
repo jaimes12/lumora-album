@@ -130,20 +130,28 @@ export default function TourOverlay() {
     else tour.advance()
   }
 
+  // En pantallas angostas el modal ocupa casi todo el alto disponible, así
+  // que no hay hueco junto al botón donde meter el tooltip sin taparse con
+  // los campos del formulario: ahí lo anclamos como una barra fija abajo de
+  // toda la pantalla en vez de calcular su posición respecto al botón.
+  const dockBottom = isModalScoped && window.innerWidth < 640
+
   const spaceBelow = window.innerHeight - (box.top + box.height)
   const placeAbove = step.placement === 'top' || (step.placement !== 'bottom' && spaceBelow < 180)
 
   const tooltipWidth = Math.min(320, window.innerWidth - 24)
   const tooltipLeft = Math.min(Math.max(12, box.left), window.innerWidth - tooltipWidth - 12)
-  const tooltipStyle = placeAbove
-    ? { left: tooltipLeft, bottom: window.innerHeight - box.top + 14 }
-    : { left: tooltipLeft, top: box.top + box.height + 14 }
+  const tooltipStyle = dockBottom
+    ? { left: 12, right: 12, bottom: 12, width: 'auto', maxWidth: 'none' }
+    : placeAbove
+      ? { left: tooltipLeft, bottom: window.innerHeight - box.top + 14 }
+      : { left: tooltipLeft, top: box.top + box.height + 14 }
 
   return (
     <div className={styles.overlayRoot}>
       <div className={`${styles.spotlight} ${isModalScoped ? styles.spotlightPlain : ''}`} style={cutoutBox} />
       {isModalScoped && <div className={styles.targetRing} style={ringBox} />}
-      <div className={styles.tooltip} style={tooltipStyle} data-placement={placeAbove ? 'top' : 'bottom'}>
+      <div className={styles.tooltip} style={tooltipStyle} data-placement={dockBottom ? 'dock' : placeAbove ? 'top' : 'bottom'}>
         <div className={styles.tooltipHead}>
           <span className={styles.badge}>Guía rápida · {tour.stepIndex} / {tour.total - 1}</span>
           <button className={styles.skipLink} onClick={tour.skip}>Saltar tour</button>
