@@ -1056,7 +1056,25 @@
   .heroRight { width: 100%; }
   .summaryStats { grid-template-columns: repeat(2, 1fr); }
   .summaryStatLast { border-left: none; padding-left: 0; }
-  .paxActions { gap: 4px; }
-  .waBtn, .pagoBtn { padding: 5px 8px; font-size: 11px; }
   .gastoFormInner { flex-direction: column; }
+
+  /* Tarjeta de pasajero: la fila avatar+datos queda arriba y las
+     acciones bajan a su propia línea con ancho completo, en vez de
+     apretarse todas en una sola fila. */
+  .paxCard { padding: 16px; gap: 14px; }
+  .paxHeader { flex-wrap: wrap; row-gap: 12px; }
+  .paxActions {
+    flex-basis: 100%;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+  .waBtn, .pagoBtn, .editBtn {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  .removeBtn { flex-shrink: 0; }
+  .paxProgressAmounts { gap: 10px 16px; }
 }
