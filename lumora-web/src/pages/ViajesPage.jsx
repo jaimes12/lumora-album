@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { viajesApi } from '../api/viajesApi'
 import { clientesApi } from '../api/clientesApi'
+import { useTour } from '../context/TourContext'
 import styles from './ViajesPage.module.css'
 
 const ESTADOS = [
@@ -107,7 +108,7 @@ function NuevoViajeModal({ onClose, onCreated }) {
           {error && <p className={styles.error}>{error}</p>}
           <div className={styles.modalActions}>
             <button type="button" className={styles.btnSecondary} onClick={onClose}>Cancelar</button>
-            <button type="submit" className={styles.btnPrimary} disabled={saving}>
+            <button type="submit" className={styles.btnPrimary} disabled={saving} data-tour="crear-viaje-submit">
               {saving ? 'Creando…' : 'Crear viaje'}
             </button>
           </div>
@@ -119,19 +120,12 @@ function NuevoViajeModal({ onClose, onCreated }) {
 
 export default function ViajesPage() {
   const navigate = useNavigate()
-  const location = useLocation()
+  const tour = useTour()
   const [viajes, setViajes] = useState([])
   const [loading, setLoading] = useState(true)
   const [filtro, setFiltro] = useState(null)
   const [busqueda, setBusqueda] = useState('')
   const [showModal, setShowModal] = useState(false)
-
-  useEffect(() => {
-    if (location.state?.autoOpenNewTrip) {
-      setShowModal(true)
-      navigate(location.pathname, { replace: true, state: {} })
-    }
-  }, [location.state]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const load = async () => {
     setLoading(true)
@@ -162,7 +156,7 @@ export default function ViajesPage() {
           <h1 className={styles.title}>Viajes</h1>
           <p className={styles.sub}>{viajes.length} viaje{viajes.length !== 1 ? 's' : ''} registrado{viajes.length !== 1 ? 's' : ''}</p>
         </div>
-        <button className={styles.btnPrimary} onClick={() => setShowModal(true)}>
+        <button className={styles.btnPrimary} onClick={() => setShowModal(true)} data-tour="nuevo-viaje-btn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Nuevo viaje
         </button>
@@ -198,7 +192,7 @@ export default function ViajesPage() {
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{opacity:0.3}}><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
           <p className={styles.emptyTitle}>Sin viajes{filtro ? ` con estado "${filtro}"` : ''}</p>
           <p className={styles.emptySub}>Crea tu primer viaje grupal para empezar.</p>
-          <button className={styles.btnPrimary} onClick={() => setShowModal(true)}>Nuevo viaje</button>
+          <button className={styles.btnPrimary} onClick={() => setShowModal(true)} data-tour="nuevo-viaje-btn">Nuevo viaje</button>
         </div>
       ) : (
         <div className={styles.grid}>
@@ -251,7 +245,10 @@ export default function ViajesPage() {
       {showModal && (
         <NuevoViajeModal
           onClose={() => setShowModal(false)}
-          onCreated={v => setViajes(prev => [v, ...prev])}
+          onCreated={v => {
+            setViajes(prev => [v, ...prev])
+            tour.notify('trip-created', { tripId: v.id })
+          }}
         />
       )}
     </div>

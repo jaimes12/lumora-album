@@ -6,6 +6,7 @@ import { findOrCreateLeadByPhone } from '../api/leadsApi'
 import { whatsappApi } from '../api/whatsappApi'
 import { ChatModal, DEFAULT_STAGES } from './ChatPage'
 import { WhatsAppModal } from '../layouts/AppLayout'
+import { useTour } from '../context/TourContext'
 import styles from './ViajeDetallePage.module.css'
 
 const ESTADOS_VIAJE = ['borrador', 'confirmado', 'completado', 'cancelado']
@@ -326,7 +327,7 @@ function AgregarPasajeroModal({ viaje, onClose, onAdded }) {
               {error && <p className={styles.error}>{error}</p>}
               <div className={styles.modalActions}>
                 <button type="button" className={styles.btnSecondary} onClick={onClose}>Cancelar</button>
-                <button type="submit" className={styles.btnPrimary} disabled={saving || !clienteSel}>
+                <button type="submit" className={styles.btnPrimary} disabled={saving || !clienteSel} data-tour="guardar-pasajero-btn">
                   {saving ? 'Guardando…' : clienteSel ? 'Agregar pasajero' : 'Selecciona un cliente'}
                 </button>
               </div>
@@ -709,6 +710,7 @@ function MarketplaceSection({ viaje, onUpdate }) {
 export default function ViajeDetallePage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const tour = useTour()
   const [viaje, setViaje] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -961,7 +963,7 @@ export default function ViajeDetallePage() {
         <button className={`${styles.tabBtn} ${activeTab === 'resumen' ? styles.tabBtnActive : ''}`} onClick={() => setActiveTab('resumen')}>
           Resumen
         </button>
-        <button className={`${styles.tabBtn} ${activeTab === 'pasajeros' ? styles.tabBtnActive : ''}`} onClick={() => setActiveTab('pasajeros')}>
+        <button className={`${styles.tabBtn} ${activeTab === 'pasajeros' ? styles.tabBtnActive : ''}`} onClick={() => setActiveTab('pasajeros')} data-tour="tab-pasajeros">
           Pasajeros
           {pasajerosList.length > 0 && <span className={styles.tabCount}>{pasajerosList.length}</span>}
         </button>
@@ -1054,7 +1056,7 @@ export default function ViajeDetallePage() {
       <div className={styles.section}>
         <div className={styles.sectionHead}>
           <h2 className={styles.sectionTitle}>Pasajeros</h2>
-          <button className={styles.btnPrimary} onClick={() => setShowAddPax(true)}>
+          <button className={styles.btnPrimary} onClick={() => setShowAddPax(true)} data-tour="agregar-pasajero-btn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Agregar pasajero
           </button>
@@ -1063,7 +1065,7 @@ export default function ViajeDetallePage() {
         {pasajerosList.length === 0 ? (
           <div className={styles.emptyPax}>
             <p>No hay pasajeros registrados aun.</p>
-            <button className={styles.btnPrimary} onClick={() => setShowAddPax(true)}>Agregar pasajero</button>
+            <button className={styles.btnPrimary} onClick={() => setShowAddPax(true)} data-tour="agregar-pasajero-btn">Agregar pasajero</button>
           </div>
         ) : (
           <div className={styles.paxList}>
@@ -1346,6 +1348,7 @@ export default function ViajeDetallePage() {
           onClose={() => setShowAddPax(false)}
           onAdded={(nuevo) => {
             setViaje(prev => ({ ...prev, pasajerosList: [...(prev.pasajerosList ?? []), nuevo] }))
+            tour.notify('passenger-added')
           }}
         />
       )}

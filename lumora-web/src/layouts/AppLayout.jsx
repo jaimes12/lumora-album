@@ -6,7 +6,8 @@ import { whatsappApi } from '../api/whatsappApi'
 import { tasksApi } from '../api/tasksApi'
 import { supportApi } from '../api/supportApi'
 import ProfileModal from '../components/ProfileModal'
-import WelcomeTourModal from '../components/WelcomeTourModal'
+import TourOverlay from '../components/TourOverlay'
+import { TourProvider } from '../context/TourContext'
 import styles from './AppLayout.module.css'
 import logoFull      from '../assets/logo_elixe.jpeg'
 import logoWhite     from '../assets/logo_white_elixe.jpeg'
@@ -621,6 +622,7 @@ export default function AppLayout() {
   }
 
   return (
+    <TourProvider>
     <div className={styles.shell}>
       {showWaModal && (
         <WhatsAppModal
@@ -630,7 +632,7 @@ export default function AppLayout() {
       )}
 {showProfileModal && <ProfileModal onClose={() => setShowProfileModal(false)} />}
       {showSupportModal && <SupportModal onClose={() => setShowSupportModal(false)} />}
-      {user?.industry === 'travel' && user?.onboardingCompleted === false && <WelcomeTourModal />}
+      <TourOverlay />
 
       {/* Overlay */}
       {sidebarOpen && (
@@ -941,5 +943,6 @@ export default function AppLayout() {
         </div>
       )}
     </div>
+    </TourProvider>
   )
 }
