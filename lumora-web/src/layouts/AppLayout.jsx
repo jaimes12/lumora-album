@@ -7,7 +7,7 @@ import { tasksApi } from '../api/tasksApi'
 import { supportApi } from '../api/supportApi'
 import ProfileModal from '../components/ProfileModal'
 import TourOverlay from '../components/TourOverlay'
-import { TourProvider } from '../context/TourContext'
+import { TourProvider, useTour } from '../context/TourContext'
 import styles from './AppLayout.module.css'
 import logoFull      from '../assets/logo_elixe.jpeg'
 import logoWhite     from '../assets/logo_white_elixe.jpeg'
@@ -220,6 +220,19 @@ export function WhatsAppModal({ onClose, onConnect }) {
 // ── Status helpers ──────────────────────────────────────────────────────────
 const ST_LABEL = { open: 'Abierto', en_proceso: 'En proceso', closed: 'Resuelto' }
 const ST_COLOR = { open: '#f59e0b', en_proceso: '#38bdf8', closed: '#34d399' }
+
+/* ── Restart tour button (solo agencias de viajes) ── */
+function RestartTourButton() {
+  const { user } = useAuth()
+  const tour = useTour()
+  if (user?.industry !== 'travel') return null
+  return (
+    <button className={styles.supportBtn} onClick={tour.restart}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      <span>Volver a ver el tutorial</span>
+    </button>
+  )
+}
 
 /* ── Support Modal ── */
 function SupportModal({ onClose }) {
@@ -738,6 +751,7 @@ export default function AppLayout() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17" strokeWidth="3" strokeLinecap="round"/></svg>
             <span>Soporte / Dudas</span>
           </button>
+          <RestartTourButton />
 
           {/* Settings */}
           <div className={styles.settingsArea}>

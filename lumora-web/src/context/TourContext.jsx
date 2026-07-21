@@ -77,8 +77,9 @@ export function TourProvider({ children }) {
   const [stepIndex, setStepIndex] = useState(0)
   const [payload, setPayload] = useState({})
   const [dismissed, setDismissed] = useState(false)
+  const [forceActive, setForceActive] = useState(false)
 
-  const active = !dismissed && user?.industry === 'travel' && user?.onboardingCompleted === false
+  const active = !dismissed && (forceActive || (user?.industry === 'travel' && user?.onboardingCompleted === false))
   const step = TOUR_STEPS[stepIndex] ?? null
 
   const goToStep = (idx, data) => {
@@ -86,6 +87,7 @@ export function TourProvider({ children }) {
     if (data) setPayload(merged)
     const nextStep = TOUR_STEPS[idx]
     if (!nextStep) {
+      setForceActive(false)
       setDismissed(true)
       completeOnboarding()
       return
@@ -105,12 +107,20 @@ export function TourProvider({ children }) {
   }
 
   const skip = () => {
+    setForceActive(false)
     setDismissed(true)
     completeOnboarding()
   }
 
+  const restart = () => {
+    setPayload({})
+    setStepIndex(0)
+    setDismissed(false)
+    setForceActive(true)
+  }
+
   return (
-    <TourContext.Provider value={{ active, step, stepIndex, total: TOUR_STEPS.length, advance, skip, notify }}>
+    <TourContext.Provider value={{ active, step, stepIndex, total: TOUR_STEPS.length, advance, skip, notify, restart }}>
       {children}
     </TourContext.Provider>
   )
