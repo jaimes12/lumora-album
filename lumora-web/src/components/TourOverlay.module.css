@@ -104,6 +104,18 @@
   border: 2px solid var(--accent);
   animation: pulseRing 1.6s ease-out infinite;
 }
+
+/* Cuando el recorte cubre un modal completo (para no apagar sus campos),
+   el borde pulsante se dibuja aparte, solo alrededor del botón real. */
+.spotlightPlain::after { display: none; }
+
+.targetRing {
+  position: fixed;
+  border-radius: 10px;
+  border: 2px solid var(--accent);
+  pointer-events: none;
+  animation: pulseRing 1.6s ease-out infinite;
+}
 @keyframes pulseRing {
   0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); }
   70%  { box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 0%, transparent); }

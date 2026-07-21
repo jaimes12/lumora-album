@@ -100,6 +100,30 @@ export default function TourOverlay() {
     height: rect.height + PAD * 2,
   }
 
+  // Si el botón vive dentro de un formulario (p.ej. un modal para llenar datos),
+  // el recorte oscuro debe cubrir todo el modal y no solo el botón, para no
+  // apagar los campos que el usuario todavía tiene que llenar.
+  const targetEl = document.querySelector(`[data-tour="${step.target}"]`)
+  const modalEl = targetEl?.closest('form')?.parentElement ?? null
+  const modalRect = modalEl?.getBoundingClientRect() ?? null
+  const isModalScoped = !!modalRect
+
+  const cutoutBox = isModalScoped
+    ? {
+        top: modalRect.top - PAD,
+        left: modalRect.left - PAD,
+        width: modalRect.width + PAD * 2,
+        height: modalRect.height + PAD * 2,
+      }
+    : box
+
+  const ringBox = {
+    top: rect.top - 4,
+    left: rect.left - 4,
+    width: rect.width + 8,
+    height: rect.height + 8,
+  }
+
   const handleCta = () => {
     const el = document.querySelector(`[data-tour="${step.target}"]`)
     if (el) el.click()
@@ -117,7 +141,8 @@ export default function TourOverlay() {
 
   return (
     <div className={styles.overlayRoot}>
-      <div className={styles.spotlight} style={box} />
+      <div className={`${styles.spotlight} ${isModalScoped ? styles.spotlightPlain : ''}`} style={cutoutBox} />
+      {isModalScoped && <div className={styles.targetRing} style={ringBox} />}
       <div className={styles.tooltip} style={tooltipStyle} data-placement={placeAbove ? 'top' : 'bottom'}>
         <div className={styles.tooltipHead}>
           <span className={styles.badge}>Guía rápida · {tour.stepIndex} / {tour.total - 1}</span>
